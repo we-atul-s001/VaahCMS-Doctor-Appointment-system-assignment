@@ -30,6 +30,7 @@ const useVaah = vaah();
 
             <Column field="name" header="Name"
                     class="overflow-wrap-anywhere"
+                    style="width:150px;"
                     :sortable="true">
 
                 <template #body="prop">
@@ -41,8 +42,64 @@ const useVaah = vaah();
 
             </Column>
 
+             <Column field="email" header="Email"
+                     class="overflow-wrap-anywhere"
+                     style="width:150px;"
+                     :sortable="true">
 
-                <Column field="updated_at" header="Updated"
+                 <template #body="prop">
+
+                     {{prop.data.email}}
+                 </template>
+
+             </Column>
+
+             <Column field="phone" header="Phone"
+                     class="overflow-wrap-anywhere"
+                     style="width:150px;"
+                     :sortable="true">
+
+                 <template #body="prop">
+
+                     {{prop.data.phone}}
+                 </template>
+
+             </Column>
+
+             <Column field="specialization" header="Specialization"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+
+                     {{prop.data.Specialization}}
+                 </template>
+
+             </Column>
+
+             <Column field="shift_start_time" header="Shift Start Time"
+                     v-if="store.isViewLarge()"
+                     style="width:150px;"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     {{useVaah.strToSlug(prop.data.shift_start_time)}}
+
+                 </template>
+
+             </Column>
+
+             <Column field="shift_end_time" header="Shift End Time"
+                     v-if="store.isViewLarge()"
+                     style="width:150px;"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     {{useVaah.strToSlug(prop.data.shift_end_time)}}
+                 </template>
+
+             </Column>
+             <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
                         style="width:150px;"
                         :sortable="true">

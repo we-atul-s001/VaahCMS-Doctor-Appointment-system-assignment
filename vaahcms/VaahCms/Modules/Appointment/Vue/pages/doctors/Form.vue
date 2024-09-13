@@ -176,7 +176,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                                    placeholder="Enter the Specialization"
                                    name="doctors-specialization"
                                    data-testid="doctors-specialization"
-                                   v-model="store.item.specialization" required/>
+                                   v-model="store.item.Specialization" required/>
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
