@@ -32,6 +32,8 @@ import Divider from "primevue/divider";
 import RadioButton from "primevue/radiobutton";
 import Message from "primevue/message";
 import Tag from "primevue/tag";
+import InputNumber from 'primevue/inputnumber';
+import Calendar from 'primevue/calendar';
 
 //-------------/CRUD PrimeVue Imports
 
@@ -69,6 +71,7 @@ app.component('ConfirmDialog', ConfirmDialog);
 app.component('Menu', Menu);
 app.component('ProgressBar', ProgressBar);
 app.component('Toast', Toast);
+
 //-------------/PrimeVue Use
 
 // -------------CRUD PrimeVue Use
@@ -85,7 +88,8 @@ app.component('Divider', Divider);
 app.component('DataTable', DataTable);
 app.component('Message', Message);
 app.component('Tag', Tag);
-
+app.component('InputNumber', InputNumber);
+app.component('Calendar', Calendar);
 //-------------/CRUD PrimeVue Use
 
 
