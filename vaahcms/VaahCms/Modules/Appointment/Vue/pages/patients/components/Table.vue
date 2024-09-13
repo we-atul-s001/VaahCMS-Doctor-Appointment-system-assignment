@@ -41,6 +41,28 @@ const useVaah = vaah();
 
             </Column>
 
+             <Column field="email" header="Email"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+
+                     {{prop.data.email}}
+                 </template>
+
+             </Column>
+
+             <Column field="phone" header="Phone"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+
+                     {{prop.data.phone}}
+                 </template>
+
+             </Column>
+
 
                 <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
