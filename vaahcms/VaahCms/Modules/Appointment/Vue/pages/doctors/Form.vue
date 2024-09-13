@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, ref, watch} from "vue";
+import {computed, onMounted, ref, watch} from "vue";
 import { useDoctorStore } from '../../stores/store-doctors'
 
 import VhField from './../../vaahvue/vue-three/primeflex/VhField.vue'
@@ -30,7 +30,23 @@ const toggleFormMenu = (event) => {
 //--------/form_menu
 const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
 
+const saveOrCreateAndNew = (action) => {
 
+    store.item.shift_start_time = formatTimeForDatabase(store.item.shift_start_time);
+    store.item.shift_end_time = formatTimeForDatabase(store.item.shift_end_time);
+
+
+    store.itemAction(action);
+};
+
+// Format time for database storage (HH:mm:ss)
+const formatTimeForDatabase = (time) => {
+    if (!time) return null;
+    const hours = time.getHours().toString().padStart(2, '0');
+    const minutes = time.getMinutes().toString().padStart(2, '0');
+    const seconds = time.getSeconds().toString().padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+};
 </script>
 <template>
 
@@ -72,12 +88,12 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                             class="p-button-sm"
                             v-if="store.item && store.item.id"
                             data-testid="doctors-save"
-                            @click="store.itemAction('save')"
+                            @click="saveOrCreateAndNew('save')"
                             icon="pi pi-save"/>
 
                     <Button label="Create & New"
                             v-else
-                            @click="store.itemAction('create-and-new')"
+                            @click="saveOrCreateAndNew('create-and-new')"
                             class="p-button-sm"
                             data-testid="doctors-create-and-new"
                             icon="pi pi-save"/>
@@ -176,7 +192,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                                    placeholder="Enter the Specialization"
                                    name="doctors-specialization"
                                    data-testid="doctors-specialization"
-                                   v-model="store.item.Specialization" required/>
+                                   v-model="store.item.specialization" required/>
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
