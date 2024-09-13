@@ -88,7 +88,7 @@ const formatTimeForDatabase = (time) => {
                             class="p-button-sm"
                             v-if="store.item && store.item.id"
                             data-testid="doctors-save"
-                            @click="saveOrCreateAndNew('save')"
+                            @click="store.itemAction('save')"
                             icon="pi pi-save"/>
 
                     <Button label="Create & New"
@@ -192,7 +192,7 @@ const formatTimeForDatabase = (time) => {
                                    placeholder="Enter the Specialization"
                                    name="doctors-specialization"
                                    data-testid="doctors-specialization"
-                                   v-model="store.item.Specialization" required/>
+                                   v-model="store.item.specialization" required/>
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>

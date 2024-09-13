@@ -72,7 +72,7 @@ const useVaah = vaah();
 
                  <template #body="prop">
 
-                     {{prop.data.Specialization}}
+                     {{prop.data.specialization}}
                  </template>
 
              </Column>
