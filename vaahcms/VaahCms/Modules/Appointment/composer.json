@@ -1,0 +1,28 @@
+{
+    "name": "vaahcms/appointment",
+    "description": "Doctor Appointment System",
+    "version": "0.0.1",
+    "authors": [
+        {
+            "name": "Atul Pratap Singh",
+            "email": "atul-s001@webreinvent.com"
+        }
+    ],
+    "require": {
+        "php": "^7.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "VaahCms\\Modules\\Appointment\\Providers\\AppointmentServiceProvider"
+            ],
+            "aliases": {
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "VaahCms\\Modules\\Appointment\\": ""
+        }
+    }
+}
