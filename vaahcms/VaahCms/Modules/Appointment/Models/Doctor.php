@@ -1,8 +1,11 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
+use Carbon\Carbon;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
 use WebReinvent\VaahCms\Models\VaahModel;
@@ -135,13 +138,13 @@ class Doctor extends VaahModel
     {
 
         if ($from) {
-            $from = \Carbon::parse($from)
+            $from = Carbon::parse($from)
                 ->startOfDay()
                 ->toDateTimeString();
         }
 
         if ($to) {
-            $to = \Carbon::parse($to)
+            $to = Carbon::parse($to)
                 ->endOfDay()
                 ->toDateTimeString();
         }
@@ -190,7 +193,32 @@ class Doctor extends VaahModel
         return $response;
 
     }
+    //-------------------------------------------------
+    protected function shiftStartTime(): Attribute
+    {
 
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
+    //-------------------------------------------------
+    protected function shiftEndTime(): Attribute
+    {
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
     {
@@ -393,7 +421,7 @@ class Doctor extends VaahModel
         return $response;
     }
     //-------------------------------------------------
-     public static function listAction($request, $type): array
+    public static function listAction($request, $type): array
     {
 
         $list = self::query();
@@ -430,21 +458,21 @@ class Doctor extends VaahModel
             case 'create-5000-records':
             case 'create-10000-records':
 
-            if(!config('appointment.is_dev')){
-                $response['success'] = false;
-                $response['errors'][] = 'User is not in the development environment.';
+                if(!config('appoinments.is_dev')){
+                    $response['success'] = false;
+                    $response['errors'][] = 'User is not in the development environment.';
 
-                return $response;
-            }
+                    return $response;
+                }
 
-            preg_match('/-(.*?)-/', $type, $matches);
+                preg_match('/-(.*?)-/', $type, $matches);
 
-            if(count($matches) !== 2){
+                if(count($matches) !== 2){
+                    break;
+                }
+
+                self::seedSampleItems($matches[1]);
                 break;
-            }
-
-            self::seedSampleItems($matches[1]);
-            break;
         }
 
         $response['success'] = true;
@@ -489,24 +517,24 @@ class Doctor extends VaahModel
             ->withTrashed()
             ->where('name', $inputs['name'])->first();
 
-         if ($item) {
-             $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
-             $response['success'] = false;
-             $response['errors'][] = $error_message;
-             return $response;
-         }
+        if ($item) {
+            $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
+            $response['success'] = false;
+            $response['errors'][] = $error_message;
+            return $response;
+        }
 
-         // check if slug exist
-         $item = self::where('id', '!=', $id)
-             ->withTrashed()
-             ->where('slug', $inputs['slug'])->first();
+        // check if slug exist
+        $item = self::where('id', '!=', $id)
+            ->withTrashed()
+            ->where('slug', $inputs['slug'])->first();
 
-         if ($item) {
-             $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
-             $response['success'] = false;
-             $response['errors'][] = $error_message;
-             return $response;
-         }
+        if ($item) {
+            $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
+            $response['success'] = false;
+            $response['errors'][] = $error_message;
+            return $response;
+        }
 
         $item = self::where('id', $id)->withTrashed()->first();
         $item->fill($inputs);
@@ -571,10 +599,8 @@ class Doctor extends VaahModel
             'name' => 'required|max:150',
             'slug' => 'required|max:150',
             'email' => 'required|email',
-            'phone' => 'required',
-            'specialization' => 'required',
-            'shift_start_time' => 'required',
-            'shift_end_time' => 'required',
+            'phone' => 'required|max:16',
+            'specialization' => 'required|max:150',
         );
 
         $validator = \Validator::make($inputs, $rules);

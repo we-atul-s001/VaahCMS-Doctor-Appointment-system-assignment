@@ -28,30 +28,33 @@ const useVaah = vaah();
             <Column field="id" header="ID" :style="{width: '80px'}" :sortable="true">
             </Column>
 
-            <Column field="name" header="Name"
-                    class="overflow-wrap-anywhere"
-                    :sortable="true">
+             <Column field="patient" header="Patient Name"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
 
-                <template #body="prop">
-                    <Badge v-if="prop.data.deleted_at"
-                           value="Trashed"
-                           severity="danger"></Badge>
-                    {{prop.data.name}}
-                </template>
+                 <template #body="prop">
+                     {{prop.data.patient?.name}}
+                 </template>
 
-            </Column>
+             </Column>
+             <Column field="doctor" header="Doctor Name"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
 
+                 <template #body="prop">
+                     {{prop.data.doctor?.name}}
+                 </template>
 
-                <Column field="updated_at" header="Updated"
-                        v-if="store.isViewLarge()"
-                        style="width:150px;"
-                        :sortable="true">
+             </Column>
+             <Column field="date" header="Date and Slot"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
 
-                    <template #body="prop">
-                        {{useVaah.strToSlug(prop.data.updated_at)}}
-                    </template>
+                 <template #body="prop">
+                     {{prop.data?.date}} at {{prop.data.slot_start_time}} - {{prop.data?.slot_end_time}}
+                 </template>
 
-                </Column>
+             </Column>
 
             <Column field="is_active" v-if="store.isViewLarge()"
                     :sortable="true"
@@ -69,47 +72,57 @@ const useVaah = vaah();
 
             </Column>
 
-            <Column field="actions" style="width:150px;"
-                    :style="{width: store.getActionWidth() }"
-                    :header="store.getActionLabel()">
+             <Column field="actions" style="width:150px;"
+                     :style="{width: store.getActionWidth() }"
+                     :header="store.getActionLabel()">
 
-                <template #body="prop">
-                    <div class="p-inputgroup ">
+                 <template #body="prop">
+                     <div class="p-inputgroup ">
 
-                        <Button class="p-button-tiny p-button-text"
-                                data-testid="patientappointments-table-to-view"
-                                v-tooltip.top="'View'"
-                                @click="store.toView(prop.data)"
-                                icon="pi pi-eye" />
+                         <Button class="p-button-tiny p-button-text"
+                                 data-testid="patientappointments-table-to-view"
+                                 v-tooltip.top="'View'"
+                                 @click="store.toView(prop.data)"
+                                 icon="pi pi-eye" />
 
-                        <Button class="p-button-tiny p-button-text"
-                                data-testid="patientappointments-table-to-edit"
-                                v-tooltip.top="'Update'"
-                                @click="store.toEdit(prop.data)"
-                                icon="pi pi-pencil" />
+                         <Button class="p-button-tiny p-button-text"
+                                 data-testid="patientappointments-table-to-edit"
+                                 v-tooltip.top="'Update'"
+                                 @click="store.toEdit(prop.data)"
+                                 icon="pi pi-pencil" />
 
-                        <Button class="p-button-tiny p-button-danger p-button-text"
-                                data-testid="patientappointments-table-action-trash"
-                                v-if="store.isViewLarge() && !prop.data.deleted_at"
-                                @click="store.itemAction('trash', prop.data)"
-                                v-tooltip.top="'Trash'"
-                                icon="pi pi-trash" />
-
-
-                        <Button class="p-button-tiny p-button-success p-button-text"
-                                data-testid="patientappointments-table-action-restore"
-                                v-if="store.isViewLarge() && prop.data.deleted_at"
-                                @click="store.itemAction('restore', prop.data)"
-                                v-tooltip.top="'Restore'"
-                                icon="pi pi-replay" />
+                         <Button class="p-button-tiny p-button-danger p-button-text"
+                                 data-testid="patientappointments-table-action-trash"
+                                 v-if="store.isViewLarge() && !prop.data.deleted_at"
+                                 @click="store.confirmDeleteTableItem( prop.data)"
+                                 v-tooltip.top="'Cancel Appointment'"
+                                 icon="pi pi-times" />
 
 
-                    </div>
-
-                </template>
 
 
-            </Column>
+                         <Button class="p-button-tiny p-button-danger p-button-text"
+                                 data-testid="patientappointments-table-action-trash"
+                                 v-if="store.isViewLarge() && !prop.data.deleted_at"
+                                 @click="store.itemAction('trash', prop.data)"
+                                 v-tooltip.top="'Trash'"
+                                 icon="pi pi-trash" />
+
+
+                         <Button class="p-button-tiny p-button-success p-button-text"
+                                 data-testid="patientappointments-table-action-restore"
+                                 v-if="store.isViewLarge() && prop.data.deleted_at"
+                                 @click="store.itemAction('restore', prop.data)"
+                                 v-tooltip.top="'Restore'"
+                                 icon="pi pi-replay" />
+
+
+                     </div>
+
+                 </template>
+
+
+             </Column>
 
              <template #empty>
                  <div class="text-center py-3">

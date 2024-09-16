@@ -844,6 +844,16 @@ export const usePatientAppointmentStore = defineStore({
             this.form.type = 'delete';
             vaah().confirmDialogDelete(this.confirmDeleteItemAfter);
         },
+        confirmDeleteTableItem(data) {
+            this.table_item_data = data;
+            this.form.type = 'delete';
+            vaah().confirmDialogDelete(this.confirmDeleteTableItemAfter);
+        },
+        //---------------------------------------------------------------------
+        confirmDeleteTableItemAfter() {
+            this.itemAction('delete', this.table_item_data);
+
+        },
         //---------------------------------------------------------------------
         confirmDeleteItemAfter()
         {

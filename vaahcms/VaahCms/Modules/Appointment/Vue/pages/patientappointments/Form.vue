@@ -30,24 +30,12 @@ const toggleFormMenu = (event) => {
 //--------/form_menu
 const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
 
-const saveOrCreateAndNew = (action) => {
-
-    store.item.shift_start_time = formatTimeForDatabase(store.item.shift_start_time);
-    store.item.shift_end_time = formatTimeForDatabase(store.item.shift_end_time);
-
-
-    store.itemAction(action);
+const handleDateChange = (newDate, property) => {
+    if (newDate && store.item[property] !== undefined) {
+        store.item[property] = new Date(newDate.getTime() - newDate.getTimezoneOffset() * 60000);
+    }
+    console.log(property, store.item[property]);
 };
-
-// Format time for database storage (HH:mm:ss)
-const formatTimeForDatabase = (time) => {
-    if (!time) return null;
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-};
-
 </script>
 <template>
 
@@ -94,7 +82,7 @@ const formatTimeForDatabase = (time) => {
 
                     <Button label="Create & New"
                             v-else
-                            @click="saveOrCreateAndNew('create-and-new')"
+                            @click="store.itemAction('create-and-new')"
                             class="p-button-sm"
                             data-testid="patientappointments-create-and-new"
                             icon="pi pi-save"/>
@@ -168,11 +156,7 @@ const formatTimeForDatabase = (time) => {
                     />
                 </VhField>
                 <VhField label="Doctor Details"  v-if="store.item.doctor" >
-                    <b>
-                        Email-
-                    </b> {{store.item.doctor?.email}}<br>
-                    <b>Phone</b>
-                    - {{store.item.doctor?.phone}}<br>
+
                     <b>Specialization
                     </b>- {{store.item.doctor?.specialization}}<br>
                     <b>
@@ -180,7 +164,7 @@ const formatTimeForDatabase = (time) => {
 
                     {{store.item?.doctor?.shift_start_time}} -
                     {{store.item?.doctor?.shift_end_time}}
-                    (Please Select the time in the given time slot).
+                    (Select the Time Slot).
 
                 </VhField>
                 <VhField label="Date and Time" required>

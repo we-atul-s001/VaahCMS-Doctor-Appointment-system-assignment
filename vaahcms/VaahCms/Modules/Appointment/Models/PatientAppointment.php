@@ -3,8 +3,10 @@
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
@@ -29,8 +31,11 @@ class PatientAppointment extends VaahModel
     //-------------------------------------------------
     protected $fillable = [
         'uuid',
-        'name',
-        'slug',
+        'patient_id',
+        'slot_start_time',
+        'date',
+        'slot_end_time',
+        'doctor_id',
         'is_active',
         'created_by',
         'updated_by',
@@ -73,14 +78,68 @@ class PatientAppointment extends VaahModel
         );
         return $fillable_columns;
     }
+
+    //-------------------------------------------------
+    //-------------------------------------------------
+    protected function slotStartTime(): Attribute
+    {
+
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
+
+    //-------------------------------------------------
+    protected function slotEndTime(): Attribute
+    {
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
+
+    //---------Slot Time-------------
+
+    public function getSlotStartTimeAttribute($value)
+    {
+        $timezone = Session::get('user_timezone');
+        return Carbon::parse($value)
+            ->setTimezone($timezone)
+            ->format('H:i');
+    }
+
+    //-------------------------------------------------
+    public function patient()
+    {
+        return $this->belongsTo(Patient::class, 'patient_id', 'id')
+            ->select('name', 'id');
+
+    }
+
+    //-------------------------------------------------
+    public function doctor()
+    {
+        return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
+            ->select('id','name','shift_start_time','shift_end_time','specialization','phone','email');
+    }
+
     //-------------------------------------------------
     public static function getEmptyItem()
     {
         $model = new self();
         $fillable = $model->getFillable();
         $empty_item = [];
-        foreach ($fillable as $column)
-        {
+        foreach ($fillable as $column) {
             $empty_item[$column] = null;
         }
 
@@ -151,30 +210,29 @@ class PatientAppointment extends VaahModel
     {
 
         $inputs = $request->all();
-
         $validation = self::validation($inputs);
         if (!$validation['success']) {
             return $validation;
         }
-
-
-        // check if name exist
-        $item = self::where('name', $inputs['name'])->withTrashed()->first();
-
+//         check if Slot exist
+        $item = self::where('patient_id', $inputs['patient_id'])
+            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])->withTrashed()->first();
         if ($item) {
-            $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
+            $error_message = "This Patient has already appointment with doctor on this date " . $inputs['date'];
             $response['success'] = false;
-            $response['messages'][] = $error_message;
+            $response['errors'][] = $error_message;
             return $response;
         }
 
-        // check if slug exist
-        $item = self::where('slug', $inputs['slug'])->withTrashed()->first();
 
-        if ($item) {
-            $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
-            $response['success'] = false;
-            $response['messages'][] = $error_message;
+        $slot_exists = self::checkDoctorSlot($inputs);
+        if($slot_exists=='Invalid Slot')
+        {
+            $response['errors'][] = 'The selected slot does not come in the doctors shift.';
+            return $response;
+        }
+        elseif ($slot_exists === 'No Slot Available') {
+            $response['errors'][] = 'Slot Not available.';
             return $response;
         }
 
@@ -182,63 +240,89 @@ class PatientAppointment extends VaahModel
         $item->fill($inputs);
         $item->save();
 
+        $subject = 'Appointment Scheduled.';
+
+        //self::sendAppointmentMail($inputs, $subject);
+
         $response = self::getItem($item->id);
         $response['messages'][] = trans("vaahcms-general.saved_successfully");
         return $response;
 
     }
-    //----------Slot Time -----------------
-    public static function selectSlotTime($request)
+
+    //-------------------------------------------------
+    public static function formatTime($time, $timezone, $format = 'H:i')
     {
-
-        $inputs = $request->all();
-
-        $validation = self::validation($inputs);
-        if (!$validation['success']) {
-            return $validation;
-        }
+        return Carbon::parse($time)
+            ->setTimezone($timezone)
+            ->format($format);
     }
 
-    public static function updateSlotTime($request, $id)
+    //-------------------------------------------------
+//    public static function sendAppointmentMail($inputs, $subject)
+//    {
+//        $doctor = Doctor::find($inputs['doctor_id']);
+//        $patient = Patient::find($inputs['patient_id']);
+//        $timezone = Session::get('user_timezone');
+//        $date = Carbon::parse($inputs['date'])->toDateString();
+//        $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
+//        $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
+//        $message_patient = sprintf(
+//            'Hello %s, You have an appointment with Dr. %s on %s from %s to %s.',
+//            $patient->name,
+//            $doctor->name,
+//            $date,
+//            $slot_start_time,
+//            $slot_end_time
+//        );
+//        $message_doctor=sprintf(
+//            'Hello DR. %s, You have an appointment with Patient %s on %s from %s to %s.',
+//            $doctor->name,
+//            $patient->name,
+//            $date,
+//            $slot_start_time,
+//            $slot_end_time
+//        );
+//        VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
+//        VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
+//
+//    }
+
+
+    //-------------------------------------------------
+    public static function checkDoctorSlot($data)
     {
-        $inputs = $request->all();
+        $start_time = Carbon::parse($data['slot_start_time'])
+            ->format('H:i:s');
+        $end_time = Carbon::parse($data['slot_end_time'])
+            ->format('H:i:s');
+        $doctor_shift_time = Doctor::where(function ($query) use ($start_time, $end_time) {
+            $query->where('shift_start_time', '<=', $start_time)
+                ->where('shift_end_time', '>=', $end_time);
+        })->exists();
+        if (!$doctor_shift_time) {
 
-        $validation = self::validation($inputs);
-        if (!$validation['success']) {
-            return $validation;
+            return 'Invalid Slot';
         }
+        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
+        use ($start_time, $end_time) {
+            $query->where('slot_start_time', '<', $end_time)
+                ->where('slot_end_time', '>', $start_time);
+        })->withTrashed()->exists();
+        if ($slots_exist) {
+            return 'No Slot Available';
+        }
+        else{
+            return false;        }
 
-        $item = self::find($id);
-        $item->fill($inputs);
-        $item->save();
-
-        $response = self::getItem($item->id);
-        $response
-        ['
-        messages
-        '] = "Updated Successfully";
-        return $response;
     }
 
-//----------------------RelationShip----------------------
 
-     public function patient()
-     {
-         return $this->belongsTo(Patient::class, 'patent_id', 'id')
-             ->select('id', 'name');
-     }
-
-     public function doctor()
-     {
-         return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
-             ->select('id', 'name', 'shift_start_time','shift_end_time','specialization','phone','email');
-     }
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
     {
 
-        if(!isset($filter['sort']))
-        {
+        if (!isset($filter['sort'])) {
             return $query->orderBy('id', 'desc');
         }
 
@@ -247,8 +331,7 @@ class PatientAppointment extends VaahModel
 
         $direction = Str::contains($sort, ':');
 
-        if(!$direction)
-        {
+        if (!$direction) {
             return $query->orderBy($sort, 'asc');
         }
 
@@ -256,66 +339,80 @@ class PatientAppointment extends VaahModel
 
         return $query->orderBy($sort[0], $sort[1]);
     }
+
     //-------------------------------------------------
     public function scopeIsActiveFilter($query, $filter)
     {
 
-        if(!isset($filter['is_active'])
+        if (!isset($filter['is_active'])
             || is_null($filter['is_active'])
             || $filter['is_active'] === 'null'
-        )
-        {
+        ) {
             return $query;
         }
         $is_active = $filter['is_active'];
 
-        if($is_active === 'true' || $is_active === true)
-        {
+        if ($is_active === 'true' || $is_active === true) {
             return $query->where('is_active', 1);
-        } else{
-            return $query->where(function ($q){
+        } else {
+            return $query->where(function ($q) {
                 $q->whereNull('is_active')
                     ->orWhere('is_active', 0);
             });
         }
 
     }
+
     //-------------------------------------------------
     public function scopeTrashedFilter($query, $filter)
     {
 
-        if(!isset($filter['trashed']))
-        {
+        if (!isset($filter['trashed'])) {
             return $query;
         }
         $trashed = $filter['trashed'];
 
-        if($trashed === 'include')
-        {
+        if ($trashed === 'include') {
             return $query->withTrashed();
-        } else if($trashed === 'only'){
+        } else if ($trashed === 'only') {
             return $query->onlyTrashed();
         }
 
     }
+
     //-------------------------------------------------
     public function scopeSearchFilter($query, $filter)
     {
 
-        if(!isset($filter['q']))
-        {
+        if (!isset($filter['q'])) {
             return $query;
         }
-        $search_array = explode(' ',$filter['q']);
-        foreach ($search_array as $search_item){
+        $search_array = explode(' ', $filter['q']);
+        foreach ($search_array as $search_item) {
             $query->where(function ($q1) use ($search_item) {
                 $q1->where('name', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('id', 'LIKE', $search_item . '%');
             });
         }
+    }
+
+    //-------------------------------------------------
+    public function scopeDoctorFilter($query, $filter)
+    {
+
+        if (!isset($filter['sort_doctor'])) {
+            return $query;
+        }
+        $search = $filter['sort_doctor'];
+
+        return $query->whereHas('doctor', function ($query) use ($search) {
+            $query->where('id', $search);
+        });
+
 
     }
+
     //-------------------------------------------------
     public static function getList($request)
     {
@@ -323,11 +420,12 @@ class PatientAppointment extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
+        $list->doctorFilter($request->filter);
+        $list->with(['patient', 'doctor']);
 
         $rows = config('vaahcms.per_page');
 
-        if($request->has('rows'))
-        {
+        if ($request->has('rows')) {
             $rows = $request->rows;
         }
 
@@ -365,8 +463,7 @@ class PatientAppointment extends VaahModel
             return $response;
         }
 
-        if(isset($inputs['items']))
-        {
+        if (isset($inputs['items'])) {
             $items_id = collect($inputs['items'])
                 ->pluck('id')
                 ->toArray();
@@ -380,7 +477,7 @@ class PatientAppointment extends VaahModel
                     ->update(['is_active' => null]);
                 break;
             case 'activate':
-                $items->withTrashed()->where(function ($q){
+                $items->withTrashed()->where(function ($q) {
                     $q->where('is_active', 0)->orWhereNull('is_active');
                 })->update(['is_active' => 1]);
                 break;
@@ -434,13 +531,14 @@ class PatientAppointment extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
-     public static function listAction($request, $type): array
+    public static function listAction($request, $type): array
     {
 
         $list = self::query();
 
-        if($request->has('filter')){
+        if ($request->has('filter')) {
             $list->getSorted($request->filter);
             $list->isActiveFilter($request->filter);
             $list->trashedFilter($request->filter);
@@ -449,7 +547,7 @@ class PatientAppointment extends VaahModel
 
         switch ($type) {
             case 'activate-all':
-                $list->withTrashed()->where(function ($q){
+                $list->withTrashed()->where(function ($q) {
                     $q->where('is_active', 0)->orWhereNull('is_active');
                 })->update(['is_active' => 1]);
                 break;
@@ -472,21 +570,21 @@ class PatientAppointment extends VaahModel
             case 'create-5000-records':
             case 'create-10000-records':
 
-            if(!config('appointment.is_dev')){
-                $response['success'] = false;
-                $response['errors'][] = 'User is not in the development environment.';
+                if (!config('appoinments.is_dev')) {
+                    $response['success'] = false;
+                    $response['errors'][] = 'User is not in the development environment.';
 
-                return $response;
-            }
+                    return $response;
+                }
 
-            preg_match('/-(.*?)-/', $type, $matches);
+                preg_match('/-(.*?)-/', $type, $matches);
 
-            if(count($matches) !== 2){
+                if (count($matches) !== 2) {
+                    break;
+                }
+
+                self::seedSampleItems($matches[1]);
                 break;
-            }
-
-            self::seedSampleItems($matches[1]);
-            break;
         }
 
         $response['success'] = true;
@@ -495,19 +593,19 @@ class PatientAppointment extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function getItem($id)
     {
 
         $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser', 'deletedByUser'])
+            ->with(['createdByUser', 'updatedByUser', 'deletedByUser','doctor'])
             ->withTrashed()
             ->first();
 
-        if(!$item)
-        {
+        if (!$item) {
             $response['success'] = false;
-            $response['errors'][] = 'Record not found with ID: '.$id;
+            $response['errors'][] = 'Record not found with ID: ' . $id;
             return $response;
         }
         $response['success'] = true;
@@ -516,6 +614,7 @@ class PatientAppointment extends VaahModel
         return $response;
 
     }
+
     //-------------------------------------------------
     public static function updateItem($request, $id)
     {
@@ -526,39 +625,38 @@ class PatientAppointment extends VaahModel
             return $validation;
         }
 
-        // check if name exist
-        $item = self::where('id', '!=', $id)
-            ->withTrashed()
-            ->where('name', $inputs['name'])->first();
-
-         if ($item) {
-             $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
-             $response['success'] = false;
-             $response['errors'][] = $error_message;
-             return $response;
-         }
-
-         // check if slug exist
-         $item = self::where('id', '!=', $id)
-             ->withTrashed()
-             ->where('slug', $inputs['slug'])->first();
-
-         if ($item) {
-             $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
-             $response['success'] = false;
-             $response['errors'][] = $error_message;
-             return $response;
-         }
+        $item = self::where('patient_id', $inputs['patient_id'])
+            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])->withTrashed()->first();
+        if ($item) {
+            $error_message = "This Patient has already appointment with doctor on this date " . $inputs['date'];
+            $response['success'] = false;
+            $response['errors'][] = $error_message;
+            return $response;
+        }
+        $slot_exists = self::checkDoctorSlot($inputs);
+        if($slot_exists=='Invalid Slot')
+        {
+            $response['errors'][] = 'The selected slot does not come in the doctors shift.';
+            return $response;
+        }
+        elseif ($slot_exists === 'No Slot Available') {
+            $response['errors'][] = 'Slot Not available.';
+            return $response;
+        }
 
         $item = self::where('id', $id)->withTrashed()->first();
         $item->fill($inputs);
         $item->save();
+        $subject = 'Appointment Scheduled Updated.';
+
+        //self::sendAppointmentMail($inputs, $subject);
 
         $response = self::getItem($item->id);
         $response['messages'][] = trans("vaahcms-general.saved_successfully");
         return $response;
 
     }
+
     //-------------------------------------------------
     public static function deleteItem($request, $id): array
     {
@@ -568,19 +666,34 @@ class PatientAppointment extends VaahModel
             $response['errors'][] = trans("vaahcms-general.record_does_not_exist");
             return $response;
         }
+        $subject='Appointment Cancelled.';
+        $patient = Patient::find($item['patient_id']);
+        $doctor = Doctor::find($item['doctor_id']);
+        $timezone = Session::get('user_timezone');
+        $date = Carbon::parse($item['date'])->toDateString();
+        $slot_start_time = self::formatTime($item['slot_start_time'], $timezone);
+        $slot_end_time = self::formatTime($item['slot_end_time'], $timezone);
+        $message = sprintf(
+            'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled.',
+            $patient->name,
+            $doctor->name,
+            $date,
+            $slot_start_time,
+            $slot_end_time
+        );
+        VaahMail::dispatchGenericMail($subject, $message, $patient->email);
         $item->forceDelete();
-
         $response['success'] = true;
         $response['data'] = [];
         $response['messages'][] = trans("vaahcms-general.record_has_been_deleted");
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function itemAction($request, $id, $type): array
     {
-        switch($type)
-        {
+        switch ($type) {
             case 'activate':
                 self::where('id', $id)
                     ->withTrashed()
@@ -604,14 +717,17 @@ class PatientAppointment extends VaahModel
 
         return self::getItem($id);
     }
+
     //-------------------------------------------------
 
     public static function validation($inputs)
     {
 
         $rules = array(
-            'name' => 'required|max:150',
-            'slug' => 'required|max:150',
+            'slot_end_time' => 'required',
+            'slot_start_time' => 'required',
+            'date' => 'required',
+            'patient_id' => 'required',
         );
 
         $validator = \Validator::make($inputs, $rules);
@@ -638,16 +754,15 @@ class PatientAppointment extends VaahModel
 
     //-------------------------------------------------
     //-------------------------------------------------
-    public static function seedSampleItems($records=100)
+    public static function seedSampleItems($records = 100)
     {
 
         $i = 0;
 
-        while($i < $records)
-        {
+        while ($i < $records) {
             $inputs = self::fillItem(false);
 
-            $item =  new self();
+            $item = new self();
             $item->fill($inputs);
             $item->save();
 
@@ -666,7 +781,7 @@ class PatientAppointment extends VaahModel
             'except' => self::getUnFillableColumns()
         ]);
         $fillable = VaahSeeder::fill($request);
-        if(!$fillable['success']){
+        if (!$fillable['success']) {
             return $fillable;
         }
         $inputs = $fillable['data']['fill'];
@@ -678,7 +793,7 @@ class PatientAppointment extends VaahModel
          * You should also return relationship from here
          */
 
-        if(!$is_response_return){
+        if (!$is_response_return) {
             return $inputs;
         }
 
