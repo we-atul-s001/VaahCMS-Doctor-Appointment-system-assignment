@@ -228,7 +228,7 @@ class Appointment extends VaahModel
         $item->fill($inputs);
         $item->save();
 
-        $subject = 'Appointment Scheduled.';
+        $subject = 'Appointment Booked - Mail';
 
         self::sendAppointmentMail($inputs, $subject);
 
@@ -256,7 +256,7 @@ class Appointment extends VaahModel
         $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
         $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
         $message_patient = sprintf(
-            'Hello %s, You have an appointment with Dr. %s on %s from %s to %s.',
+            'Hello, %s, You have an appointment is scheduled with Dr. %s on %s from %s to %s.',
             $patient->name,
             $doctor->name,
             $date,
@@ -264,7 +264,7 @@ class Appointment extends VaahModel
             $slot_end_time
         );
         $message_doctor=sprintf(
-            'Hello DR. %s, You have an appointment with Patient %s on %s from %s to %s.',
+            'Hello, DR. %s, You have an appointment scheduled with Patient %s on %s from %s to %s.',
             $doctor->name,
             $patient->name,
             $date,
