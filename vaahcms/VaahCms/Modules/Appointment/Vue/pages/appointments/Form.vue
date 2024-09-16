@@ -1,12 +1,12 @@
 <script setup>
 import {onMounted, ref, watch} from "vue";
-import { usePatientAppointmentStore } from '../../stores/store-patientappointments'
+import { useAppointmentStore } from '../../stores/store-appointments'
 
 import VhField from './../../vaahvue/vue-three/primeflex/VhField.vue'
 import {useRoute} from 'vue-router';
 
 
-const store = usePatientAppointmentStore();
+const store = useAppointmentStore();
 const route = useRoute();
 
 onMounted(async () => {
@@ -23,19 +23,21 @@ onMounted(async () => {
 });
 
 //--------form_menu
-const form_menu = ref();
-const toggleFormMenu = (event) => {
-    form_menu.value.toggle(event);
-};
-//--------/form_menu
-const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
-
 const handleDateChange = (newDate, property) => {
     if (newDate && store.item[property] !== undefined) {
         store.item[property] = new Date(newDate.getTime() - newDate.getTimezoneOffset() * 60000);
     }
     console.log(property, store.item[property]);
 };
+//--------form_menu
+const form_menu = ref();
+const toggleFormMenu = (event) => {
+    form_menu.value.toggle(event);
+};
+//--------/form_menu
+const today_date = ref(new Date());
+const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
+
 </script>
 <template>
 
@@ -52,7 +54,7 @@ const handleDateChange = (newDate, property) => {
                             Update
                         </span>
                         <span v-else>
-                            Create Appointment
+                            Create
                         </span>
                     </div>
 
@@ -69,14 +71,14 @@ const handleDateChange = (newDate, property) => {
                     <Button class="p-button-sm"
                             v-tooltip.left="'View'"
                             v-if="store.item && store.item.id"
-                            data-testid="patientappointments-view_item"
+                            data-testid="appointments-view_item"
                             @click="store.toView(store.item)"
                             icon="pi pi-eye"/>
 
                     <Button label="Save"
                             class="p-button-sm"
                             v-if="store.item && store.item.id"
-                            data-testid="patientappointments-save"
+                            data-testid="appointments-save"
                             @click="store.itemAction('save')"
                             icon="pi pi-save"/>
 
@@ -84,17 +86,30 @@ const handleDateChange = (newDate, property) => {
                             v-else
                             @click="store.itemAction('create-and-new')"
                             class="p-button-sm"
-                            data-testid="patientappointments-create-and-new"
+                            data-testid="appointments-create-and-new"
                             icon="pi pi-save"/>
 
 
+                    <!--form_menu-->
+                    <Button
+                        type="button"
+                        @click="toggleFormMenu"
+                        class="p-button-sm"
+                        data-testid="appointments-form-menu"
+                        icon="pi pi-angle-down"
+                        aria-haspopup="true"/>
 
+                    <Menu ref="form_menu"
+                          :model="store.form_menu_list"
+                          :popup="true" />
+                    <!--/form_menu-->
 
                     <Button class="p-button-primary p-button-sm"
                             icon="pi pi-times"
-                            data-testid="patientappointments-to-list"
+                            data-testid="doctors-to-list"
                             @click="store.toList()">
                     </Button>
+
                 </div>
 
 
@@ -128,10 +143,12 @@ const handleDateChange = (newDate, property) => {
 
                 </Message>
 
+
+
                 <VhField label="Select Patient">
                     <Dropdown
                         filter
-                        name="items-patient"
+                        name="appointments-patient"
                         data-testid="items-patient"
                         placeholder="Select Patient"
                         :options="store.assets.patients"
@@ -143,12 +160,13 @@ const handleDateChange = (newDate, property) => {
                     />
                 </VhField>
                 <VhField label="Select Doctor">
+
                     <Dropdown
                         filter
-                        name="items-doctor"
+                        name="appointments-doctor"
                         data-testid="items-doctor"
                         placeholder="Select Doctor"
-                        :options="store.assets.doctor"
+                        :options="store.assets.doctors"
                         v-model="store.item.doctor"
                         option-label="name"
                         class="w-full"
@@ -164,13 +182,13 @@ const handleDateChange = (newDate, property) => {
 
                     {{store.item?.doctor?.shift_start_time}} -
                     {{store.item?.doctor?.shift_end_time}}
-                    (Select the Time Slot).
+                    (Please Select the time in the given time slot).
 
                 </VhField>
                 <VhField label="Date and Time" required>
                     <div class="p-inputgroup">
                         <Calendar
-                            name="items-date"
+                            name="appointments-date"
                             date-format="yy-mm-dd"
                             :showIcon="true"
                             :minDate="today_date"
@@ -204,15 +222,15 @@ const handleDateChange = (newDate, property) => {
                         />
                     </div>
                 </VhField>
-
                 <VhField label="Is Active">
                     <InputSwitch v-bind:false-value="0"
                                  v-bind:true-value="1"
                                  class="p-inputswitch-sm"
-                                 name="patientappointments-active"
-                                 data-testid="patientappointments-active"
+                                 name="appointments-active"
+                                 data-testid="appointments-active"
                                  v-model="store.item.is_active"/>
                 </VhField>
+
 
             </div>
         </Panel>

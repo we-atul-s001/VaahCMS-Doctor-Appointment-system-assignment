@@ -2,9 +2,9 @@
 import {ref, reactive, watch, onMounted} from 'vue';
 import {useRoute} from 'vue-router';
 
-import { usePatientAppointmentStore } from '../../../stores/store-patientappointments'
+import { useAppointmentStore } from '../../../stores/store-appointments'
 
-const store = usePatientAppointmentStore();
+const store = useAppointmentStore();
 const route = useRoute();
 
 onMounted(async () => {
@@ -40,7 +40,7 @@ const toggleBulkMenuState = (event) => {
                 <Button class="p-button-sm"
                     type="button"
                     @click="toggleSelectedMenuState"
-                    data-testid="patientappointments-actions-menu"
+                    data-testid="appointments-actions-menu"
                     aria-haspopup="true"
                     aria-controls="overlay_menu">
                     <i class="pi pi-angle-down"></i>
@@ -70,17 +70,17 @@ const toggleBulkMenuState = (event) => {
                                        class="p-inputtext-sm"
                                        @keyup.enter.native="store.delayedSearch()"
                                        @keyup.13="store.delayedSearch()"
-                                       data-testid="patientappointments-actions-search"
+                                       data-testid="appointments-actions-search"
                                        placeholder="Search"/>
                             <Button @click="store.delayedSearch()"
                                     class="p-button-sm"
-                                    data-testid="patientappointments-actions-search-button"
+                                    data-testid="appointments-actions-search-button"
                                     icon="pi pi-search"/>
                             <Button
                                 type="button"
                                 class="p-button-sm"
                                 :disabled="Object.keys(route.params).length"
-                                data-testid="patientappointments-actions-show-filters"
+                                data-testid="appointments-actions-show-filters"
                                 @click="store.show_filters = !store.show_filters">
                                 Filters
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
@@ -89,7 +89,7 @@ const toggleBulkMenuState = (event) => {
                             <Button
                                 type="button"
                                 icon="pi pi-filter-slash"
-                                data-testid="patientappointments-actions-reset-filters"
+                                data-testid="appointments-actions-reset-filters"
                                 class="p-button-sm"
                                 label="Reset"
                                 @click="store.resetQuery()" />
@@ -99,7 +99,7 @@ const toggleBulkMenuState = (event) => {
                                     type="button"
                                     @click="toggleBulkMenuState"
                                     severity="danger" outlined
-                                    data-testid="patientappointments-actions-bulk-menu"
+                                    data-testid="appointments-actions-bulk-menu"
                                     aria-haspopup="true"
                                     aria-controls="bulk_menu_state"
                                     class="ml-1 p-button-sm">

@@ -1,9 +1,12 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
+use Carbon\Carbon;
 use DateTimeInterface;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Faker\Factory;
 use WebReinvent\VaahCms\Libraries\VaahMail;
@@ -11,17 +14,15 @@ use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
 use WebReinvent\VaahCms\Libraries\VaahSeeder;
-use Symfony\Component\HttpKernel\Attribute;
-use Carbon\Carbon;
 
-class PatientAppointment extends VaahModel
+class Appointment extends VaahModel
 {
 
     use SoftDeletes;
     use CrudWithUuidObservantTrait;
 
     //-------------------------------------------------
-    protected $table = 'vh_patient_appointment';
+    protected $table = 'vh_appointments';
     //-------------------------------------------------
     protected $dates = [
         'created_at',
@@ -68,19 +69,6 @@ class PatientAppointment extends VaahModel
         ];
     }
     //-------------------------------------------------
-    public static function getFillableColumns()
-    {
-        $model = new self();
-        $except = $model->fill_except;
-        $fillable_columns = $model->getFillable();
-        $fillable_columns = array_diff(
-            $fillable_columns, $except
-        );
-        return $fillable_columns;
-    }
-
-    //-------------------------------------------------
-    //-------------------------------------------------
     protected function slotStartTime(): Attribute
     {
 
@@ -106,16 +94,6 @@ class PatientAppointment extends VaahModel
                     ->format('H:i');
             },
         );
-    }
-
-    //---------Slot Time-------------
-
-    public function getSlotStartTimeAttribute($value)
-    {
-        $timezone = Session::get('user_timezone');
-        return Carbon::parse($value)
-            ->setTimezone($timezone)
-            ->format('H:i');
     }
 
     //-------------------------------------------------
@@ -242,7 +220,7 @@ class PatientAppointment extends VaahModel
 
         $subject = 'Appointment Scheduled.';
 
-        //self::sendAppointmentMail($inputs, $subject);
+        self::sendAppointmentMail($inputs, $subject);
 
         $response = self::getItem($item->id);
         $response['messages'][] = trans("vaahcms-general.saved_successfully");
@@ -259,34 +237,34 @@ class PatientAppointment extends VaahModel
     }
 
     //-------------------------------------------------
-//    public static function sendAppointmentMail($inputs, $subject)
-//    {
-//        $doctor = Doctor::find($inputs['doctor_id']);
-//        $patient = Patient::find($inputs['patient_id']);
-//        $timezone = Session::get('user_timezone');
-//        $date = Carbon::parse($inputs['date'])->toDateString();
-//        $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
-//        $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
-//        $message_patient = sprintf(
-//            'Hello %s, You have an appointment with Dr. %s on %s from %s to %s.',
-//            $patient->name,
-//            $doctor->name,
-//            $date,
-//            $slot_start_time,
-//            $slot_end_time
-//        );
-//        $message_doctor=sprintf(
-//            'Hello DR. %s, You have an appointment with Patient %s on %s from %s to %s.',
-//            $doctor->name,
-//            $patient->name,
-//            $date,
-//            $slot_start_time,
-//            $slot_end_time
-//        );
-//        VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
-//        VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
-//
-//    }
+    public static function sendAppointmentMail($inputs, $subject)
+    {
+        $doctor = Doctor::find($inputs['doctor_id']);
+        $patient = Patient::find($inputs['patient_id']);
+        $timezone = Session::get('user_timezone');
+        $date = Carbon::parse($inputs['date'])->toDateString();
+        $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
+        $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
+        $message_patient = sprintf(
+            'Hello %s, You have an appointment with Dr. %s on %s from %s to %s.',
+            $patient->name,
+            $doctor->name,
+            $date,
+            $slot_start_time,
+            $slot_end_time
+        );
+        $message_doctor=sprintf(
+            'Hello DR. %s, You have an appointment with Patient %s on %s from %s to %s.',
+            $doctor->name,
+            $patient->name,
+            $date,
+            $slot_start_time,
+            $slot_end_time
+        );
+        VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
+        VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
+
+    }
 
 
     //-------------------------------------------------
@@ -649,7 +627,7 @@ class PatientAppointment extends VaahModel
         $item->save();
         $subject = 'Appointment Scheduled Updated.';
 
-        //self::sendAppointmentMail($inputs, $subject);
+        self::sendAppointmentMail($inputs, $subject);
 
         $response = self::getItem($item->id);
         $response['messages'][] = trans("vaahcms-general.saved_successfully");
@@ -727,6 +705,7 @@ class PatientAppointment extends VaahModel
             'slot_end_time' => 'required',
             'slot_start_time' => 'required',
             'date' => 'required',
+            'doctor_id' => 'required',
             'patient_id' => 'required',
         );
 

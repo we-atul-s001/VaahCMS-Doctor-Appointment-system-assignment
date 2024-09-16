@@ -3,11 +3,11 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import qs from 'qs'
 import {vaah} from '../vaahvue/pinia/vaah'
 
-let model_namespace = 'VaahCms\\Modules\\Appointment\\Models\\PatientAppointment';
+let model_namespace = 'VaahCms\\Modules\\Appointment\\Models\\Appointment';
 
 
 let base_url = document.getElementsByTagName('base')[0].getAttribute("href");
-let ajax_url = base_url + "/appointment/patientappointments";
+let ajax_url = base_url + "/appointment/appointments";
 
 let empty_states = {
     query: {
@@ -26,8 +26,8 @@ let empty_states = {
     }
 };
 
-export const usePatientAppointmentStore = defineStore({
-    id: 'patientappointments',
+export const useAppointmentStore = defineStore({
+    id: 'appointments',
     state: () => ({
         base_url: base_url,
         ajax_url: ajax_url,
@@ -49,7 +49,7 @@ export const usePatientAppointmentStore = defineStore({
         },
         route: null,
         watch_stopper: null,
-        route_prefix: 'patientappointments.',
+        route_prefix: 'appointments.',
         view: 'large',
         show_filters: false,
         list_view_width: 12,
@@ -102,7 +102,7 @@ export const usePatientAppointmentStore = defineStore({
         {
             switch(route_name)
             {
-                case 'patientappointments.index':
+                case 'appointments.index':
                     this.view = 'large';
                     this.list_view_width = 12;
                     break;
@@ -241,7 +241,7 @@ export const usePatientAppointmentStore = defineStore({
             {
                 this.item = data;
             }else{
-                this.$router.push({name: 'patientappointments.index',query:this.query});
+                this.$router.push({name: 'appointments.index',query:this.query});
             }
             await this.getItemMenu();
             await this.getFormMenu();
@@ -374,6 +374,7 @@ export const usePatientAppointmentStore = defineStore({
                 case 'create-and-close':
                 case 'create-and-clone':
                     options.method = 'POST';
+                    item.doctor_id = this.item.doctor?.id;
                     options.params = item;
                     break;
 
@@ -437,12 +438,12 @@ export const usePatientAppointmentStore = defineStore({
                 case 'create-and-close':
                 case 'save-and-close':
                     this.setActiveItemAsEmpty();
-                    this.$router.push({name: 'patientappointments.index',query:this.query});
+                    this.$router.push({name: 'appointments.index',query:this.query});
                     break;
                 case 'save-and-clone':
                 case 'create-and-clone':
                     this.item.id = null;
-                    this.$router.push({name: 'patientappointments.form',query:this.query,params: { id: null }});
+                    this.$router.push({name: 'appointments.form',query:this.query,params: { id: null }});
                     await this.getFormMenu();
                     break;
                 case 'trash':
@@ -617,20 +618,20 @@ export const usePatientAppointmentStore = defineStore({
         //---------------------------------------------------------------------
         closeForm()
         {
-            this.$router.push({name: 'patientappointments.index',query:this.query})
+            this.$router.push({name: 'appointments.index',query:this.query})
         },
         //---------------------------------------------------------------------
         toList()
         {
             this.item = vaah().clone(this.assets.empty_item);
-            this.$router.push({name: 'patientappointments.index',query:this.query})
+            this.$router.push({name: 'appointments.index',query:this.query})
         },
         //---------------------------------------------------------------------
         toForm()
         {
             this.item = vaah().clone(this.assets.empty_item);
             this.getFormMenu();
-            this.$router.push({name: 'patientappointments.form',query:this.query})
+            this.$router.push({name: 'appointments.form',query:this.query})
         },
         //---------------------------------------------------------------------
         toView(item)
@@ -638,7 +639,7 @@ export const usePatientAppointmentStore = defineStore({
             if(!this.item || !this.item.id || this.item.id !== item.id){
                 this.item = vaah().clone(item);
             }
-            this.$router.push({name: 'patientappointments.view', params:{id:item.id},query:this.query})
+            this.$router.push({name: 'appointments.view', params:{id:item.id},query:this.query})
         },
         //---------------------------------------------------------------------
         toEdit(item)
@@ -646,7 +647,7 @@ export const usePatientAppointmentStore = defineStore({
             if(!this.item || !this.item.id || this.item.id !== item.id){
                 this.item = vaah().clone(item);
             }
-            this.$router.push({name: 'patientappointments.form', params:{id:item.id},query:this.query})
+            this.$router.push({name: 'appointments.form', params:{id:item.id},query:this.query})
         },
         //---------------------------------------------------------------------
         isViewLarge()
@@ -844,16 +845,6 @@ export const usePatientAppointmentStore = defineStore({
             this.form.type = 'delete';
             vaah().confirmDialogDelete(this.confirmDeleteItemAfter);
         },
-        confirmDeleteTableItem(data) {
-            this.table_item_data = data;
-            this.form.type = 'delete';
-            vaah().confirmDialogDelete(this.confirmDeleteTableItemAfter);
-        },
-        //---------------------------------------------------------------------
-        confirmDeleteTableItemAfter() {
-            this.itemAction('delete', this.table_item_data);
-
-        },
         //---------------------------------------------------------------------
         confirmDeleteItemAfter()
         {
@@ -948,5 +939,5 @@ export const usePatientAppointmentStore = defineStore({
 
 // Pinia hot reload
 if (import.meta.hot) {
-    import.meta.hot.accept(acceptHMRUpdate(usePatientAppointmentStore, import.meta.hot))
+    import.meta.hot.accept(acceptHMRUpdate(useAppointmentStore, import.meta.hot))
 }

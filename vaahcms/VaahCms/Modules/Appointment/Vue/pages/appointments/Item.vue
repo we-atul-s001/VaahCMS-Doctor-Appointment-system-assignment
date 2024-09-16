@@ -2,10 +2,10 @@
 import {onMounted, ref, watch} from "vue";
 import {useRoute} from 'vue-router';
 
-import { usePatientAppointmentStore } from '../../stores/store-patientappointments'
+import { useAppointmentStore } from '../../stores/store-appointments'
 
 import VhViewRow from '../../vaahvue/vue-three/primeflex/VhViewRow.vue';
-const store = usePatientAppointmentStore();
+const store = useAppointmentStore();
 const route = useRoute();
 
 onMounted(async () => {
@@ -61,7 +61,7 @@ const toggleItemMenu = (event) => {
                     <Button label="Edit"
                             class="p-button-sm"
                             @click="store.toEdit(store.item)"
-                            data-testid="patientappointments-item-to-edit"
+                            data-testid="appointments-item-to-edit"
                             icon="pi pi-save"/>
 
                     <!--item_menu-->
@@ -69,7 +69,7 @@ const toggleItemMenu = (event) => {
                         type="button"
                         class="p-button-sm"
                         @click="toggleItemMenu"
-                        data-testid="patientappointments-item-menu"
+                        data-testid="appointments-item-menu"
                         icon="pi pi-angle-down"
                         aria-haspopup="true"/>
 
@@ -80,7 +80,7 @@ const toggleItemMenu = (event) => {
 
                     <Button class="p-button-primary p-button-sm"
                             icon="pi pi-times"
-                            data-testid="patientappointments-item-to-list"
+                            data-testid="appointments-item-to-list"
                             @click="store.toList()"/>
 
                 </div>
@@ -107,7 +107,7 @@ const toggleItemMenu = (event) => {
                         <div class="ml-3">
                             <Button label="Restore"
                                     class="p-button-sm"
-                                    data-testid="patientappointments-item-restore"
+                                    data-testid="appointments-item-restore"
                                     @click="store.itemAction('restore')">
                             </Button>
                         </div>
