@@ -233,7 +233,7 @@ class Appointment extends VaahModel
         self::sendAppointmentMail($inputs, $subject);
 
         $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.saved_successfully");
+        $response['messages'][] = trans("vaahcms-general.appointment_booked_successfully");
         return $response;
 
     }
