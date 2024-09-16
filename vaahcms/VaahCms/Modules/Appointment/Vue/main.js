@@ -34,7 +34,7 @@ import Message from "primevue/message";
 import Tag from "primevue/tag";
 import InputNumber from 'primevue/inputnumber';
 import Calendar from 'primevue/calendar';
-
+import Dropdown from 'primevue/dropdown';
 //-------------/CRUD PrimeVue Imports
 
 
@@ -90,6 +90,7 @@ app.component('Message', Message);
 app.component('Tag', Tag);
 app.component('InputNumber', InputNumber);
 app.component('Calendar', Calendar);
+app.component('Dropdown', Dropdown);
 //-------------/CRUD PrimeVue Use
 
 
