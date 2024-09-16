@@ -2,14 +2,14 @@
 import {onMounted, reactive, ref} from "vue";
 import {useRoute} from 'vue-router';
 
-import {usePatientAppointmentStore} from '../../stores/store-patientappointments'
+import {useAppointmentStore} from '../../stores/store-appointments'
 import {useRootStore} from '../../stores/root'
 
 import Actions from "./components/Actions.vue";
 import Table from "./components/Table.vue";
 import Filters from './components/Filters.vue'
 
-const store = usePatientAppointmentStore();
+const store = useAppointmentStore();
 const root = useRootStore();
 const route = useRoute();
 
@@ -18,7 +18,7 @@ const confirm = useConfirm();
 
 
 onMounted(async () => {
-    document.title = 'PatientAppointments - Appointment';
+    document.title = 'Appointments - Appointment';
     store.item = null;
     /**
      * call onLoad action when List view loads
@@ -73,7 +73,7 @@ const toggleCreateMenu = (event) => {
 
                     <div class="flex flex-row">
                         <div >
-                            <b class="mr-1">PatientAppointments</b>
+                            <b class="mr-1">Appointments</b>
                             <Badge v-if="store.list && store.list.total > 0"
                                    :value="store.list.total">
                             </Badge>
@@ -87,14 +87,14 @@ const toggleCreateMenu = (event) => {
 
                     <div class="p-inputgroup">
 
-                    <Button data-testid="patientappointments-list-create"
+                    <Button data-testid="appointments-list-create"
                             class="p-button-sm"
                             @click="store.toForm()">
                         <i class="pi pi-plus mr-1"></i>
                         Create
                     </Button>
 
-                    <Button data-testid="patientappointments-list-reload"
+                    <Button data-testid="appointments-list-reload"
                             class="p-button-sm"
                             @click="store.getList()">
                         <i class="pi pi-refresh mr-1"></i>
@@ -107,7 +107,7 @@ const toggleCreateMenu = (event) => {
                         type="button"
                         @click="toggleCreateMenu"
                         class="p-button-sm"
-                        data-testid="patientappointments-create-menu"
+                        data-testid="appointments-create-menu"
                         icon="pi pi-angle-down"
                         aria-haspopup="true"/>
 

@@ -30,23 +30,6 @@ const toggleFormMenu = (event) => {
 //--------/form_menu
 const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
 
-const saveOrCreateAndNew = (action) => {
-
-    store.item.shift_start_time = formatTimeForDatabase(store.item.shift_start_time);
-    store.item.shift_end_time = formatTimeForDatabase(store.item.shift_end_time);
-
-
-    store.itemAction(action);
-};
-
-// Format time for database storage (HH:mm:ss)
-const formatTimeForDatabase = (time) => {
-    if (!time) return null;
-    const hours = time.getHours().toString().padStart(2, '0');
-    const minutes = time.getMinutes().toString().padStart(2, '0');
-    const seconds = time.getSeconds().toString().padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
-};
 </script>
 <template>
 
@@ -93,7 +76,7 @@ const formatTimeForDatabase = (time) => {
 
                     <Button label="Create & New"
                             v-else
-                            @click="saveOrCreateAndNew('create-and-new')"
+                            @click="store.itemAction('create-and-new')"
                             class="p-button-sm"
                             data-testid="doctors-create-and-new"
                             icon="pi pi-save"/>
@@ -175,16 +158,26 @@ const formatTimeForDatabase = (time) => {
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
-                <VhField label="Phone">
+                <VhField label="Email">
                     <div class="p-inputgroup">
                         <InputText class="w-full"
-                                     placeholder="Enter the Phone"
-                                     name="doctors-phone"
-                                     data-testid="doctors-phone"
-                                     v-model="store.item.phone" required/>
+                                   placeholder="Enter the Email"
+                                   name="doctors-email"
+                                   data-testid="doctors-email"
+                                   v-model="store.item.email" required/>
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
+                <VhField label="Phone">
+                <div class="p-inputgroup">
+                    <InputText class="w-full"
+                                 placeholder="Enter the Phone"
+                                 name="doctors-phone"
+                                 data-testid="doctors-phone"
+                                 v-model="store.item.phone" required/>
+                    <div class="required-field hidden"></div>
+                </div>
+            </VhField>
 
                 <VhField label="Specialization">
                     <div class="p-inputgroup">
@@ -196,18 +189,7 @@ const formatTimeForDatabase = (time) => {
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
-
-                <VhField label="Email">
-                    <div class="p-inputgroup">
-                        <InputText class="w-full"
-                                   placeholder="Enter the Email"
-                                   name="doctors-email"
-                                   data-testid="doctors-email"
-                                   v-model="store.item.email" required/>
-                        <div class="required-field hidden"></div>
-                    </div>
-                </VhField>
-                <VhField label="Working Hour">
+                <VhField label="Specialization">
                     <div class="p-inputgroup">
                         <Calendar
                             v-model="store.item.shift_start_time"
@@ -231,6 +213,7 @@ const formatTimeForDatabase = (time) => {
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
+
 
                 <VhField label="Is Active">
                     <InputSwitch v-bind:false-value="0"

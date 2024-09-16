@@ -2,12 +2,12 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use VaahCms\Modules\Appointment\Models\Appointment;
 use VaahCms\Modules\Appointment\Models\Doctor;
 use VaahCms\Modules\Appointment\Models\Patient;
-use VaahCms\Modules\Appointment\Models\PatientAppointment;
 
 
-class PatientAppointmentsController extends Controller
+class AppointmentsController extends Controller
 {
 
 
@@ -29,12 +29,11 @@ class PatientAppointmentsController extends Controller
             $data['permission'] = [];
             $data['rows'] = config('vaahcms.per_page');
 
-            $data['fillable']['columns'] = PatientAppointment::getFillableColumns();
-            $data['fillable']['except'] = PatientAppointment::getUnFillableColumns();
-            $data['empty_item'] = PatientAppointment::getEmptyItem();
+            $data['fillable']['columns'] = Appointment::getFillableColumns();
+            $data['fillable']['except'] = Appointment::getUnFillableColumns();
+            $data['empty_item'] = Appointment::getEmptyItem();
             $data['patients'] = Patient::where('is_active',1)->select('id','name','slug')->get();
-            $data['doctor'] = Doctor::where('is_active',1)->select('id','name','shift_start_time','shift_end_time','specialization','phone','email')->get();
-
+            $data['doctors'] = Doctor::where('is_active',1)->select('id','name','shift_start_time','shift_end_time','specialization','phone','email')->get();
             $data['actions'] = [];
 
             $response['success'] = true;
@@ -58,7 +57,7 @@ class PatientAppointmentsController extends Controller
     public function getList(Request $request)
     {
         try{
-            return PatientAppointment::getList($request);
+            return Appointment::getList($request);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -75,7 +74,7 @@ class PatientAppointmentsController extends Controller
     public function updateList(Request $request)
     {
         try{
-            return PatientAppointment::updateList($request);
+            return Appointment::updateList($request);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -95,7 +94,7 @@ class PatientAppointmentsController extends Controller
 
 
         try{
-            return PatientAppointment::listAction($request, $type);
+            return Appointment::listAction($request, $type);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -113,7 +112,7 @@ class PatientAppointmentsController extends Controller
     public function deleteList(Request $request)
     {
         try{
-            return PatientAppointment::deleteList($request);
+            return Appointment::deleteList($request);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -130,7 +129,7 @@ class PatientAppointmentsController extends Controller
     public function fillItem(Request $request)
     {
         try{
-            return PatientAppointment::fillItem($request);
+            return Appointment::fillItem($request);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -147,7 +146,7 @@ class PatientAppointmentsController extends Controller
     public function createItem(Request $request)
     {
         try{
-            return PatientAppointment::createItem($request);
+            return Appointment::createItem($request);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -164,7 +163,7 @@ class PatientAppointmentsController extends Controller
     public function getItem(Request $request, $id)
     {
         try{
-            return PatientAppointment::getItem($id);
+            return Appointment::getItem($id);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -181,7 +180,7 @@ class PatientAppointmentsController extends Controller
     public function updateItem(Request $request,$id)
     {
         try{
-            return PatientAppointment::updateItem($request,$id);
+            return Appointment::updateItem($request,$id);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -198,7 +197,7 @@ class PatientAppointmentsController extends Controller
     public function deleteItem(Request $request,$id)
     {
         try{
-            return PatientAppointment::deleteItem($request,$id);
+            return Appointment::deleteItem($request,$id);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;
@@ -215,7 +214,7 @@ class PatientAppointmentsController extends Controller
     public function itemAction(Request $request,$id,$action)
     {
         try{
-            return PatientAppointment::itemAction($request,$id,$action);
+            return Appointment::itemAction($request,$id,$action);
         }catch (\Exception $e){
             $response = [];
             $response['success'] = false;

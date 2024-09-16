@@ -39,10 +39,10 @@ const items = ref([
                 route: "/patients"
             },
             {
-                label: 'Appointments',
+                label: 'Appointment',
                 icon: 'fa-regular fa-chart-bar',
-                route: "/patientappointments"
-            },
+                route: "/appointments"
+            }
         ]
     },
 ]);

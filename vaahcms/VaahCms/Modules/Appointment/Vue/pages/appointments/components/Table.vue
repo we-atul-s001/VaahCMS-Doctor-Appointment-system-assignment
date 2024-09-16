@@ -1,8 +1,8 @@
 <script setup>
 import { vaah } from '../../../vaahvue/pinia/vaah'
-import { usePatientAppointmentStore } from '../../../stores/store-patientappointments'
+import { useAppointmentStore } from '../../../stores/store-appointments'
 
-const store = usePatientAppointmentStore();
+const store = useAppointmentStore();
 const useVaah = vaah();
 
 </script>
@@ -28,19 +28,33 @@ const useVaah = vaah();
             <Column field="id" header="ID" :style="{width: '80px'}" :sortable="true">
             </Column>
 
-            <Column field="name" header="Name"
-                    class="overflow-wrap-anywhere"
-                    :sortable="true">
+             <Column field="patient" header="Patient Name"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
 
-                <template #body="prop">
-                    <Badge v-if="prop.data.deleted_at"
-                           value="Trashed"
-                           severity="danger"></Badge>
-                    {{prop.data.name}}
-                </template>
+                 <template #body="prop">
+                     {{prop.data.patient?.name}}
+                 </template>
 
-            </Column>
+             </Column>
+             <Column field="doctor" header="Doctor Name"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
 
+                 <template #body="prop">
+                     {{prop.data.doctor?.name}}
+                 </template>
+
+             </Column>
+             <Column field="date" header="Date and Slot"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     {{prop.data?.date}} at {{prop.data.slot_start_time}} - {{prop.data?.slot_end_time}}
+                 </template>
+
+             </Column>
 
                 <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
@@ -60,7 +74,7 @@ const useVaah = vaah();
 
                 <template #body="prop">
                     <InputSwitch v-model.bool="prop.data.is_active"
-                                 data-testid="patientappointments-table-is-active"
+                                 data-testid="appointments-table-is-active"
                                  v-bind:false-value="0"  v-bind:true-value="1"
                                  class="p-inputswitch-sm"
                                  @input="store.toggleIsActive(prop.data)">
@@ -77,19 +91,29 @@ const useVaah = vaah();
                     <div class="p-inputgroup ">
 
                         <Button class="p-button-tiny p-button-text"
-                                data-testid="patientappointments-table-to-view"
+                                data-testid="appoinments-table-to-view"
                                 v-tooltip.top="'View'"
                                 @click="store.toView(prop.data)"
                                 icon="pi pi-eye" />
 
                         <Button class="p-button-tiny p-button-text"
-                                data-testid="patientappointments-table-to-edit"
+                                data-testid="appoinments-table-to-edit"
                                 v-tooltip.top="'Update'"
                                 @click="store.toEdit(prop.data)"
                                 icon="pi pi-pencil" />
 
                         <Button class="p-button-tiny p-button-danger p-button-text"
-                                data-testid="patientappointments-table-action-trash"
+                                data-testid="appoinments-table-action-trash"
+                                v-if="store.isViewLarge() && !prop.data.deleted_at"
+                                @click="store.confirmDeleteTableItem( prop.data)"
+                                v-tooltip.top="'Cancel Appointment'"
+                                icon="pi pi-times" />
+
+
+
+
+                        <Button class="p-button-tiny p-button-danger p-button-text"
+                                data-testid="appoinments-table-action-trash"
                                 v-if="store.isViewLarge() && !prop.data.deleted_at"
                                 @click="store.itemAction('trash', prop.data)"
                                 v-tooltip.top="'Trash'"
@@ -97,7 +121,7 @@ const useVaah = vaah();
 
 
                         <Button class="p-button-tiny p-button-success p-button-text"
-                                data-testid="patientappointments-table-action-restore"
+                                data-testid="appoinments-table-action-restore"
                                 v-if="store.isViewLarge() && prop.data.deleted_at"
                                 @click="store.itemAction('restore', prop.data)"
                                 v-tooltip.top="'Restore'"
@@ -107,6 +131,7 @@ const useVaah = vaah();
                     </div>
 
                 </template>
+
 
 
             </Column>

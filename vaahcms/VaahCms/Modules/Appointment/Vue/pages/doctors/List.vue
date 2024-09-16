@@ -1,4 +1,4 @@
-<script setup>
+    <script setup>
 import {onMounted, reactive, ref} from "vue";
 import {useRoute} from 'vue-router';
 
@@ -121,7 +121,7 @@ const toggleCreateMenu = (event) => {
 
                 </template>
 
-                <Actions/>
+                    <Actions/>
 
                 <Table/>
 
