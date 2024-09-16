@@ -125,6 +125,16 @@ class Appointment extends VaahModel
 
         return $empty_item;
     }
+    public static function getFillableColumns()
+    {
+        $model = new self();
+        $except = $model->fill_except;
+        $fillable_columns = $model->getFillable();
+        $fillable_columns = array_diff(
+            $fillable_columns, $except
+        );
+        return $fillable_columns;
+    }
 
     //-------------------------------------------------
 
