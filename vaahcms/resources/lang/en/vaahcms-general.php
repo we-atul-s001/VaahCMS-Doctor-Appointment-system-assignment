@@ -1,4 +1,4 @@
-<?php 
+<?php
 return [
 
     /*
@@ -59,6 +59,7 @@ return [
     'is_active_required' => 'The is active option is required.',
     'status_required' => 'The status is required.',
     'saved_successfully' => 'Saved successfully.',
+    'appointment_booked_successfully' => 'Appointment booked successfully.',
     'action_successful' => 'Action was successful',
     'no_module_installed' => 'No module installed/downloaded',
     'something_went_wrong' => 'Something went wrong.',
