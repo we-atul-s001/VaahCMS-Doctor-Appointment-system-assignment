@@ -281,14 +281,13 @@ class Appointment extends VaahModel
     public static function checkDoctorSlot($data)
     {
         $timezone = Session::get('user_timezone');
-        $start_time = self::formatTime($data['slot_start_time'], $timezone, 'H:i:s');
-        $end_time = self::formatTime($data['slot_end_time'], $timezone, 'H:i:s');
+        $start_time = $data['slot_start_time'];
+        $end_time = $data['slot_end_time'];
 
-        $doctor_shift_time = Doctor::where(function ($query) use ($start_time, $end_time) {
-            $query->where('shift_start_time', '<=', $start_time)
-                ->where('shift_end_time', '>=', $end_time);
-        })->exists();
-
+        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
+            ->where('shift_start_time', '<=', $start_time)
+            ->where('shift_end_time', '>=', $end_time)
+            ->exists();
         if (!$doctor_shift_time) {
 
             return 'Invalid Slot';
