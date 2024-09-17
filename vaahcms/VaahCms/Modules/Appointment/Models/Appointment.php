@@ -280,18 +280,20 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function checkDoctorSlot($data)
     {
-        $start_time = Carbon::parse($data['slot_start_time'])
-            ->format('H:i:s');
-        $end_time = Carbon::parse($data['slot_end_time'])
-            ->format('H:i:s');
+        $timezone = Session::get('user_timezone');
+        $start_time = self::formatTime($data['slot_start_time'], $timezone, 'H:i:s');
+        $end_time = self::formatTime($data['slot_end_time'], $timezone, 'H:i:s');
+
         $doctor_shift_time = Doctor::where(function ($query) use ($start_time, $end_time) {
             $query->where('shift_start_time', '<=', $start_time)
                 ->where('shift_end_time', '>=', $end_time);
         })->exists();
+
         if (!$doctor_shift_time) {
 
             return 'Invalid Slot';
         }
+
         $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
         use ($start_time, $end_time) {
             $query->where('slot_start_time', '<', $end_time)
@@ -676,15 +678,16 @@ class Appointment extends VaahModel
         $doctor = Doctor::find($item['doctor_id']);
         $timezone = Session::get('user_timezone');
         $date = Carbon::parse($item['date'])->toDateString();
-        $slot_start_time = self::formatTime($item['slot_start_time'], $timezone);
-        $slot_end_time = self::formatTime($item['slot_end_time'], $timezone);
+
+        $start_time = $item['slot_start_time'];
+        $end_time = $item['slot_end_time'];
         $message = sprintf(
             'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled by doctor',
             $patient->name,
             $doctor->name,
             $date,
-            $slot_start_time,
-            $slot_end_time
+            $start_time,
+            $end_time
         );
         VaahMail::dispatchGenericMail($subject, $message, $patient->email);
         $item->forceDelete();
