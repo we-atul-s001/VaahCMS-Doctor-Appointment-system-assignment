@@ -599,7 +599,7 @@ class Doctor extends VaahModel
             'name' => 'required|max:150',
             'slug' => 'required|max:150',
             'email' => 'required|email',
-            'phone' => 'required|max:16',
+            'phone' => 'required|min:7|max:16',
             'specialization' => 'required|max:150',
         );
 

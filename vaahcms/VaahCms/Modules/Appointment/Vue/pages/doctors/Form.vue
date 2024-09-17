@@ -170,9 +170,10 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                 </VhField>
                 <VhField label="Phone">
                 <div class="p-inputgroup">
-                    <InputText class="w-full"
+                    <InputNumber class="w-full"
                                  placeholder="Enter the Phone"
                                  name="doctors-phone"
+                                 :useGrouping="false"
                                  data-testid="doctors-phone"
                                  v-model="store.item.phone" required/>
                     <div class="required-field hidden"></div>

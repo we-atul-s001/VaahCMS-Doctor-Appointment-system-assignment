@@ -171,10 +171,11 @@ const toggleFormMenu = (event) => {
 
                 <VhField label="Phone">
                     <div class="p-inputgroup">
-                        <InputText class="w-full"
+                        <InputNumber class="w-full"
                                    placeholder="Enter the Phone"
                                    name="patients-phone"
                                    data-testid="patients-phone"
+                                     :useGrouping="false"
                                    v-model="store.item.phone" required/>
                         <div class="required-field hidden"></div>
                     </div>
