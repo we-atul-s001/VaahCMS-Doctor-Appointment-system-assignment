@@ -60,6 +60,8 @@ return [
     'status_required' => 'The status is required.',
     'saved_successfully' => 'Saved successfully.',
     'appointment_booked_successfully' => 'Appointment booked successfully.',
+    'appointment_updated_successfully' => 'Appointment updated successfully.',
+    'appointment_cancelled_successfully' => 'Appointment cancel successfully.',
     'action_successful' => 'Action was successful',
     'no_module_installed' => 'No module installed/downloaded',
     'something_went_wrong' => 'Something went wrong.',
