@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use Illuminate\Validation\Validator;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
@@ -567,9 +568,11 @@ class Patient extends VaahModel
         $rules = array(
             'name' => 'required|max:150',
             'slug' => 'required|max:150',
+            'email' => 'required|email',
+            'phone' => 'required|min:7|max:16',
         );
 
-        $validator = \Validator::make($inputs, $rules);
+        $validator = Validator::make($inputs, $rules);
         if ($validator->fails()) {
             $messages = $validator->errors();
             $response['success'] = false;
