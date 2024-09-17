@@ -105,7 +105,7 @@ const useVaah = vaah();
                         <Button class="p-button-tiny p-button-danger p-button-text"
                                 data-testid="appoinments-table-action-trash"
                                 v-if="store.isViewLarge() && !prop.data.deleted_at"
-                                @click="store.confirmDeleteTableItem( prop.data)"
+                                @click="store.confirmToCancelAppointment( prop.data)"
                                 v-tooltip.top="'Cancel Appointment'"
                                 icon="pi pi-times" />
 

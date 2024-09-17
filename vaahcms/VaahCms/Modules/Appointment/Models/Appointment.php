@@ -603,7 +603,7 @@ class Appointment extends VaahModel
 
     }
 
-    //-------------------------------------------------
+    //--------------------Update the appointment-----------------------------
     public static function updateItem($request, $id)
     {
         $inputs = $request->all();
@@ -613,36 +613,53 @@ class Appointment extends VaahModel
             return $validation;
         }
 
-        $item = self::where('patient_id', $inputs['patient_id'])
-            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])->withTrashed()->first();
-        if ($item) {
-            $error_message = "This Patient has already appointment with doctor on this date " . $inputs['date'];
+
+        $item = self::where('id', $id)->withTrashed()->first();
+
+        if (!$item) {
+            $response['success'] = false;
+            $response['errors'][] = "Item not found.";
+            return $response;
+        }
+
+
+        $existingAppointment = self::where('patient_id', $inputs['patient_id'])
+            ->where('doctor_id', $inputs['doctor_id'])
+            ->where('date', $inputs['date'])
+            ->where('id', '!=', $id)
+            ->withTrashed()
+            ->first();
+
+        if ($existingAppointment) {
+            $error_message = "This patient already has an appointment with the doctor on " . $inputs['date'];
             $response['success'] = false;
             $response['errors'][] = $error_message;
             return $response;
         }
+
         $slot_exists = self::checkDoctorSlot($inputs);
-        if($slot_exists=='Invalid Slot')
-        {
-            $response['errors'][] = 'The selected slot does not come in the doctors shift.';
+        if ($slot_exists == 'Invalid Slot') {
+            $response['success'] = false;
+            $response['errors'][] = 'The selected slot does not come in the doctor\'s shift.';
             return $response;
-        }
-        elseif ($slot_exists === 'No Slot Available') {
-            $response['errors'][] = 'Slot Not available.';
+        } elseif ($slot_exists === 'No Slot Available') {
+            $response['success'] = false;
+            $response['errors'][] = 'Slot not available.';
             return $response;
         }
 
-        $item = self::where('id', $id)->withTrashed()->first();
         $item->fill($inputs);
         $item->save();
-        $subject = 'Appointment Scheduled Updated.';
 
+
+        $subject = 'Appointment Updated - Mail';
         self::sendAppointmentMail($inputs, $subject);
 
-        $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.saved_successfully");
-        return $response;
 
+        $response = self::getItem($item->id);
+        $response['messages'][] = trans("vaahcms-general.appointment_updated_successfully");
+
+        return $response;
     }
 
     //-------------------------------------------------
@@ -654,7 +671,7 @@ class Appointment extends VaahModel
             $response['errors'][] = trans("vaahcms-general.record_does_not_exist");
             return $response;
         }
-        $subject='Appointment Cancelled.';
+        $subject='Appointment Cancelled - Mail';
         $patient = Patient::find($item['patient_id']);
         $doctor = Doctor::find($item['doctor_id']);
         $timezone = Session::get('user_timezone');
@@ -662,7 +679,7 @@ class Appointment extends VaahModel
         $slot_start_time = self::formatTime($item['slot_start_time'], $timezone);
         $slot_end_time = self::formatTime($item['slot_end_time'], $timezone);
         $message = sprintf(
-            'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled.',
+            'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled by doctor',
             $patient->name,
             $doctor->name,
             $date,
@@ -673,7 +690,7 @@ class Appointment extends VaahModel
         $item->forceDelete();
         $response['success'] = true;
         $response['data'] = [];
-        $response['messages'][] = trans("vaahcms-general.record_has_been_deleted");
+        $response['messages'][] = trans("vaahcms-general.appointment_cancelled_successfully");
 
         return $response;
     }
