@@ -572,7 +572,7 @@ class Patient extends VaahModel
             'phone' => 'required|min:7|max:16',
         );
 
-        $validator = Validator::make($inputs, $rules);
+        $validator = \Validator::make($inputs, $rules);
         if ($validator->fails()) {
             $messages = $validator->errors();
             $response['success'] = false;
