@@ -1,10 +1,24 @@
 <script setup>
-import { vaah } from '../../../vaahvue/pinia/vaah'
-import { useDoctorStore } from '../../../stores/store-doctors'
+import {vaah} from '../../../vaahvue/pinia/vaah'
+import {useDoctorStore} from '../../../stores/store-doctors'
 
 const store = useDoctorStore();
 const useVaah = vaah();
 
+function formatTimeWithAmPm(time) {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+
+    let hour = date.getHours() % 12;
+    if (hour === 0) hour = 12;
+
+    return `${hour}:${minutes} ${amPm}`;
+}
 </script>
 
 <template>
@@ -44,7 +58,7 @@ const useVaah = vaah();
 
              <Column field="email" header="Email"
                      class="overflow-wrap-anywhere"
-                     style="width:150px;"
+                     style="width:500px;"
                      :sortable="true">
 
                  <template #body="prop">
@@ -66,13 +80,25 @@ const useVaah = vaah();
 
              </Column>
 
+             <Column field="totalAppointment" header="Appointments"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     <div style="display:flex; justify-content:center; align-items:center;">
+                         <Badge severity="info">{{ prop.data.appointments_count || 0 }}</Badge>
+                     </div>
+                 </template>
+
+
+             </Column>
              <Column field="specialization" header="Specialization"
                      class="overflow-wrap-anywhere"
                      :sortable="true">
 
                  <template #body="prop">
 
-                     {{prop.data.specialization}}
+                     {{prop.data.Specialization}}
                  </template>
 
              </Column>
@@ -83,7 +109,7 @@ const useVaah = vaah();
                      :sortable="true">
 
                  <template #body="prop">
-                     {{useVaah.strToSlug(prop.data.shift_start_time)}}
+                     {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
 
                  </template>
 
@@ -95,7 +121,7 @@ const useVaah = vaah();
                      :sortable="true">
 
                  <template #body="prop">
-                     {{useVaah.strToSlug(prop.data.shift_end_time)}}
+                     {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
                  </template>
 
              </Column>
