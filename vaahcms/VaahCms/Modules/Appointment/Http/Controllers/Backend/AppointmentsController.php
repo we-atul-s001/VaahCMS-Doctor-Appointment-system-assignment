@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use VaahCms\Modules\Appointment\Models\Appointment;
 use VaahCms\Modules\Appointment\Models\Doctor;
 use VaahCms\Modules\Appointment\Models\Patient;
@@ -21,12 +22,19 @@ class AppointmentsController extends Controller
 
     public function getAssets(Request $request)
     {
+        if (!Auth::user()->hasPermission('appointment-has-access-of-appointment')) {
+            $response['success'] = false;
+            $response['errors'][] = trans("vaahcms::messages.permission_denied");
+
+            return response()->json($response);
+        }
+
 
         try{
 
             $data = [];
 
-            $data['permission'] = [];
+            $data['permission'] = \Auth::user()->permissions(true);
             $data['rows'] = config('vaahcms.per_page');
 
             $data['fillable']['columns'] = Appointment::getFillableColumns();
