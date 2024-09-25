@@ -85,9 +85,8 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     <div style=" display:flex; justify-content:center; align-items:center;">
-                         <Badge v-if="prop.data.appointments_count > 0"
-                                severity="info">{{ prop.data.appointments_count }}</Badge>
+                     <div style="display:flex; justify-content:center; align-items:center;">
+                         <Badge severity="info">{{ prop.data.appointments_count || 0 }}</Badge>
                      </div>
                  </template>
 
