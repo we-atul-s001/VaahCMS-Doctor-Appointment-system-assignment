@@ -44,7 +44,7 @@ const useVaah = vaah();
 
              <Column field="email" header="Email"
                      class="overflow-wrap-anywhere"
-                     style="width:150px;"
+                     style="width:500px;"
                      :sortable="true">
 
                  <template #body="prop">
@@ -66,13 +66,26 @@ const useVaah = vaah();
 
              </Column>
 
+             <Column field="totalAppointment" header="Appointments"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     <div style=" display:flex; justify-content:center; align-items:center;">
+                         <Badge v-if="prop.data.appointments_count > 0"
+                                severity="info">{{ prop.data.appointments_count }}</Badge>
+                     </div>
+                 </template>
+
+
+             </Column>
              <Column field="specialization" header="Specialization"
                      class="overflow-wrap-anywhere"
                      :sortable="true">
 
                  <template #body="prop">
 
-                     {{prop.data.specialization}}
+                     {{prop.data.Specialization}}
                  </template>
 
              </Column>
