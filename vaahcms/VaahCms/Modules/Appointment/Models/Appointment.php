@@ -255,9 +255,8 @@ class Appointment extends VaahModel
     {
         $doctor = Doctor::find($inputs['doctor_id']);
         $patient = Patient::find($inputs['patient_id']);
-        $timezone = Session::get('user_timezone');
         $date = Carbon::parse($inputs['date'])->toDateString();
-        $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
+        $slot_start_time = self::formatTime($inputs['slot_start_time']);
         $message_patient = sprintf(
             'Hello, %s, You have an appointment is scheduled with Dr. %s on %s at %s',
             $patient->name,
@@ -652,7 +651,7 @@ class Appointment extends VaahModel
         $subject='Appointment Cancelled - Mail';
         $patient = Patient::find($item['patient_id']);
         $doctor = Doctor::find($item['doctor_id']);
-        $timezone = Session::get('user_timezone');
+
         $date = Carbon::parse($item['date'])->toDateString();
 
         $item->status = 0;
