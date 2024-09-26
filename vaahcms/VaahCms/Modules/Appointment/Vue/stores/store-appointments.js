@@ -664,6 +664,9 @@ export const useAppointmentStore = defineStore({
         {
             return this.view === 'large';
         },
+        hasPermission(permissions, slug) {
+            return vaah.hasPermission(permissions, slug);
+        },
         //---------------------------------------------------------------------
         getActionWidth()
         {

@@ -1,0 +1,21 @@
+[
+
+    {
+        "name": "Has Access of Doctor",
+        "module": "Appointment",
+        "section": "Doctor",
+        "details": "This will allow user to see the link of doctor section."
+    },
+    {
+        "name": "Has Access of Appointment",
+        "module": "Appointment",
+        "section": "appointments",
+        "details": "This will allow user to see the link of appointment section."
+    },
+    {
+        "name": "Has Not Access of Patient",
+        "module": "Appointment",
+        "section": "patient",
+        "details": "This will allow user to see the link of patient section."
+    }
+]
