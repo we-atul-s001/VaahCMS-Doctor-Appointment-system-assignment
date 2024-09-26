@@ -65,7 +65,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data?.date}} at {{formatTimeWithAmPm(prop.data.slot_start_time)}} - {{formatTimeWithAmPm(prop.data?.slot_end_time)}}
+                     {{prop.data?.date}} at {{formatTimeWithAmPm(prop.data.slot_start_time)}}
                  </template>
 
              </Column>

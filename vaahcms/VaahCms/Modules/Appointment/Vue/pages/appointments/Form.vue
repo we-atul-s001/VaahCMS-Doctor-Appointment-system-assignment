@@ -208,17 +208,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                                   yearPicker:{class:'w-15rem'}
                               }"
                             time-only
-                            placeholder="Appointment Start Time"
-                        />
-                        <Calendar
-                            v-model="store.item.slot_end_time"
-                            :minDate="isValidTime(store.item.slot_start_time) ? store.item.slot_start_time : null"
-                            :pt="{
-                                  monthPicker:{class:'w-15rem'},
-                                  yearPicker:{class:'w-15rem'}
-                              }"
-                            time-only
-                            placeholder="Appointment End Time"
+                            placeholder="Appointment Time"
                         />
                     </div>
                 </VhField>

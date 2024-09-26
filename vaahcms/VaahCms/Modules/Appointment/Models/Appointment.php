@@ -258,22 +258,20 @@ class Appointment extends VaahModel
         $timezone = Session::get('user_timezone');
         $date = Carbon::parse($inputs['date'])->toDateString();
         $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
-        $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
         $message_patient = sprintf(
-            'Hello, %s, You have an appointment is scheduled with Dr. %s on %s from %s to %s.',
+            'Hello, %s, You have an appointment is scheduled with Dr. %s on %s at %s',
             $patient->name,
             $doctor->name,
             $date,
             $slot_start_time,
-            $slot_end_time
+
         );
         $message_doctor=sprintf(
-            'Hello, DR. %s, You have an appointment scheduled with Patient %s on %s from %s to %s.',
+            'Hello, DR. %s, You have an appointment scheduled with Patient %s on %s at %s',
             $doctor->name,
             $patient->name,
             $date,
-            $slot_start_time,
-            $slot_end_time
+            $slot_start_time
         );
         VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
         VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
@@ -286,11 +284,10 @@ class Appointment extends VaahModel
     {
         $timezone = Session::get('user_timezone');
         $start_time = $data['slot_start_time'];
-        $end_time = $data['slot_end_time'];
+
 
         $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
             ->where('shift_start_time', '<=', $start_time)
-            ->where('shift_end_time', '>=', $end_time)
             ->exists();
         if (!$doctor_shift_time) {
 
@@ -298,8 +295,8 @@ class Appointment extends VaahModel
         }
 
         $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
-        use ($start_time, $end_time) {
-            $query->where('slot_start_time', '<', $end_time)
+        use ($start_time) {
+            $query
                 ->where('slot_end_time', '>', $start_time);
         })->withTrashed()->exists();
         if ($slots_exist) {
@@ -626,7 +623,7 @@ class Appointment extends VaahModel
             $response['errors'][] = "Item not found.";
             return $response;
         }
-        
+
 
         $item->fill($inputs);
         $item->save();
@@ -710,7 +707,7 @@ class Appointment extends VaahModel
     {
 
         $rules = array(
-            'slot_end_time' => 'required',
+
             'slot_start_time' => 'required',
             'date' => 'required',
             'doctor_id' => 'required',
