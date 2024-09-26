@@ -2,7 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Auth;
 use VaahCms\Modules\Appointment\Models\Patient;
 
 
@@ -20,7 +19,14 @@ class PatientsController extends Controller
 
     public function getAssets(Request $request)
     {
+        $permission_slug = 'appointment-has-not-access-of-patient';
+        if(!\Auth::user()->hasPermission($permission_slug))
+        {
+            $response['success'] = false;
+            $response['errors'][] = trans("vaahcms::messages.permission_denied");
 
+            return response()->json($response);
+        }
         try{
 
             $data = [];
