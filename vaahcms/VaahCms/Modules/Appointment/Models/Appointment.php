@@ -678,8 +678,8 @@ class Appointment extends VaahModel
         $timezone = Session::get('user_timezone');
         $date = Carbon::parse($item['date'])->toDateString();
 
-        $start_time = $item['slot_start_time'];
-        $end_time = $item['slot_end_time'];
+        $start_time = self::formatTime($item['slot_start_time'], $timezone);
+        $end_time = self::formatTime($item['slot_end_time'], $timezone);
         $message = sprintf(
             'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled by doctor',
             $patient->name,
