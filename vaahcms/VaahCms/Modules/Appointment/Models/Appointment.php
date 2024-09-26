@@ -37,6 +37,7 @@ class Appointment extends VaahModel
         'date',
         'slot_end_time',
         'doctor_id',
+        'status',
         'is_active',
         'created_by',
         'updated_by',
@@ -226,6 +227,9 @@ class Appointment extends VaahModel
 
         $item = new self();
         $item->fill($inputs);
+
+        $item->status = 1;
+
         $item->save();
 
         $subject = 'Appointment Booked - Mail';
@@ -667,6 +671,7 @@ class Appointment extends VaahModel
     public static function deleteItem($request, $id): array
     {
         $item = self::where('id', $id)->withTrashed()->first();
+
         if (!$item) {
             $response['success'] = false;
             $response['errors'][] = trans("vaahcms-general.record_does_not_exist");
@@ -678,18 +683,17 @@ class Appointment extends VaahModel
         $timezone = Session::get('user_timezone');
         $date = Carbon::parse($item['date'])->toDateString();
 
-        $start_time = self::formatTime($item['slot_start_time'], $timezone);
-        $end_time = self::formatTime($item['slot_end_time'], $timezone);
+        $item->status = 0;
+        $item->save();
         $message = sprintf(
-            'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled by doctor',
+            'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',
             $patient->name,
             $doctor->name,
-            $date,
-            $start_time,
-            $end_time
+            $date
         );
+
         VaahMail::dispatchGenericMail($subject, $message, $patient->email);
-        $item->forceDelete();
+
         $response['success'] = true;
         $response['data'] = [];
         $response['messages'][] = trans("vaahcms-general.appointment_cancelled_successfully");
