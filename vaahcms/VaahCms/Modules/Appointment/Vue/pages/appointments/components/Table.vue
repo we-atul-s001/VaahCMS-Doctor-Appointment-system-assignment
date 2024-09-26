@@ -141,15 +141,6 @@ function formatTimeWithAmPm(time) {
 
 
 
-
-                        <Button class="p-button-tiny p-button-danger p-button-text"
-                                data-testid="appoinments-table-action-trash"
-                                v-if="store.isViewLarge() && !prop.data.deleted_at"
-                                @click="store.itemAction('trash', prop.data)"
-                                v-tooltip.top="'Trash'"
-                                icon="pi pi-trash" />
-
-
                         <Button class="p-button-tiny p-button-success p-button-text"
                                 data-testid="appoinments-table-action-restore"
                                 v-if="store.isViewLarge() && prop.data.deleted_at"
