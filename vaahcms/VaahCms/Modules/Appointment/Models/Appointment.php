@@ -203,26 +203,20 @@ class Appointment extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-//         check if Slot exist
-        $item = self::where('patient_id', $inputs['patient_id'])
-            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])->withTrashed()->first();
-        if ($item) {
-            $error_message = "This Patient has already appointment " . $inputs['date'];
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
-        }
 
 
-        $slot_exists = self::checkDoctorSlot($inputs);
-        if($slot_exists=='Invalid Slot')
-        {
-            $response['errors'][] = 'The Selected Slot is not available for Doctor.';
-            return $response;
-        }
-        elseif ($slot_exists === 'No Slot Available') {
-            $response['errors'][] = 'Slot Not available.';
-            return $response;
+        $slot_check_result = self::checkDoctorSlot($inputs);
+
+        if ($slot_check_result === 'Invalid Slot') {
+            return [
+                'success' => false,
+                'errors' => ['The selected slot is not available for the doctor.']
+            ];
+        } elseif ($slot_check_result === 'No Slot Available') {
+            return [
+                'success' => false,
+                'errors' => ['Slot not available.']
+            ];
         }
 
         $item = new self();
@@ -243,10 +237,10 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function formatTime($time, $timezone, $format = 'H:i:s A')
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
-            ->setTimezone($timezone)
+            ->timezone('ASIA/KOLKATA')
             ->format($format);
     }
 
@@ -282,30 +276,37 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function checkDoctorSlot($data)
     {
-        $timezone = Session::get('user_timezone');
-        $start_time = $data['slot_start_time'];
+
+        $start_time = self::formatTime($data['slot_start_time']);
+
+        $doctor_shift = Doctor::where('id', $data['doctor_id'])
+            ->first(['shift_start_time', 'shift_end_time']);
 
 
-        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
-            ->where('shift_start_time', '<=', $start_time)
-            ->exists();
-        if (!$doctor_shift_time) {
-
-            return 'Invalid Slot';
+        if ($doctor_shift) {
+            $isValidShift = $start_time >= $doctor_shift->shift_start_time && $start_time <= $doctor_shift->shift_end_time;
+            if (!$isValidShift) {
+                return 'Invalid Slot';
+            }
+        } else {
+            return 'Doctor Not Found';
         }
 
-        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
-        use ($start_time) {
-            $query
-                ->where('slot_end_time', '>', $start_time);
-        })->withTrashed()->exists();
+        $slots_exist = self::where('doctor_id', $data['doctor_id'])
+            ->where('date', $data['date'])
+            ->where(function ($query) use ($start_time) {
+                $query->where('slot_start_time', '>', $start_time);
+            })
+            ->withTrashed()
+            ->exists();
+
         if ($slots_exist) {
             return 'No Slot Available';
+        } else {
+            return false;
         }
-        else{
-            return false;        }
-
     }
+
 
 
     //-------------------------------------------------
@@ -623,7 +624,16 @@ class Appointment extends VaahModel
             $response['errors'][] = "Item not found.";
             return $response;
         }
-
+        $slot_exists = self::checkDoctorSlot($inputs);
+        if($slot_exists=='Invalid Slot')
+        {
+            $response['errors'][] = 'The Selected Slot is not available for Doctor.';
+            return $response;
+        }
+        elseif ($slot_exists === 'No Slot Available') {
+            $response['errors'][] = 'Slot Not available.';
+            return $response;
+        }
 
         $item->fill($inputs);
         $item->save();

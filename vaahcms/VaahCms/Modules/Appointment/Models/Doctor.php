@@ -214,8 +214,8 @@ class Doctor extends VaahModel
                 $timezone = Session::get('user_timezone');
 
                 return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
+                    ->timezone('ASIA/KOLKATA')
+                    ->format('H:i:s A');
             },
         );
     }
@@ -226,8 +226,8 @@ class Doctor extends VaahModel
             get: function (string $value = null,) {
                 $timezone = Session::get('user_timezone');
                 return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
+                    ->timezone('ASIA/KOLKATA')
+                    ->format('H:i:s A');
             },
         );
     }
