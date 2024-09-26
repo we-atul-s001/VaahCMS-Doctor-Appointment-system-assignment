@@ -626,32 +626,7 @@ class Appointment extends VaahModel
             $response['errors'][] = "Item not found.";
             return $response;
         }
-
-
-        $existingAppointment = self::where('patient_id', $inputs['patient_id'])
-            ->where('doctor_id', $inputs['doctor_id'])
-            ->where('date', $inputs['date'])
-            ->where('id', '!=', $id)
-            ->withTrashed()
-            ->first();
-
-        if ($existingAppointment) {
-            $error_message = "This patient already has an appointment with the doctor on " . $inputs['date'];
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
-        }
-
-        $slot_exists = self::checkDoctorSlot($inputs);
-        if ($slot_exists == 'Invalid Slot') {
-            $response['success'] = false;
-            $response['errors'][] = 'The selected slot does not come in the doctor\'s shift.';
-            return $response;
-        } elseif ($slot_exists === 'No Slot Available') {
-            $response['success'] = false;
-            $response['errors'][] = 'Slot not available.';
-            return $response;
-        }
+        
 
         $item->fill($inputs);
         $item->save();
