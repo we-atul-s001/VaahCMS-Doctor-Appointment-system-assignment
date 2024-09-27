@@ -243,10 +243,10 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function formatTime($time, $timezone, $format = 'H:i:s A')
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
-            ->setTimezone($timezone)
+            ->setTimezone("ASIA/KOLKATA")
             ->format($format);
     }
 
