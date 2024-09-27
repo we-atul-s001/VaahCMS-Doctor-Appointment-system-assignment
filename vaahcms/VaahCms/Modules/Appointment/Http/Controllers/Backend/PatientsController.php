@@ -19,7 +19,7 @@ class PatientsController extends Controller
 
     public function getAssets(Request $request)
     {
-        $permission_slug = 'appointment-has-not-access-of-patient';
+        $permission_slug = 'appointment-has-access-of-patient';
         if(!\Auth::user()->hasPermission($permission_slug))
         {
             $response['success'] = false;
@@ -31,7 +31,7 @@ class PatientsController extends Controller
 
             $data = [];
 
-            $data['permission'] = [];
+            $data['permission'] = \Auth::user()->permissions(true);
             $data['rows'] = config('vaahcms.per_page');
 
             $data['fillable']['columns'] = Patient::getFillableColumns();

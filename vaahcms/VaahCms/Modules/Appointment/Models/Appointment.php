@@ -243,10 +243,10 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function formatTime($time, $timezone, $format = 'H:i:s A')
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
-            ->setTimezone($timezone)
+            ->setTimezone("ASIA/KOLKATA")
             ->format($format);
     }
 
@@ -588,10 +588,10 @@ class Appointment extends VaahModel
     {
 
         $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser', 'deletedByUser','doctor'])
+            ->with(['createdByUser', 'updatedByUser'])
             ->withTrashed()
-            ->first();
-
+            ->first()
+            ->makeHidden('slot_end_time', 'meta', 'deleted_at');
         if (!$item) {
             $response['success'] = false;
             $response['errors'][] = 'Record not found with ID: ' . $id;
