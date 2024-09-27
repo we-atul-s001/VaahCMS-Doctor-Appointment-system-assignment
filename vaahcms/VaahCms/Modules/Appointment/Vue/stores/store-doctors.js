@@ -596,6 +596,9 @@ export const useDoctorStore = defineStore({
             await this.updateUrlQueryString(this.query);
             await this.getList();
         },
+        hasPermission(permissions, slug) {
+            return vaah().hasPermission(permissions, slug);
+        },
         //---------------------------------------------------------------------
         async resetQuery()
         {
