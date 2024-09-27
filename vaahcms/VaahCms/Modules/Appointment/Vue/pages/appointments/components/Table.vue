@@ -75,8 +75,8 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     <div style="display:flex; justify-content:center; align-items:center;">
-                         <Badge style="width: 100px;" :severity="prop.data.status === 1 ? 'success' : 'danger'">
+                     <div>
+                         <Badge style="width: 80px; display: flex;  justify-content:center; align-items:center;" :severity="prop.data.status === 1 ? 'success' : 'danger'">
                              {{ prop.data.status === 1 ? 'Booked' : 'Cancelled' }}
                          </Badge>
                      </div>
