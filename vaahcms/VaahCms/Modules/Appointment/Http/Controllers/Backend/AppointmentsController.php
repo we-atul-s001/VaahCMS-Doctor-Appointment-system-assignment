@@ -22,13 +22,17 @@ class AppointmentsController extends Controller
 
     public function getAssets(Request $request)
     {
-        if (!Auth::user()->hasPermission('appointment-has-access-of-appointment')) {
+
+        $permission_slug = 'appointment-has-access-of-doctor';
+        $permission_slug_patient = 'appointment-has-access-of-patient';
+
+        if(!\Auth::user()->hasPermission($permission_slug) && !\Auth::user()->hasPermission($permission_slug_patient))
+        {
             $response['success'] = false;
             $response['errors'][] = trans("vaahcms::messages.permission_denied");
 
             return response()->json($response);
         }
-
 
         try{
 

@@ -224,6 +224,9 @@ export const useAppointmentStore = defineStore({
                 this.list = data;
             }
         },
+        hasPermission(permissions, slug) {
+            return vaah().hasPermission(permissions, slug);
+        },
         //---------------------------------------------------------------------
 
         async getItem(id) {
@@ -651,6 +654,7 @@ export const useAppointmentStore = defineStore({
             }
             this.$router.push({name: 'appointments.view', params:{id:item.id},query:this.query})
         },
+
         //---------------------------------------------------------------------
         toEdit(item)
         {

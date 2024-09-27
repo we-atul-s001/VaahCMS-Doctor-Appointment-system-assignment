@@ -37,6 +37,7 @@ class Appointment extends VaahModel
         'date',
         'slot_end_time',
         'doctor_id',
+        'status',
         'is_active',
         'created_by',
         'updated_by',
@@ -226,6 +227,9 @@ class Appointment extends VaahModel
 
         $item = new self();
         $item->fill($inputs);
+
+        $item->status = 1;
+
         $item->save();
 
         $subject = 'Appointment Booked - Mail';
@@ -239,10 +243,10 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function formatTime($time, $timezone, $format = 'H:i:s A')
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
-            ->setTimezone($timezone)
+            ->setTimezone("ASIA/KOLKATA")
             ->format($format);
     }
 
@@ -251,25 +255,22 @@ class Appointment extends VaahModel
     {
         $doctor = Doctor::find($inputs['doctor_id']);
         $patient = Patient::find($inputs['patient_id']);
-        $timezone = Session::get('user_timezone');
         $date = Carbon::parse($inputs['date'])->toDateString();
-        $slot_start_time = self::formatTime($inputs['slot_start_time'], $timezone);
-        $slot_end_time = self::formatTime($inputs['slot_end_time'], $timezone);
+        $slot_start_time = self::formatTime($inputs['slot_start_time']);
         $message_patient = sprintf(
-            'Hello, %s, You have an appointment is scheduled with Dr. %s on %s from %s to %s.',
+            'Hello, %s, You have an appointment is scheduled with Dr. %s on %s at %s',
             $patient->name,
             $doctor->name,
             $date,
             $slot_start_time,
-            $slot_end_time
+
         );
         $message_doctor=sprintf(
-            'Hello, DR. %s, You have an appointment scheduled with Patient %s on %s from %s to %s.',
+            'Hello, DR. %s, You have an appointment scheduled with Patient %s on %s at %s',
             $doctor->name,
             $patient->name,
             $date,
-            $slot_start_time,
-            $slot_end_time
+            $slot_start_time
         );
         VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
         VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
@@ -282,11 +283,10 @@ class Appointment extends VaahModel
     {
         $timezone = Session::get('user_timezone');
         $start_time = $data['slot_start_time'];
-        $end_time = $data['slot_end_time'];
+
 
         $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
             ->where('shift_start_time', '<=', $start_time)
-            ->where('shift_end_time', '>=', $end_time)
             ->exists();
         if (!$doctor_shift_time) {
 
@@ -294,8 +294,8 @@ class Appointment extends VaahModel
         }
 
         $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
-        use ($start_time, $end_time) {
-            $query->where('slot_start_time', '<', $end_time)
+        use ($start_time) {
+            $query
                 ->where('slot_end_time', '>', $start_time);
         })->withTrashed()->exists();
         if ($slots_exist) {
@@ -588,10 +588,10 @@ class Appointment extends VaahModel
     {
 
         $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser', 'deletedByUser','doctor'])
+            ->with(['createdByUser', 'updatedByUser'])
             ->withTrashed()
-            ->first();
-
+            ->first()
+            ->makeHidden('slot_end_time', 'meta', 'deleted_at');
         if (!$item) {
             $response['success'] = false;
             $response['errors'][] = 'Record not found with ID: ' . $id;
@@ -624,31 +624,6 @@ class Appointment extends VaahModel
         }
 
 
-        $existingAppointment = self::where('patient_id', $inputs['patient_id'])
-            ->where('doctor_id', $inputs['doctor_id'])
-            ->where('date', $inputs['date'])
-            ->where('id', '!=', $id)
-            ->withTrashed()
-            ->first();
-
-        if ($existingAppointment) {
-            $error_message = "This patient already has an appointment with the doctor on " . $inputs['date'];
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
-        }
-
-        $slot_exists = self::checkDoctorSlot($inputs);
-        if ($slot_exists == 'Invalid Slot') {
-            $response['success'] = false;
-            $response['errors'][] = 'The selected slot does not come in the doctor\'s shift.';
-            return $response;
-        } elseif ($slot_exists === 'No Slot Available') {
-            $response['success'] = false;
-            $response['errors'][] = 'Slot not available.';
-            return $response;
-        }
-
         $item->fill($inputs);
         $item->save();
 
@@ -667,6 +642,7 @@ class Appointment extends VaahModel
     public static function deleteItem($request, $id): array
     {
         $item = self::where('id', $id)->withTrashed()->first();
+
         if (!$item) {
             $response['success'] = false;
             $response['errors'][] = trans("vaahcms-general.record_does_not_exist");
@@ -675,21 +651,20 @@ class Appointment extends VaahModel
         $subject='Appointment Cancelled - Mail';
         $patient = Patient::find($item['patient_id']);
         $doctor = Doctor::find($item['doctor_id']);
-        $timezone = Session::get('user_timezone');
+
         $date = Carbon::parse($item['date'])->toDateString();
 
-        $start_time = $item['slot_start_time'];
-        $end_time = $item['slot_end_time'];
+        $item->status = 0;
+        $item->save();
         $message = sprintf(
-            'Hello %s, Your appointment with Dr. %s on %s from %s to %s is cancelled by doctor',
+            'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',
             $patient->name,
             $doctor->name,
-            $date,
-            $start_time,
-            $end_time
+            $date
         );
+
         VaahMail::dispatchGenericMail($subject, $message, $patient->email);
-        $item->forceDelete();
+
         $response['success'] = true;
         $response['data'] = [];
         $response['messages'][] = trans("vaahcms-general.appointment_cancelled_successfully");
@@ -731,7 +706,7 @@ class Appointment extends VaahModel
     {
 
         $rules = array(
-            'slot_end_time' => 'required',
+
             'slot_start_time' => 'required',
             'date' => 'required',
             'doctor_id' => 'required',

@@ -65,8 +65,23 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data?.date}} at {{formatTimeWithAmPm(prop.data.slot_start_time)}} - {{formatTimeWithAmPm(prop.data?.slot_end_time)}}
+                     {{prop.data?.date}} at {{formatTimeWithAmPm(prop.data.slot_start_time)}}
                  </template>
+
+             </Column>
+
+             <Column field="status" header="Status"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     <div>
+                         <Badge style="width: 80px; display: flex;  justify-content:center; align-items:center;" :severity="prop.data.status === 1 ? 'success' : 'danger'">
+                             {{ prop.data.status === 1 ? 'Booked' : 'Cancelled' }}
+                         </Badge>
+                     </div>
+                 </template>
+
 
              </Column>
 
@@ -112,26 +127,18 @@ function formatTimeWithAmPm(time) {
 
                         <Button class="p-button-tiny p-button-text"
                                 data-testid="appoinments-table-to-edit"
+                                v-if="prop.data.status !== 0 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
                                 v-tooltip.top="'Update'"
                                 @click="store.toEdit(prop.data)"
                                 icon="pi pi-pencil" />
 
                         <Button class="p-button-tiny p-button-danger p-button-text"
                                 data-testid="appoinments-table-action-trash"
-                                v-if="store.isViewLarge() && !prop.data.deleted_at"
+                                v-if="store.isViewLarge() && !prop.data.deleted_at && prop.data.status !== 0"
                                 @click="store.confirmToCancelAppointment( prop.data)"
                                 v-tooltip.top="'Cancel Appointment'"
                                 icon="pi pi-times" />
 
-
-
-
-                        <Button class="p-button-tiny p-button-danger p-button-text"
-                                data-testid="appoinments-table-action-trash"
-                                v-if="store.isViewLarge() && !prop.data.deleted_at"
-                                @click="store.itemAction('trash', prop.data)"
-                                v-tooltip.top="'Trash'"
-                                icon="pi pi-trash" />
 
 
                         <Button class="p-button-tiny p-button-success p-button-text"

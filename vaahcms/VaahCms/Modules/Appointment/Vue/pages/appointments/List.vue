@@ -18,7 +18,7 @@ const confirm = useConfirm();
 
 
 onMounted(async () => {
-    document.title = 'Appointments - Appointment';
+    document.title = 'Book Appointments - Appointment';
     store.item = null;
     /**
      * call onLoad action when List view loads
@@ -73,7 +73,7 @@ const toggleCreateMenu = (event) => {
 
                     <div class="flex flex-row">
                         <div >
-                            <b class="mr-1">Appointments</b>
+                            <b class="mr-1">Book Appointments</b>
                             <Badge v-if="store.list && store.list.total > 0"
                                    :value="store.list.total">
                             </Badge>
@@ -87,7 +87,7 @@ const toggleCreateMenu = (event) => {
 
                     <div class="p-inputgroup">
 
-                    <Button data-testid="appointments-list-create"
+                    <Button v-if="!store.assets.permission.includes('appointment-has-access-of-doctor')" data-testid="appointments-list-create"
                             class="p-button-sm"
                             @click="store.toForm()">
                         <i class="pi pi-plus mr-1"></i>

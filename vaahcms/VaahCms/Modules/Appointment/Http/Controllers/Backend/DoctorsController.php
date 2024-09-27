@@ -20,12 +20,20 @@ class DoctorsController extends Controller
 
     public function getAssets(Request $request)
     {
+        $permission_slug = 'appointment-has-access-of-doctor';
 
+        if(!\Auth::user()->hasPermission($permission_slug))
+        {
+            $response['success'] = false;
+            $response['errors'][] = trans("vaahcms::messages.permission_denied");
+
+            return response()->json($response);
+        }
         try{
 
             $data = [];
 
-            $data['permission'] = [];
+            $data['permission'] =$data['permission'] =  \Auth::user()->permissions(true);;
             $data['rows'] = config('vaahcms.per_page');
 
             $data['fillable']['columns'] = Doctor::getFillableColumns();
