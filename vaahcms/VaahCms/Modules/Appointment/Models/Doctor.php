@@ -88,7 +88,7 @@ class Doctor extends VaahModel
 
     public function getAppointmentsCountAttribute(): int
     {
-        return $this->appointments()->count();
+        return $this->appointments()->where('status', '!=', 0)->count();
     }
 
 
