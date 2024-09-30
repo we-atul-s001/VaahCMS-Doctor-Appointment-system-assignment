@@ -85,7 +85,21 @@ function formatTimeWithAmPm(time) {
 
              </Column>
 
-                <Column field="updated_at" header="Updated"
+             <Column
+
+                     field="reason"
+                     header="Reason"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     {{ prop.data?.reason || 'N/A'}}
+                 </template>
+
+             </Column>
+
+
+             <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
                         style="width:150px;"
                         :sortable="true">
