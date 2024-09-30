@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
@@ -219,6 +220,13 @@ class Doctor extends VaahModel
             },
         );
     }
+    public static function formatTime($time, $format = 'H:i:s A')
+    {
+        return Carbon::parse($time)
+            ->setTimezone("ASIA/KOLKATA")
+            ->format($format);
+    }
+
     //-------------------------------------------------
     protected function shiftEndTime(): Attribute
     {
@@ -519,44 +527,103 @@ class Doctor extends VaahModel
     {
         $inputs = $request->all();
 
+        // Validate the inputs
         $validation = self::validation($inputs);
         if (!$validation['success']) {
             return $validation;
         }
 
-        // check if name exist
+        // Check if name already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
-            ->where('name', $inputs['name'])->first();
+            ->where('name', $inputs['name'])
+            ->first();
 
         if ($item) {
-            $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
+            $error_message = "This name already exists" . ($item->deleted_at ? ' in trash.' : '.');
+            return [
+                'success' => false,
+                'errors' => [$error_message]
+            ];
         }
 
-        // check if slug exist
+        // Check if slug already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
-            ->where('slug', $inputs['slug'])->first();
+            ->where('slug', $inputs['slug'])
+            ->first();
 
         if ($item) {
-            $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
+            $error_message = "This slug already exists" . ($item->deleted_at ? ' in trash.' : '.');
+            return [
+                'success' => false,
+                'errors' => [$error_message]
+            ];
         }
 
-        $item = self::where('id', $id)->withTrashed()->first();
+        $item = self::where('id', $id)
+            ->withTrashed()
+            ->first();
+
+        $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
+            ($item->shift_end_time != $inputs['shift_end_time']);
+
         $item->fill($inputs);
         $item->save();
+
+        if ($working_hours_changed) {
+
+            $appointments = Appointment::where('doctor_id', $id)
+                ->where('patient_id', '!=', null)
+                ->get();
+
+
+            foreach ($appointments as $appointment) {
+
+                $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
+                self::sendRescheduleMail($appointment, $subject);
+
+
+                $appointment->delete();
+            }
+        }
 
         $response = self::getItem($item->id);
         $response['messages'][] = trans("vaahcms-general.saved_successfully");
         return $response;
 
     }
+
+    public static function sendRescheduleMail($appointment, $subject)
+    {
+
+        $doctor = Doctor::find($appointment->doctor_id);
+        $patient = Patient::find($appointment->patient_id);
+        $date = Carbon::parse($appointment->date)->toDateString();
+        $slot_start_time = self::formatTime($appointment->slot_start_time);
+
+        $message_patient = sprintf(
+            'Hello, %s. Unfortunately, your appointment with Dr. %s on %s at %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment.',
+            $patient->name,
+            $doctor->name,
+            $date,
+            $slot_start_time
+        );
+
+
+        $message_doctor = sprintf(
+            'Hello, Dr. %s. Your appointment with %s on %s at %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
+            $doctor->name,
+            $patient->name,
+            $date,
+            $slot_start_time
+        );
+
+
+        VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
+        VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
+    }
+
     //-------------------------------------------------
     public static function deleteItem($request, $id): array
     {
