@@ -77,7 +77,7 @@ function formatTimeWithAmPm(time) {
                  <template #body="prop">
                      <div>
                          <Badge style="width: 80px; display: flex;  justify-content:center; align-items:center;" :severity="prop.data.status === 1 ? 'success' : 'danger'">
-                             {{ prop.data.status === 1 ? 'Booked' : 'Cancelled' }}
+                             {{ prop.data.status === 1 ? 'Booked' : 'Cancelled'}}
                          </Badge>
                      </div>
                  </template>
@@ -127,7 +127,6 @@ function formatTimeWithAmPm(time) {
 
                         <Button class="p-button-tiny p-button-text"
                                 data-testid="appoinments-table-to-edit"
-                                v-if="prop.data.status !== 0 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
                                 v-tooltip.top="'Update'"
                                 @click="store.toEdit(prop.data)"
                                 icon="pi pi-pencil" />
