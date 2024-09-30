@@ -584,12 +584,12 @@ class Doctor extends VaahModel
                 self::sendRescheduleMail($appointment, $subject);
 
 
-                $appointment->delete();
+                $appointment->status = 0;
             }
         }
 
         $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.saved_successfully");
+        $response['messages'][] = trans("vaahcms-general.appointment_rescheduled_successfully");
         return $response;
 
     }
@@ -600,23 +600,19 @@ class Doctor extends VaahModel
         $doctor = Doctor::find($appointment->doctor_id);
         $patient = Patient::find($appointment->patient_id);
         $date = Carbon::parse($appointment->date)->toDateString();
-        $slot_start_time = self::formatTime($appointment->slot_start_time);
 
         $message_patient = sprintf(
-            'Hello, %s. Unfortunately, your appointment with Dr. %s on %s at %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment.',
+            'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment.',
             $patient->name,
             $doctor->name,
-            $date,
-            $slot_start_time
+            $date
         );
 
-
         $message_doctor = sprintf(
-            'Hello, Dr. %s. Your appointment with %s on %s at %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
+            'Hello, Dr. %s. Your appointment with %s on %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
             $doctor->name,
             $patient->name,
-            $date,
-            $slot_start_time
+            $date
         );
 
 

@@ -59,6 +59,7 @@ return [
     'is_active_required' => 'The is active option is required.',
     'status_required' => 'The status is required.',
     'saved_successfully' => 'Saved successfully.',
+    'appointment_rescheduled_successfully' => 'Appointment rescheduled mail sent successfully.',
     'appointment_booked_successfully' => 'Appointment booked successfully.',
     'appointment_updated_successfully' => 'Appointment updated successfully.',
     'appointment_cancelled_successfully' => 'Appointment cancel successfully.',
