@@ -627,6 +627,7 @@ class Appointment extends VaahModel
 
         $item->fill($inputs);
         $item->status = 1;
+        $item->reason = 'Appointment Rescheduled';
         $item->save();
 
 
@@ -660,7 +661,7 @@ class Appointment extends VaahModel
         $user = \Auth::user();
 
         $item->reason = "Cancelled by " . $user->username;
-        
+
         $item->save();
         $message = sprintf(
             'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',

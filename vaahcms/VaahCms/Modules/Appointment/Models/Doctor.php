@@ -585,7 +585,7 @@ class Doctor extends VaahModel
 
 
                 $appointment->status = 0;
-                $appointment->reason = "Doctor's working hours changed. Please reschedule your appointment.";
+                $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
                 $appointment->save();
             }
         }
