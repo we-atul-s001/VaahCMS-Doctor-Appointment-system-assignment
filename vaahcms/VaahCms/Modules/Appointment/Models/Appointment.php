@@ -662,7 +662,7 @@ class Appointment extends VaahModel
 
         $item->save();
         $message = sprintf(
-            'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',
+            'Hello %s, Your appointment with Dr. %s on %s is cancelled by patient.',
             $patient->name,
             $doctor->name,
             $date
