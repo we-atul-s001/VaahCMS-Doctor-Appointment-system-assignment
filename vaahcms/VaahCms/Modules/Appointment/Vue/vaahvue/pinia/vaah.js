@@ -226,9 +226,6 @@ export const vaah = defineStore({
     confirmDialogDelete(callbackOnAccept) {
       this.confirmDialog('Delete Confirmation', 'Do you want to delete record(s)?', callbackOnAccept)
     },
-      CancelAppointment(callbackOnAccept) {
-          this.confirmDialog('Cancel Confirmation', 'Do you want to cancel your appointment?', callbackOnAccept)
-      },
     //----------------------------------------------------------
     clone: function (source) {
       return JSON.parse(JSON.stringify(source))
