@@ -18,7 +18,7 @@ class Patient extends VaahModel
     use CrudWithUuidObservantTrait;
 
     //-------------------------------------------------
-    protected $table = 'vh_patient';
+    protected $table = 'vh_patients';
     //-------------------------------------------------
     protected $dates = [
         'created_at',

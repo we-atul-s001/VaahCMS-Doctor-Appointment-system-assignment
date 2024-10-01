@@ -14,8 +14,8 @@ class VhDoctor extends Migration
     public function up()
     {
 
-        if (!Schema::hasTable('vh_doctor')) {
-            Schema::create('vh_doctor', function (Blueprint $table) {
+        if (!Schema::hasTable('vh_doctors')) {
+            Schema::create('vh_doctors', function (Blueprint $table) {
                 $table->bigIncrements('id')->unsigned();
                 $table->uuid('uuid')->nullable()->index();
 
