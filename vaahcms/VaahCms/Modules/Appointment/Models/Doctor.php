@@ -22,7 +22,7 @@ class Doctor extends VaahModel
     use CrudWithUuidObservantTrait;
 
     //-------------------------------------------------
-    protected $table = 'vh_doctor';
+    protected $table = 'vh_doctors';
     //-------------------------------------------------
     protected $dates = [
         'created_at',
