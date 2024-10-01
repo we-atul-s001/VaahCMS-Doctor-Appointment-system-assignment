@@ -655,10 +655,10 @@ class Appointment extends VaahModel
 
         $date = Carbon::parse($item['date'])->toDateString();
 
-        $item->status = 0;
+        $item->status = 2;
         $user = \Auth::user();
 
-        $item->reason = "Cancelled by " . $user->username;
+        $item->reason = "Cancelled by Patient";
 
         $item->save();
         $message = sprintf(
