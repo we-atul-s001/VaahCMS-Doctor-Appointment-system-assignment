@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use mysql_xdevapi\Exception;
+use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
@@ -53,11 +55,7 @@ class Doctor extends VaahModel
     ];
 
     //-------------------------------------------------
-    protected function serializeDate(DateTimeInterface $date)
-    {
-        $date_time_format = config('settings.global.datetime_format');
-        return $date->format($date_time_format);
-    }
+
 
     //-------------------------------------------------
     public static function getUnFillableColumns()
@@ -87,7 +85,7 @@ class Doctor extends VaahModel
 
     public function getAppointmentsCountAttribute(): int
     {
-        return $this->appointments()->count();
+        return $this->appointments()->where('status', '!=', 0)->count();
     }
 
 
@@ -219,6 +217,13 @@ class Doctor extends VaahModel
             },
         );
     }
+    public static function formatTime($time, $format = 'H:i:s A')
+    {
+        return Carbon::parse($time)
+            ->setTimezone("ASIA/KOLKATA")
+            ->format($format);
+    }
+
     //-------------------------------------------------
     protected function shiftEndTime(): Attribute
     {
@@ -519,44 +524,119 @@ class Doctor extends VaahModel
     {
         $inputs = $request->all();
 
+        // Validate the inputs
         $validation = self::validation($inputs);
         if (!$validation['success']) {
             return $validation;
         }
 
-        // check if name exist
+        // Check if name already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
-            ->where('name', $inputs['name'])->first();
+            ->where('name', $inputs['name'])
+            ->first();
 
         if ($item) {
-            $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
+            $error_message = "This name already exists" . ($item->deleted_at ? ' in trash.' : '.');
+            return [
+                'success' => false,
+                'errors' => [$error_message]
+            ];
         }
 
-        // check if slug exist
+        // Check if slug already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
-            ->where('slug', $inputs['slug'])->first();
+            ->where('slug', $inputs['slug'])
+            ->first();
 
         if ($item) {
-            $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
-            $response['success'] = false;
-            $response['errors'][] = $error_message;
-            return $response;
+            $error_message = "This slug already exists" . ($item->deleted_at ? ' in trash.' : '.');
+            return [
+                'success' => false,
+                'errors' => [$error_message]
+            ];
         }
 
-        $item = self::where('id', $id)->withTrashed()->first();
+        $item = self::where('id', $id)
+            ->withTrashed()
+            ->first();
+
+        $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
+            ($item->shift_end_time != $inputs['shift_end_time']);
+
         $item->fill($inputs);
         $item->save();
 
+        if ($working_hours_changed) {
+
+            $appointments = Appointment::where('doctor_id', $id)
+                ->where('patient_id', '!=', null)
+                ->get();
+
+
+            foreach ($appointments as $appointment) {
+
+                $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
+                self::sendRescheduleMail($appointment, $subject);
+
+
+                $appointment->status = 0;
+                $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
+                $appointment->save();
+            }
+        }
+
         $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.saved_successfully");
+        $response['messages'][] = trans("vaahcms-general.appointment_rescheduled_successfully");
         return $response;
 
     }
+
+    public static function sendRescheduleMail($appointment, $subject)
+    {
+
+        if(!$appointment->doctor_id || !$appointment->patient_id){
+            return false;
+        }
+
+        try {
+            $doctor = Doctor::find($appointment->doctor_id);
+            $patient = Patient::find($appointment->patient_id);
+            $date = Carbon::parse($appointment->date)->toDateString();
+
+            $appointmentUrl = "http://127.0.0.1:8000/backend/appointment#/appointments";
+
+            $message_patient = sprintf(
+                'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
+    <a href="%s" style="text-decoration:none;">
+        <button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Reschedule Here
+        </button>
+    </a><br><br>Thank you.',
+                $patient->name,
+                $doctor->name,
+                $date,
+                $appointmentUrl
+            );
+
+            $message_doctor = sprintf(
+                'Hello, Dr. %s. Your appointment with %s on %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
+                $doctor->name,
+                $patient->name,
+                $date
+            );
+        }catch (\Exception $e){
+            return false;
+
+    }
+
+
+
+        VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
+        VaahMail::dispatchGenericMail($subject, $message_patient, $patient->email);
+    }
+
     //-------------------------------------------------
     public static function deleteItem($request, $id): array
     {

@@ -38,6 +38,7 @@ class Appointment extends VaahModel
         'slot_end_time',
         'doctor_id',
         'status',
+        'reason',
         'is_active',
         'created_by',
         'updated_by',
@@ -625,6 +626,8 @@ class Appointment extends VaahModel
 
 
         $item->fill($inputs);
+        $item->status = 1;
+        $item->reason = 'Appointment Rescheduled';
         $item->save();
 
 
@@ -655,6 +658,10 @@ class Appointment extends VaahModel
         $date = Carbon::parse($item['date'])->toDateString();
 
         $item->status = 0;
+        $user = \Auth::user();
+
+        $item->reason = "Cancelled by " . $user->username;
+
         $item->save();
         $message = sprintf(
             'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',

@@ -77,7 +77,7 @@ function formatTimeWithAmPm(time) {
                  <template #body="prop">
                      <div>
                          <Badge style="width: 80px; display: flex;  justify-content:center; align-items:center;" :severity="prop.data.status === 1 ? 'success' : 'danger'">
-                             {{ prop.data.status === 1 ? 'Booked' : 'Cancelled' }}
+                             {{ prop.data.status === 1 ? 'Booked' : 'Cancelled'}}
                          </Badge>
                      </div>
                  </template>
@@ -85,7 +85,21 @@ function formatTimeWithAmPm(time) {
 
              </Column>
 
-                <Column field="updated_at" header="Updated"
+             <Column
+
+                     field="reason"
+                     header="Reason"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     {{ prop.data?.reason || 'N/A'}}
+                 </template>
+
+             </Column>
+
+
+             <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
                         style="width:150px;"
                         :sortable="true">
@@ -127,7 +141,7 @@ function formatTimeWithAmPm(time) {
 
                         <Button class="p-button-tiny p-button-text"
                                 data-testid="appoinments-table-to-edit"
-                                v-if="prop.data.status !== 0 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
+                                v-if="prop.data.status !== 1"
                                 v-tooltip.top="'Update'"
                                 @click="store.toEdit(prop.data)"
                                 icon="pi pi-pencil" />

@@ -535,7 +535,7 @@ export const useAppointmentStore = defineStore({
         confirmToCancelAppointment(data) {
             this.table_item_data = data;
             this.form.type = 'delete';
-            vaah().confirmDialogDelete(this.confirmToCancelAppointmentAfter);
+            vaah().CancelAppointment(this.confirmToCancelAppointmentAfter);
         },
         //---------------------------------------------------------------------
         confirmToCancelAppointmentAfter() {
