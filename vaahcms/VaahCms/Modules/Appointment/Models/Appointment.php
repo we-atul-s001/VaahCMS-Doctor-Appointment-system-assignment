@@ -222,7 +222,16 @@ class Appointment extends VaahModel
             $response['errors'][] = $error_message;
             return $response;
         }
-
+        $slot_exists = self::checkDoctorSlot($inputs);
+        if($slot_exists=='Invalid Slot')
+        {
+            $response['errors'][] = 'The Selected Slot is not available for Doctor.';
+            return $response;
+        }
+        elseif ($slot_exists === 'No Slot Available') {
+            $response['errors'][] = 'Slot Not available.';
+            return $response;
+        }
 
         $item = new self();
         $item->fill($inputs);
@@ -260,7 +269,33 @@ class Appointment extends VaahModel
         return $appointments->isEmpty() ? [] : $appointments;
     }
 
+//-------------------------------------------------
+    public static function checkDoctorSlot($data)
+    {
+        $timezone = Session::get('user_timezone');
+        $start_time = $data['slot_start_time'];
 
+
+        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
+            ->where('shift_start_time', '<=', $start_time)
+            ->exists();
+        if (!$doctor_shift_time) {
+
+            return 'Invalid Slot';
+        }
+
+        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
+        use ($start_time) {
+            $query
+                ->where('slot_end_time', '>', $start_time);
+        })->withTrashed()->exists();
+        if ($slots_exist) {
+            return 'No Slot Available';
+        }
+        else{
+            return false;        }
+
+    }
     //-------------------------------------------------
     public static function formatTime($time, $format = 'H:i:s A')
     {
