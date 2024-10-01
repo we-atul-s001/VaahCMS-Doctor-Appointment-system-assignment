@@ -289,6 +289,12 @@ class Patient extends VaahModel
 
         $list = $list->paginate($rows);
 
+        $list->transform(function ($item) {
+            return collect($item)->filter(function ($value) {
+                return !is_null($value);
+            });
+        });
+        
         $response['success'] = true;
         $response['data'] = $list;
 
