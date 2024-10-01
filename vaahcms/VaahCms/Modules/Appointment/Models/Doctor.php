@@ -571,33 +571,38 @@ class Doctor extends VaahModel
         $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
             ($item->shift_end_time != $inputs['shift_end_time']);
 
+        // Update the item with the new inputs
         $item->fill($inputs);
         $item->save();
 
         if ($working_hours_changed) {
 
+
             $appointments = Appointment::where('doctor_id', $id)
                 ->where('patient_id', '!=', null)
                 ->get();
 
-
             foreach ($appointments as $appointment) {
 
-                $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
-                self::sendRescheduleMail($appointment, $subject);
+
+                if ($appointment->status == 1) {
+                    $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
+                    self::sendRescheduleMail($appointment, $subject);
 
 
-                $appointment->status = 0;
-                $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
-                $appointment->save();
+                    $appointment->status = 0;
+                    $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
+                    $appointment->save();
+                }
             }
         }
 
-        $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.appointment_rescheduled_successfully");
-        return $response;
 
+        $response = self::getItem($item->id);
+        $response['messages'][] = trans("vaahcms-general.saved_successfully");
+        return $response;
     }
+
 
     public static function sendRescheduleMail($appointment, $subject)
     {

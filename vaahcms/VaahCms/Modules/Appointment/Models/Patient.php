@@ -294,7 +294,7 @@ class Patient extends VaahModel
                 return !is_null($value);
             });
         });
-        
+
         $response['success'] = true;
         $response['data'] = $list;
 
