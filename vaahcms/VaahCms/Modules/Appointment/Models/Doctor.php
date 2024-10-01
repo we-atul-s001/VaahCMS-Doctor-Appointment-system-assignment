@@ -605,7 +605,7 @@ class Doctor extends VaahModel
             $patient = Patient::find($appointment->patient_id);
             $date = Carbon::parse($appointment->date)->toDateString();
 
-            $appointmentUrl = "http://127.0.0.1:8000/backend/appointment#/appointments";
+            $appointment_url = "http://127.0.0.1:8000/backend/appointment#/appointments";
 
             $message_patient = sprintf(
                 'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
@@ -617,7 +617,7 @@ class Doctor extends VaahModel
                 $patient->name,
                 $doctor->name,
                 $date,
-                $appointmentUrl
+                $appointment_url
             );
 
             $message_doctor = sprintf(
