@@ -199,8 +199,9 @@ class Appointment extends VaahModel
     public static function createItem($request)
     {
 
-        $checkStatus = self::checkAppointmentTime($request->input('slot_start_time'),$request->input('doctor_id'));
-        if(count($checkStatus) > 0){
+        $check_status = self::checkAppointmentTime($request->input('slot_start_time'),$request->input('date'), $request->input('doctor_id'));
+
+        if(count($check_status) > 0){
             $response['errors'][] = 'Slot is already booked. Please select 15 minutes later slot';
             return $response;
         }
@@ -241,22 +242,25 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function checkAppointmentTime($slot_start_time,$doctorId)
+    public static function checkAppointmentTime($slot_start_time, $appointment_date, $doctorId)
     {
-        $date_time = Carbon::parse($slot_start_time);
+        $slot_time = Carbon::parse($slot_start_time);
+        $slot_date = $appointment_date;
 
-        $appointments = Appointment::where('doctor_id',$doctorId)
-            ->where(function ($query) use ($date_time) {
-                $query->whereBetween('slot_start_time', [$date_time->copy()->subMinutes(15), $date_time->copy()->addMinutes(15)]);
+        $appointments = Appointment::where('doctor_id', $doctorId)
+            ->where('date', $slot_date)
+            ->where(function ($query) use ($slot_time) {
+                $query->whereBetween('slot_start_time', [
+                    $slot_time->copy()->subMinutes(15),
+                    $slot_time->copy()->addMinutes(15)
+                ]);
             })->get();
 
-        if(!$appointments){
 
-            return $appointments->isEmpty();
-            
-        }
-        return $appointments;
+        return $appointments->isEmpty() ? [] : $appointments;
     }
+
+
     //-------------------------------------------------
     public static function formatTime($time, $format = 'H:i:s A')
     {
