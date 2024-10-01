@@ -48,7 +48,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
             <template class="p-1" #header>
 
 
-                <div v-if="!store.assets.permission.includes('appointment-has-access-of-doctor')" class="flex flex-row">
+                <div class="flex flex-row">
                     <div class="p-panel-title">
                         <span v-if="store.item && store.item.id">
                             Update
