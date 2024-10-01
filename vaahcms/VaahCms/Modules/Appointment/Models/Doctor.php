@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use mysql_xdevapi\Exception;
 use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
@@ -595,23 +596,41 @@ class Doctor extends VaahModel
     public static function sendRescheduleMail($appointment, $subject)
     {
 
-        $doctor = Doctor::find($appointment->doctor_id);
-        $patient = Patient::find($appointment->patient_id);
-        $date = Carbon::parse($appointment->date)->toDateString();
+        if(!$appointment->doctor_id || !$appointment->patient_id){
+            return false;
+        }
 
-        $message_patient = sprintf(
-            'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment.',
-            $patient->name,
-            $doctor->name,
-            $date
-        );
+        try {
+            $doctor = Doctor::find($appointment->doctor_id);
+            $patient = Patient::find($appointment->patient_id);
+            $date = Carbon::parse($appointment->date)->toDateString();
 
-        $message_doctor = sprintf(
-            'Hello, Dr. %s. Your appointment with %s on %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
-            $doctor->name,
-            $patient->name,
-            $date
-        );
+            $appointmentUrl = "http://127.0.0.1:8000/backend/appointment#/appointments";
+
+            $message_patient = sprintf(
+                'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
+    <a href="%s" style="text-decoration:none;">
+        <button style="background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Reschedule Here
+        </button>
+    </a><br><br>Thank you.',
+                $patient->name,
+                $doctor->name,
+                $date,
+                $appointmentUrl
+            );
+
+            $message_doctor = sprintf(
+                'Hello, Dr. %s. Your appointment with %s on %s has been canceled due to a change in your working hours. The patient will be notified to reschedule.',
+                $doctor->name,
+                $patient->name,
+                $date
+            );
+        }catch (\Exception $e){
+            return false;
+
+    }
+
 
 
         VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
