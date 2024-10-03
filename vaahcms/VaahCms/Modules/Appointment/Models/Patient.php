@@ -574,7 +574,7 @@ class Patient extends VaahModel
         $rules = array(
             'name' => 'required|max:150',
             'slug' => 'required|max:150',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:vh_patients,email',
             'phone' => 'required|min:7|max:16',
         );
 
