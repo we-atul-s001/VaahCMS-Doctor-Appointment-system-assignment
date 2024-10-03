@@ -148,16 +148,16 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     </div>
                 </VhField>
 
-                <VhField label="Slug">
-                    <div class="p-inputgroup">
-                        <InputText class="w-full"
-                                   placeholder="Enter the slug"
-                                   name="doctors-slug"
-                                   data-testid="doctors-slug"
-                                   v-model="store.item.slug" required/>
-                        <div class="required-field hidden"></div>
-                    </div>
-                </VhField>
+<!--                <VhField label="Slug">-->
+<!--                    <div class="p-inputgroup">-->
+<!--                        <InputText class="w-full"-->
+<!--                                   placeholder="Enter the slug"-->
+<!--                                   name="doctors-slug"-->
+<!--                                   data-testid="doctors-slug"-->
+<!--                                   v-model="store.item.slug" required/>-->
+<!--                        <div class="required-field hidden"></div>-->
+<!--                    </div>-->
+<!--                </VhField>-->
                 <VhField label="Email">
                     <div class="p-inputgroup">
                         <InputText class="w-full"

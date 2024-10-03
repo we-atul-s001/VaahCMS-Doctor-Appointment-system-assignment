@@ -147,16 +147,6 @@ const toggleFormMenu = (event) => {
                     </div>
                 </VhField>
 
-                <VhField label="Slug">
-                    <div class="p-inputgroup">
-                        <InputText class="w-full"
-                                   placeholder="Enter the slug"
-                                   name="patients-slug"
-                                   data-testid="patients-slug"
-                                   v-model="store.item.slug" required/>
-                        <div class="required-field hidden"></div>
-                    </div>
-                </VhField>
 
                 <VhField label="Email">
                     <div class="p-inputgroup">
