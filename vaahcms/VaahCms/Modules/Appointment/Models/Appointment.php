@@ -467,13 +467,11 @@ class Appointment extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'doctor_id', 'patient_id', 'date', 'slot_start_time', 'slot_end_time',
+            'reason','status','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
-        $list->transform(function ($item) {
-            return collect($item)->filter(function ($value) {
-                return !is_null($value);
-            });
-        });
+
 
         $response['success'] = true;
         $response['data'] = $list;
@@ -643,11 +641,10 @@ class Appointment extends VaahModel
     {
 
 
-        $item = self::where('id', $id)
+        $item = self::select('id','doctor_id', 'patient_id', 'slot_start_time', 'reason','status', 'is_active', 'created_at', 'updated_at', 'created_by', 'updated_by')
             ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
-            ->first()
-            ->makeHidden('slot_end_time', 'meta', 'deleted_at');
+            ->first();
 
         if (!$item) {
             $response['success'] = false;

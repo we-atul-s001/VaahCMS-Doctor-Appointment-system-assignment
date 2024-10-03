@@ -161,6 +161,14 @@ const toggleItemMenu = (event) => {
                             />
                         </template>
 
+                        <template v-else-if="column === 'status'">
+                            <VhViewRow
+                                :label="column"
+                                :value="value === 1 ? 'Booked' : (value === 0 || value === 2 ? 'Cancelled' : 'Unknown')"
+                            />
+                        </template>
+
+
                         <template v-else>
                             <VhViewRow :label="column"
                                        :value="value"
