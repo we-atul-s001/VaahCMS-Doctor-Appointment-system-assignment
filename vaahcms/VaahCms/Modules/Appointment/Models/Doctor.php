@@ -197,11 +197,39 @@ class Doctor extends VaahModel
     }
     //-------------------------------------------------
 
-    public static function formatTime($time, $format = 'H:i')
+    protected function shiftStartTime(): Attribute
+    {
+
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
+
+    //-------------------------------------------------
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
             ->setTimezone("ASIA/KOLKATA")
             ->format($format);
+    }
+
+    //-------------------------------------------------
+    protected function shiftEndTime(): Attribute
+    {
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
     }
 
 
@@ -496,7 +524,7 @@ class Doctor extends VaahModel
         $inputs = $request->all();
 
         // Validate the inputs
-        $validation = self::validation($inputs);
+        $validation = self::validation($inputs, $id);
         if (!$validation['success']) {
             return $validation;
         }
@@ -660,12 +688,12 @@ class Doctor extends VaahModel
     }
     //-------------------------------------------------
 
-    public static function validation($inputs)
+    public static function validation($inputs, $id = null)
     {
 
         $rules = array(
             'name' => 'required|max:150',
-            'email' => 'required|email|unique:vh_doctors,email',
+            'email' => 'required|email' . ($id ? '|unique:vh_doctors,email,' . $id : '|unique:vh_doctors,email'),
             'phone' => 'required|min:7|max:16',
             'specialization' => 'required|max:150',
         );
