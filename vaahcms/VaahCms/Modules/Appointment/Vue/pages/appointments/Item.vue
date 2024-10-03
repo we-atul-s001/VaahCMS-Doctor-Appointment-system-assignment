@@ -60,6 +60,7 @@ const toggleItemMenu = (event) => {
 
                     <Button label="Edit"
                             class="p-button-sm"
+                            v-if="store.item.status == 1"
                             @click="store.toEdit(store.item)"
                             data-testid="appointments-item-to-edit"
                             icon="pi pi-save"/>
