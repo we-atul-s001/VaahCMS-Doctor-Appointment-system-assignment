@@ -237,6 +237,7 @@ class Appointment extends VaahModel
         $item->fill($inputs);
 
         $item->status = 1;
+        $item->reason = 'N/A';
 
         $item->save();
 
@@ -615,6 +616,8 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function getItem($id)
     {
+
+
         $item = self::where('id', $id)
             ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
@@ -635,8 +638,9 @@ class Appointment extends VaahModel
         $response['data'] = $item;
 
         return $response;
-    }
 
+
+    }
 
     //--------------------Update the appointment-----------------------------
     public static function updateItem($request, $id)
