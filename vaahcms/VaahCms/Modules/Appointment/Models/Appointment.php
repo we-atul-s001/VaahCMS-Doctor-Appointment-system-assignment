@@ -110,7 +110,7 @@ class Appointment extends VaahModel
     public function doctor()
     {
         return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
-            ->select('id','name','shift_start_time','shift_end_time','specialization','phone','email');
+            ->select('id','name','shift_start_time','shift_end_time','specialization');
     }
 
     //-------------------------------------------------

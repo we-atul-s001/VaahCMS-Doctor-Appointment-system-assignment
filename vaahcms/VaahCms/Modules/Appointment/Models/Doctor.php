@@ -51,7 +51,7 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     protected $appends = [
-        'appointments_count'
+
     ];
 
     //-------------------------------------------------
@@ -77,15 +77,6 @@ class Doctor extends VaahModel
             $fillable_columns, $except
         );
         return $fillable_columns;
-    }
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
-    }
-
-    public function getAppointmentsCountAttribute(): int
-    {
-        return $this->appointments()->whereNotIn('status', [0, 2])->count();
     }
 
 
@@ -335,13 +326,9 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time', 'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
-        $list->transform(function ($item) {
-            return collect($item)->filter(function ($value) {
-                return !is_null($value);
-            });
-        });
 
         $response['success'] = true;
         $response['data'] = $list;
