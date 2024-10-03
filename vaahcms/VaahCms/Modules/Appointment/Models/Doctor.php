@@ -197,11 +197,39 @@ class Doctor extends VaahModel
     }
     //-------------------------------------------------
 
-    public static function formatTime($time, $format = 'H:i')
+    protected function shiftStartTime(): Attribute
+    {
+
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
+    }
+
+    //-------------------------------------------------
+    public static function formatTime($time, $format = 'H:i:s A')
     {
         return Carbon::parse($time)
             ->setTimezone("ASIA/KOLKATA")
             ->format($format);
+    }
+
+    //-------------------------------------------------
+    protected function shiftEndTime(): Attribute
+    {
+        return Attribute::make(
+            get: function (string $value = null,) {
+                $timezone = Session::get('user_timezone');
+                return Carbon::parse($value)
+                    ->setTimezone($timezone)
+                    ->format('H:i');
+            },
+        );
     }
 
 
