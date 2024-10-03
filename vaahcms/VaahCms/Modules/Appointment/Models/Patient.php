@@ -483,7 +483,7 @@ class Patient extends VaahModel
     {
         $inputs = $request->all();
 
-        $validation = self::validation($inputs);
+        $validation = self::validation($inputs, $id);
         if (!$validation['success']) {
             return $validation;
         }
@@ -568,12 +568,12 @@ class Patient extends VaahModel
     }
     //-------------------------------------------------
 
-    public static function validation($inputs)
+    public static function validation($inputs, $id=null)
     {
 
         $rules = array(
             'name' => 'required|max:150',
-            'email' => 'required|email|unique:vh_patients,email',
+            'email' => 'required|email' . ($id ? '|unique:vh_patients,email,' . $id : '|unique:vh_patients,email'),
             'phone' => 'required|min:7|max:16',
         );
 

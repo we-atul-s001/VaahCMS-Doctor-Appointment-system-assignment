@@ -231,7 +231,7 @@ class Doctor extends VaahModel
             },
         );
     }
-    
+
 
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
@@ -524,7 +524,7 @@ class Doctor extends VaahModel
         $inputs = $request->all();
 
         // Validate the inputs
-        $validation = self::validation($inputs);
+        $validation = self::validation($inputs, $id);
         if (!$validation['success']) {
             return $validation;
         }
@@ -688,12 +688,12 @@ class Doctor extends VaahModel
     }
     //-------------------------------------------------
 
-    public static function validation($inputs)
+    public static function validation($inputs, $id = null)
     {
 
         $rules = array(
             'name' => 'required|max:150',
-            'email' => 'required|email|unique:vh_doctors,email',
+            'email' => 'required|email' . ($id ? '|unique:vh_doctors,email,' . $id : '|unique:vh_doctors,email'),
             'phone' => 'required|min:7|max:16',
             'specialization' => 'required|max:150',
         );
