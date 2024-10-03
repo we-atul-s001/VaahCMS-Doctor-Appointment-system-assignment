@@ -382,6 +382,30 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
+
+    public function scopeIsStatusFilter($query, $filter)
+    {
+
+        if (!isset($filter['status'])
+            || is_null($filter['status'])
+            || $filter['status'] === 'null'
+        ) {
+            return $query;
+        }
+        $is_active = $filter['status'];
+
+        if ($is_active === 'true' || $is_active === true) {
+            return $query->where('status', 1);
+        } else {
+            return $query->where(function ($q) {
+                $q->whereNull('status')
+                    ->orWhere('status', 0);
+            });
+        }
+
+    }
+
+    //-------------------------------------------------
     public function scopeTrashedFilter($query, $filter)
     {
 
@@ -432,6 +456,7 @@ class Appointment extends VaahModel
     {
         $list = self::getSorted($request->filter);
         $list->isActiveFilter($request->filter);
+        $list->isStatusFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
         $list->with(['patient', 'doctor']);
