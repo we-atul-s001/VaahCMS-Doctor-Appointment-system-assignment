@@ -231,7 +231,7 @@ class Doctor extends VaahModel
             },
         );
     }
-
+    
 
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
