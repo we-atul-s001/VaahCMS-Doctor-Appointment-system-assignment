@@ -141,7 +141,7 @@ function formatTimeWithAmPm(time) {
 
                         <Button class="p-button-tiny p-button-text"
                                 data-testid="appoinments-table-to-edit"
-                                v-if="prop.data.status !== 1 && prop.data.status !== 2 || prop.data.status == 1 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
+                                v-if="!(prop.data.status === 1 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient') && store.hasPermission(store.assets.permission, 'appointment-has-access-of-doctor')) && prop.data.status !== 2 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
                                 v-tooltip.top="'Update'"
                                 @click="store.toEdit(prop.data)"
                                 icon="pi pi-pencil" />
