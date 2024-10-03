@@ -335,13 +335,9 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time', 'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
-        $list->transform(function ($item) {
-            return collect($item)->filter(function ($value) {
-                return !is_null($value);
-            });
-        });
 
         $response['success'] = true;
         $response['data'] = $list;

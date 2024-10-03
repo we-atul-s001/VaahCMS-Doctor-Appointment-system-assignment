@@ -98,7 +98,7 @@ function formatTimeWithAmPm(time) {
 
                  <template #body="prop">
 
-                     {{prop.data.Specialization}}
+                     {{prop.data.specialization}}
                  </template>
 
              </Column>
