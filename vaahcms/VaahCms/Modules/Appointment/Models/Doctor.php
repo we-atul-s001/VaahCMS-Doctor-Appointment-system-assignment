@@ -22,7 +22,7 @@ class Doctor extends VaahModel
     use CrudWithUuidObservantTrait;
 
     //-------------------------------------------------
-    protected $table = 'vh_doctor';
+    protected $table = 'vh_doctors';
     //-------------------------------------------------
     protected $dates = [
         'created_at',
@@ -51,7 +51,7 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     protected $appends = [
-        'appointments_count'
+
     ];
 
     //-------------------------------------------------
@@ -78,15 +78,7 @@ class Doctor extends VaahModel
         );
         return $fillable_columns;
     }
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
-    }
 
-    public function getAppointmentsCountAttribute(): int
-    {
-        return $this->appointments()->where('status', '!=', 0)->count();
-    }
 
 
     //-------------------------------------------------
@@ -204,38 +196,15 @@ class Doctor extends VaahModel
 
     }
     //-------------------------------------------------
-    protected function shiftStartTime(): Attribute
-    {
 
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
-    public static function formatTime($time, $format = 'H:i:s A')
+    public static function formatTime($time, $format = 'H:i')
     {
         return Carbon::parse($time)
             ->setTimezone("ASIA/KOLKATA")
             ->format($format);
     }
 
-    //-------------------------------------------------
-    protected function shiftEndTime(): Attribute
-    {
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
+
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
     {
@@ -334,15 +303,17 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time', 'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
+
 
         $response['success'] = true;
         $response['data'] = $list;
 
         return $response;
-
-
     }
+
+
 
     //-------------------------------------------------
     public static function updateList($request)
@@ -565,33 +536,38 @@ class Doctor extends VaahModel
         $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
             ($item->shift_end_time != $inputs['shift_end_time']);
 
+        // Update the item with the new inputs
         $item->fill($inputs);
         $item->save();
 
         if ($working_hours_changed) {
 
+
             $appointments = Appointment::where('doctor_id', $id)
                 ->where('patient_id', '!=', null)
                 ->get();
 
-
             foreach ($appointments as $appointment) {
 
-                $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
-                self::sendRescheduleMail($appointment, $subject);
+
+                if ($appointment->status == 1) {
+                    $subject = 'Appointment Rescheduled - Doctor Working Hours Changed';
+                    self::sendRescheduleMail($appointment, $subject);
 
 
-                $appointment->status = 0;
-                $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
-                $appointment->save();
+                    $appointment->status = 0;
+                    $appointment->reason = "Doctor working hours changed. Please reschedule your appointment.";
+                    $appointment->save();
+                }
             }
         }
 
-        $response = self::getItem($item->id);
-        $response['messages'][] = trans("vaahcms-general.appointment_rescheduled_successfully");
-        return $response;
 
+        $response = self::getItem($item->id);
+        $response['messages'][] = trans("vaahcms-general.saved_successfully");
+        return $response;
     }
+
 
     public static function sendRescheduleMail($appointment, $subject)
     {
@@ -605,7 +581,7 @@ class Doctor extends VaahModel
             $patient = Patient::find($appointment->patient_id);
             $date = Carbon::parse($appointment->date)->toDateString();
 
-            $appointmentUrl = "http://127.0.0.1:8000/backend/appointment#/appointments";
+            $appointment_url = "http://127.0.0.1:8000/backend/appointment#/appointments";
 
             $message_patient = sprintf(
                 'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
@@ -617,7 +593,7 @@ class Doctor extends VaahModel
                 $patient->name,
                 $doctor->name,
                 $date,
-                $appointmentUrl
+                $appointment_url
             );
 
             $message_doctor = sprintf(
@@ -689,8 +665,7 @@ class Doctor extends VaahModel
 
         $rules = array(
             'name' => 'required|max:150',
-            'slug' => 'required|max:150',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:vh_doctors,email',
             'phone' => 'required|min:7|max:16',
             'specialization' => 'required|max:150',
         );

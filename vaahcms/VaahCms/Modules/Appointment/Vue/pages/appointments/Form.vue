@@ -173,7 +173,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                         showClear
                     />
                 </VhField>
-                <VhField label="Doctor Details"  v-if="store.item.doctor" >
+                <VhField  label="Doctor Details"  v-if="store.item.doctor" >
 
                     <b>Specialization
                     </b>- {{store.item.doctor?.specialization}}<br>
@@ -208,6 +208,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                                   yearPicker:{class:'w-15rem'}
                               }"
                             time-only
+                            showTime hourFormat="12"
                             placeholder="Appointment Time"
                         />
                     </div>

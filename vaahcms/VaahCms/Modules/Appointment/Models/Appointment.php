@@ -110,7 +110,7 @@ class Appointment extends VaahModel
     public function doctor()
     {
         return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
-            ->select('id','name','shift_start_time','shift_end_time','specialization','phone','email');
+            ->select('id','name','shift_start_time','shift_end_time','specialization');
     }
 
     //-------------------------------------------------
@@ -199,6 +199,13 @@ class Appointment extends VaahModel
     public static function createItem($request)
     {
 
+        $check_status = self::checkAppointmentTime($request->input('slot_start_time'),$request->input('date'), $request->input('doctor_id'));
+
+        if(count($check_status) > 0){
+            $response['errors'][] = 'Slot is already booked. Please select 15 minutes later slot';
+            return $response;
+        }
+
         $inputs = $request->all();
         $validation = self::validation($inputs);
         if (!$validation['success']) {
@@ -206,15 +213,15 @@ class Appointment extends VaahModel
         }
 //         check if Slot exist
         $item = self::where('patient_id', $inputs['patient_id'])
-            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])->withTrashed()->first();
+            ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])
+            ->where('status','!=','0')
+            ->withTrashed()->first();
         if ($item) {
             $error_message = "This Patient has already appointment " . $inputs['date'];
             $response['success'] = false;
             $response['errors'][] = $error_message;
             return $response;
         }
-
-
         $slot_exists = self::checkDoctorSlot($inputs);
         if($slot_exists=='Invalid Slot')
         {
@@ -243,6 +250,52 @@ class Appointment extends VaahModel
 
     }
 
+    //-------------------------------------------------
+    public static function checkAppointmentTime($slot_start_time, $appointment_date, $doctorId)
+    {
+        $slot_time = Carbon::parse($slot_start_time);
+        $slot_date = $appointment_date;
+
+        $appointments = Appointment::where('doctor_id', $doctorId)
+            ->where('date', $slot_date)
+            ->where(function ($query) use ($slot_time) {
+                $query->whereBetween('slot_start_time', [
+                    $slot_time->copy()->subMinutes(15),
+                    $slot_time->copy()->addMinutes(15)
+                ]);
+            })->get();
+
+
+        return $appointments->isEmpty() ? [] : $appointments;
+    }
+
+//-------------------------------------------------
+    public static function checkDoctorSlot($data)
+    {
+        $timezone = Session::get('user_timezone');
+        $start_time = $data['slot_start_time'];
+
+
+        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
+            ->where('shift_start_time', '<=', $start_time)
+            ->exists();
+        if (!$doctor_shift_time) {
+
+            return 'Invalid Slot';
+        }
+
+        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
+        use ($start_time) {
+            $query
+                ->where('slot_end_time', '>', $start_time);
+        })->withTrashed()->exists();
+        if ($slots_exist) {
+            return 'No Slot Available';
+        }
+        else{
+            return false;        }
+
+    }
     //-------------------------------------------------
     public static function formatTime($time, $format = 'H:i:s A')
     {
@@ -279,33 +332,7 @@ class Appointment extends VaahModel
     }
 
 
-    //-------------------------------------------------
-    public static function checkDoctorSlot($data)
-    {
-        $timezone = Session::get('user_timezone');
-        $start_time = $data['slot_start_time'];
 
-
-        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
-            ->where('shift_start_time', '<=', $start_time)
-            ->exists();
-        if (!$doctor_shift_time) {
-
-            return 'Invalid Slot';
-        }
-
-        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
-        use ($start_time) {
-            $query
-                ->where('slot_end_time', '>', $start_time);
-        })->withTrashed()->exists();
-        if ($slots_exist) {
-            return 'No Slot Available';
-        }
-        else{
-            return false;        }
-
-    }
 
 
     //-------------------------------------------------
@@ -420,6 +447,12 @@ class Appointment extends VaahModel
         }
 
         $list = $list->paginate($rows);
+
+        $list->transform(function ($item) {
+            return collect($item)->filter(function ($value) {
+                return !is_null($value);
+            });
+        });
 
         $response['success'] = true;
         $response['data'] = $list;
@@ -657,14 +690,14 @@ class Appointment extends VaahModel
 
         $date = Carbon::parse($item['date'])->toDateString();
 
-        $item->status = 0;
+        $item->status = 2;
         $user = \Auth::user();
 
-        $item->reason = "Cancelled by " . $user->username;
+        $item->reason = "Cancelled by Patient";
 
         $item->save();
         $message = sprintf(
-            'Hello %s, Your appointment with Dr. %s on %s is cancelled by doctor',
+            'Hello %s, Your appointment with Dr. %s on %s is cancelled by patient.',
             $patient->name,
             $doctor->name,
             $date

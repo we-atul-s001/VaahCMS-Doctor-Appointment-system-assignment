@@ -18,7 +18,7 @@ class Patient extends VaahModel
     use CrudWithUuidObservantTrait;
 
     //-------------------------------------------------
-    protected $table = 'vh_patient';
+    protected $table = 'vh_patients';
     //-------------------------------------------------
     protected $dates = [
         'created_at',
@@ -288,6 +288,12 @@ class Patient extends VaahModel
         }
 
         $list = $list->paginate($rows);
+
+        $list->transform(function ($item) {
+            return collect($item)->filter(function ($value) {
+                return !is_null($value);
+            });
+        });
 
         $response['success'] = true;
         $response['data'] = $list;
@@ -567,8 +573,7 @@ class Patient extends VaahModel
 
         $rules = array(
             'name' => 'required|max:150',
-            'slug' => 'required|max:150',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:vh_patients,email',
             'phone' => 'required|min:7|max:16',
         );
 

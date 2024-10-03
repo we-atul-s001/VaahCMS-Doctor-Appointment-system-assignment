@@ -148,16 +148,16 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     </div>
                 </VhField>
 
-                <VhField label="Slug">
-                    <div class="p-inputgroup">
-                        <InputText class="w-full"
-                                   placeholder="Enter the slug"
-                                   name="doctors-slug"
-                                   data-testid="doctors-slug"
-                                   v-model="store.item.slug" required/>
-                        <div class="required-field hidden"></div>
-                    </div>
-                </VhField>
+<!--                <VhField label="Slug">-->
+<!--                    <div class="p-inputgroup">-->
+<!--                        <InputText class="w-full"-->
+<!--                                   placeholder="Enter the slug"-->
+<!--                                   name="doctors-slug"-->
+<!--                                   data-testid="doctors-slug"-->
+<!--                                   v-model="store.item.slug" required/>-->
+<!--                        <div class="required-field hidden"></div>-->
+<!--                    </div>-->
+<!--                </VhField>-->
                 <VhField label="Email">
                     <div class="p-inputgroup">
                         <InputText class="w-full"
@@ -190,11 +190,12 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
-                <VhField label="Specialization">
+                <VhField label="Working Hour">
                     <div class="p-inputgroup">
                         <Calendar
                             v-model="store.item.shift_start_time"
-                            :minDate="isValidTime(store.item.shift_start_time) ? store.item.shift_start_time : null"
+                            showTime hourFormat="12"
+                            :minDate="store.item.shift_start_time ? store.item.shift_start_time : null"
                             :pt="{
                                   monthPicker:{class:'w-15rem'},
                                   yearPicker:{class:'w-15rem'}
@@ -204,7 +205,8 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                         />
                         <Calendar
                             v-model="store.item.shift_end_time"
-                            :minDate="isValidTime(store.item.shift_start_time) ? store.item.shift_start_time : null"
+                            showTime hourFormat="12"
+                            :minDate="isValidTime(store.item.shift_end_time) ? store.item.shift_end_time : null"
                             :pt="{
                                   monthPicker:{class:'w-15rem'},
                                   yearPicker:{class:'w-15rem'}
