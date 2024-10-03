@@ -164,7 +164,13 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-
+        if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
+            if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
+                $response['success'] = false;
+                $response['messages'][] = "Shift end time is not valid time";
+                return $response;
+            }
+        }
 
         // check if name exist
         $item = self::where('name', $inputs['name'])->withTrashed()->first();
@@ -331,7 +337,8 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time', 'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time',
+            'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
 
@@ -501,10 +508,11 @@ class Doctor extends VaahModel
     public static function getItem($id)
     {
 
-        $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser', 'deletedByUser'])
+        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','is_active', 'created_at', 'updated_at')
+            ->where('id', $id)
             ->withTrashed()
             ->first();
+
 
         if(!$item)
         {

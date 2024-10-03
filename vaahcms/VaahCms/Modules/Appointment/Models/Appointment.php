@@ -647,7 +647,7 @@ class Appointment extends VaahModel
             ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
             ->first()
-            ->makeHidden('slot_end_time', 'meta', 'deleted_at', 'doctor_id', 'patient_id', 'doctor', 'patient');
+            ->makeHidden('slot_end_time', 'meta', 'deleted_at');
 
         if (!$item) {
             $response['success'] = false;
@@ -656,8 +656,8 @@ class Appointment extends VaahModel
         }
 
 
-        $item->doctor_name = $item->doctor ? $item->doctor->name : null;
-        $item->patient_name = $item->patient ? $item->patient->name : null;
+//        $item->doctor_name = $item->doctor ? $item->doctor->name : null;
+//        $item->patient_name = $item->patient ? $item->patient->name : null;
 
         $response['success'] = true;
         $response['data'] = $item;
