@@ -105,6 +105,40 @@ const store = useAppointmentStore();
 
              <Divider/>
 
+                <VhFieldVertical >
+                    <template #label>
+                        <b>Status:</b>
+                    </template>
+
+                    <div class="field-radiobutton">
+                        <RadioButton name="status-all"
+                                     inputId="status-all"
+                                     value="null"
+                                     data-testid="appointments-filters-status-all"
+                                     v-model="store.query.filter.status" />
+                        <label for="status-all" class="cursor-pointer">All</label>
+                    </div>
+                    <div class="field-radiobutton">
+                        <RadioButton name="status-true"
+                                     inputId="status-true"
+                                     data-testid="appointments-filters-status-true"
+                                     value="true"
+                                     v-model="store.query.filter.status" />
+                        <label for="status-true" class="cursor-pointer">Booked</label>
+                    </div>
+                    <div class="field-radiobutton">
+                        <RadioButton name="status-false"
+                                     inputId="status-false"
+                                     data-testid="appointments-filters-status-false"
+                                     value="false"
+                                     v-model="store.query.filter.status" />
+                        <label for="status-false" class="cursor-pointer">Cancelled</label>
+                    </div>
+
+                </VhFieldVertical>
+
+                <Divider/>
+
             <VhFieldVertical >
                 <template #label>
                     <b>Trashed:</b>
