@@ -190,7 +190,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
-                <VhField label="Specialization">
+                <VhField label="Working Hour">
                     <div class="p-inputgroup">
                         <Calendar
                             v-model="store.item.shift_start_time"

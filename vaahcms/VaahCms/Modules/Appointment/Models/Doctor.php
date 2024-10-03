@@ -702,7 +702,7 @@ class Doctor extends VaahModel
         $rules = array(
             'name' => 'required|max:150',
             'slug' => 'required|max:150',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:vh_doctors,email',
             'phone' => 'required|min:7|max:16',
             'specialization' => 'required|max:150',
         );
