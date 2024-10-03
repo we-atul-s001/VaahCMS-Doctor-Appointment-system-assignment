@@ -407,28 +407,24 @@ class Appointment extends VaahModel
         $search_array = explode(' ', $filter['q']);
         foreach ($search_array as $search_item) {
             $query->where(function ($q1) use ($search_item) {
-                $q1->where('name', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('id', 'LIKE', $search_item . '%');
+                $q1->whereHas('doctor', function ($query) use ($search_item) {
+                    $query->where('name', 'LIKE', '%' . $search_item . '%');
+                })
+                    ->orWhereHas('patient', function ($query) use ($search_item) {
+                        $query->where('name', 'LIKE', '%' . $search_item . '%');
+                    })
+                    ->orWhere(function ($query) use ($search_item) {
+                        if (strtolower($search_item) === 'booked') {
+                            $query->where('status', 1);
+                        } elseif (strtolower($search_item) === 'cancelled') {
+                            $query->where('status', 0);
+                        }
+                    });
             });
         }
-    }
-
-    //-------------------------------------------------
-    public function scopeDoctorFilter($query, $filter)
-    {
-
-        if (!isset($filter['sort_doctor'])) {
-            return $query;
-        }
-        $search = $filter['sort_doctor'];
-
-        return $query->whereHas('doctor', function ($query) use ($search) {
-            $query->where('id', $search);
-        });
-
 
     }
+
 
     //-------------------------------------------------
     public static function getList($request)
@@ -437,7 +433,6 @@ class Appointment extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
-        $list->doctorFilter($request->filter);
         $list->with(['patient', 'doctor']);
 
         $rows = config('vaahcms.per_page');
@@ -620,23 +615,28 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function getItem($id)
     {
-
         $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser'])
+            ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
             ->first()
-            ->makeHidden('slot_end_time', 'meta', 'deleted_at');
+            ->makeHidden('slot_end_time', 'meta', 'deleted_at', 'doctor_id', 'patient_id', 'doctor', 'patient');
+
         if (!$item) {
             $response['success'] = false;
             $response['errors'][] = 'Record not found with ID: ' . $id;
             return $response;
         }
+
+
+        $item->doctor_name = $item->doctor ? $item->doctor->name : null;
+        $item->patient_name = $item->patient ? $item->patient->name : null;
+
         $response['success'] = true;
         $response['data'] = $item;
 
         return $response;
-
     }
+
 
     //--------------------Update the appointment-----------------------------
     public static function updateItem($request, $id)
