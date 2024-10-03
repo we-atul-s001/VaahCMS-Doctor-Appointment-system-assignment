@@ -237,6 +237,7 @@ class Appointment extends VaahModel
         $item->fill($inputs);
 
         $item->status = 1;
+        $item->reason = 'N/A';
 
         $item->save();
 
