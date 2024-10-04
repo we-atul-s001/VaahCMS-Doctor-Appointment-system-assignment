@@ -437,8 +437,34 @@ class Doctor extends VaahModel
         }
 
         $items_id = collect($inputs['items'])->pluck('id')->toArray();
-        Appointment::whereIn('doctor_id', $items_id)
-            ->forceDelete();
+
+        $appointments = Appointment::whereIn('doctor_id', $items_id)->get();
+
+        foreach ($appointments as $appointment) {
+
+            $patient = Patient::find($appointment->patient_id);
+
+
+            if ($patient) {
+
+                $inputs = [
+                    'doctor_id' => $appointment->doctor_id,
+                    'patient_email' => $patient->email,
+                    'date' => $appointment->date,
+                    'slot_start_time' => $appointment->slot_start_time,
+                ];
+
+
+                $subject = 'Appointment Cancellation Notice';
+
+
+                self::sendCancelAppointmentMail($inputs, $subject);
+            }
+        }
+
+
+        Appointment::whereIn('doctor_id', $items_id)->forceDelete();
+
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
@@ -447,6 +473,25 @@ class Doctor extends VaahModel
 
         return $response;
     }
+    //-------------------------------------------------
+    public static function sendCancelAppointmentMail($inputs, $subject)
+    {
+
+        $doctor = Doctor::find($inputs['doctor_id']);
+
+
+
+        $message_patient = sprintf(
+            'Hello, your appointment with Dr. %s has been canceled as the doctor is unavailable. Please select a different doctor to reschedule your appointment.',
+            $doctor->name,
+        
+        );
+
+
+        VaahMail::dispatchGenericMail($subject, $message_patient, $inputs['patient_email']);
+    }
+
+
     //-------------------------------------------------
     public static function listAction($request, $type): array
     {

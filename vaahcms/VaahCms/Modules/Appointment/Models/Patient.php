@@ -385,6 +385,8 @@ class Patient extends VaahModel
         }
 
         $items_id = collect($inputs['items'])->pluck('id')->toArray();
+        Appointment::whereIn('patient_id', $items_id)
+            ->forceDelete();
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
