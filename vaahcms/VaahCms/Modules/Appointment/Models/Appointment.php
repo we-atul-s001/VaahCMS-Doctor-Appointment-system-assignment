@@ -470,7 +470,7 @@ class Appointment extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'doctor_id', 'patient_id', 'date', 'slot_start_time', 'slot_end_time',
+        $list = $list->select('id', 'doctor_id', 'patient_id', 'date', 'slot_start_time',
             'reason','status','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
@@ -644,7 +644,7 @@ class Appointment extends VaahModel
     {
 
 
-        $item = self::select('id','doctor_id', 'patient_id', 'slot_start_time', 'reason','status', 'is_active', 'created_at', 'updated_at', 'created_by', 'updated_by')
+        $item = self::select('id','doctor_id', 'patient_id', 'slot_start_time', 'date', 'reason','status', 'is_active', 'created_at', 'updated_at', 'created_by', 'updated_by')
             ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
             ->first();

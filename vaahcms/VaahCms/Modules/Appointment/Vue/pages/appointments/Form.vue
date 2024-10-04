@@ -175,6 +175,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                 <VhField label="Select Doctor">
 
                     <Dropdown
+
                         filter
                         name="appointments-doctor"
                         data-testid="items-doctor"
@@ -207,7 +208,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                             :minDate="today_date"
                             data-testid="items-date"
                             @date-select="handleDateChange($event,'date')"
-                            v-model="store.item.date "
+                            v-model="store.item.date"
                             :pt="{
                                   monthPicker:{class:'w-15rem'},
                                   yearPicker:{class:'w-15rem'}

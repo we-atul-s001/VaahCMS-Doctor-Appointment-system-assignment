@@ -552,10 +552,7 @@ class Doctor extends VaahModel
         }
 
         // Check if slug already exists
-        $item = self::where('id', '!=', $id)
-            ->withTrashed()
-            ->where('slug', $inputs['slug'])
-            ->first();
+
 
         if ($item) {
             $error_message = "This slug already exists" . ($item->deleted_at ? ' in trash.' : '.');
@@ -572,7 +569,7 @@ class Doctor extends VaahModel
         $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
             ($item->shift_end_time != $inputs['shift_end_time']);
 
-        // Update the item with the new inputs
+
         $item->fill($inputs);
         $item->save();
 
