@@ -396,6 +396,8 @@ class Doctor extends VaahModel
             case 'trash':
                 self::whereIn('id', $items_id)
                     ->get()->each->delete();
+                Appointment::whereIn('doctor_id', $items_id)
+                    ->get()->each->delete();
                 break;
             case 'restore':
                 self::whereIn('id', $items_id)->onlyTrashed()
@@ -435,6 +437,8 @@ class Doctor extends VaahModel
         }
 
         $items_id = collect($inputs['items'])->pluck('id')->toArray();
+        Appointment::whereIn('doctor_id', $items_id)
+            ->forceDelete();
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
