@@ -287,13 +287,10 @@ class Patient extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'name', 'email' , 'phone', 'is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
-        $list->transform(function ($item) {
-            return collect($item)->filter(function ($value) {
-                return !is_null($value);
-            });
-        });
+
 
         $response['success'] = true;
         $response['data'] = $list;
@@ -461,10 +458,11 @@ class Patient extends VaahModel
     public static function getItem($id)
     {
 
-        $item = self::where('id', $id)
-            ->with(['createdByUser', 'updatedByUser', 'deletedByUser'])
+        $item = self::select('id', 'name', 'phone', 'email', 'is_active', 'created_at', 'updated_at')
+            ->where('id', $id)
             ->withTrashed()
             ->first();
+
 
         if(!$item)
         {

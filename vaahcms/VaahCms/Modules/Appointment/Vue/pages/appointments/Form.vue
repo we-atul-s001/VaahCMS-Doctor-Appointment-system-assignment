@@ -21,7 +21,20 @@ onMounted(async () => {
 
     await store.getFormMenu();
 });
+function formatTimeWithAmPm(time) {
+    if (!time) return '';
 
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+
+    let hour = date.getHours() % 12;
+    if (hour === 0) hour = 12;
+
+    return `${hour}:${minutes} ${amPm}`;
+}
 //--------form_menu
 const handleDateChange = (newDate, property) => {
     if (newDate && store.item[property] !== undefined) {
@@ -162,6 +175,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                 <VhField label="Select Doctor">
 
                     <Dropdown
+
                         filter
                         name="appointments-doctor"
                         data-testid="items-doctor"
@@ -180,8 +194,8 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     <b>
                         Shift Time-</b>
 
-                    {{store.item?.doctor?.shift_start_time}} -
-                    {{store.item?.doctor?.shift_end_time}}
+                    {{formatTimeWithAmPm(store.item?.doctor?.shift_start_time)}} -
+                    {{formatTimeWithAmPm(store.item?.doctor?.shift_end_time)}}
                     (Please Select the time in the given time slot).
 
                 </VhField>
@@ -194,7 +208,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                             :minDate="today_date"
                             data-testid="items-date"
                             @date-select="handleDateChange($event,'date')"
-                            v-model="store.item.date "
+                            v-model="store.item.date"
                             :pt="{
                                   monthPicker:{class:'w-15rem'},
                                   yearPicker:{class:'w-15rem'}

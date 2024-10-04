@@ -382,6 +382,30 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
+
+    public function scopeIsStatusFilter($query, $filter)
+    {
+
+        if (!isset($filter['status'])
+            || is_null($filter['status'])
+            || $filter['status'] === 'null'
+        ) {
+            return $query;
+        }
+        $is_active = $filter['status'];
+
+        if ($is_active === 'true' || $is_active === true) {
+            return $query->where('status', 1);
+        } else {
+            return $query->where(function ($q) {
+                $q->whereNull('status')
+                    ->orWhere('status', 0);
+            });
+        }
+
+    }
+
+    //-------------------------------------------------
     public function scopeTrashedFilter($query, $filter)
     {
 
@@ -415,12 +439,15 @@ class Appointment extends VaahModel
                         $query->where('name', 'LIKE', '%' . $search_item . '%');
                     })
                     ->orWhere(function ($query) use ($search_item) {
-                        if (strtolower($search_item) === 'booked') {
+                        $search_item = strtolower($search_item);
+
+                        if ($search_item === 'booked') {
                             $query->where('status', 1);
-                        } elseif (strtolower($search_item) === 'cancelled') {
-                            $query->where('status', 0);
+                        } elseif ($search_item === 'cancelled') {
+                            $query->whereIn('status', [0, 2]);
                         }
                     });
+
             });
         }
 
@@ -432,6 +459,7 @@ class Appointment extends VaahModel
     {
         $list = self::getSorted($request->filter);
         $list->isActiveFilter($request->filter);
+        $list->isStatusFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
         $list->with(['patient', 'doctor']);
@@ -442,13 +470,11 @@ class Appointment extends VaahModel
             $rows = $request->rows;
         }
 
+        $list = $list->select('id', 'doctor_id', 'patient_id', 'date', 'slot_start_time',
+            'reason','status','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
-        $list->transform(function ($item) {
-            return collect($item)->filter(function ($value) {
-                return !is_null($value);
-            });
-        });
+
 
         $response['success'] = true;
         $response['data'] = $list;
@@ -618,11 +644,10 @@ class Appointment extends VaahModel
     {
 
 
-        $item = self::where('id', $id)
+        $item = self::select('id','doctor_id', 'patient_id', 'slot_start_time', 'date', 'reason','status', 'is_active', 'created_at', 'updated_at', 'created_by', 'updated_by')
             ->with(['createdByUser', 'updatedByUser', 'doctor', 'patient'])
             ->withTrashed()
-            ->first()
-            ->makeHidden('slot_end_time', 'meta', 'deleted_at', 'doctor_id', 'patient_id', 'doctor', 'patient');
+            ->first();
 
         if (!$item) {
             $response['success'] = false;
@@ -631,8 +656,8 @@ class Appointment extends VaahModel
         }
 
 
-        $item->doctor_name = $item->doctor ? $item->doctor->name : null;
-        $item->patient_name = $item->patient ? $item->patient->name : null;
+//        $item->doctor_name = $item->doctor ? $item->doctor->name : null;
+//        $item->patient_name = $item->patient ? $item->patient->name : null;
 
         $response['success'] = true;
         $response['data'] = $item;

@@ -60,6 +60,7 @@ const toggleItemMenu = (event) => {
 
                     <Button label="Edit"
                             class="p-button-sm"
+                            v-if="store.item.status == 1"
                             @click="store.toEdit(store.item)"
                             data-testid="appointments-item-to-edit"
                             icon="pi pi-save"/>
@@ -121,8 +122,8 @@ const toggleItemMenu = (event) => {
                     <tbody class="p-datatable-tbody">
                     <template v-for="(value, column) in store.item ">
 
-                        <template v-if="column === 'created_by' || column === 'updated_by'
-                        || column === 'deleted_by'">
+                        <template v-if="column ==='created_by' || column === 'updated_by'
+                        || column === 'deleted_by' || column ==='doctor_id' || column==='patient_id'">
                         </template>
 
                         <template v-else-if="column === 'id' || column === 'uuid'">
@@ -146,6 +147,27 @@ const toggleItemMenu = (event) => {
                                        type="yes-no"
                             />
                         </template>
+
+
+                        <template v-else-if="column === 'doctor'">
+                            <VhViewRow :label="column"
+                                       :value="value.name"
+                            />
+                        </template>
+
+                        <template v-else-if="column === 'patient'">
+                            <VhViewRow :label="column"
+                                       :value="value.name"
+                            />
+                        </template>
+
+                        <template v-else-if="column === 'status'">
+                            <VhViewRow
+                                :label="column"
+                                :value="value === 1 ? 'Booked' : (value === 0 || value === 2 ? 'Cancelled' : 'Unknown')"
+                            />
+                        </template>
+
 
                         <template v-else>
                             <VhViewRow :label="column"
