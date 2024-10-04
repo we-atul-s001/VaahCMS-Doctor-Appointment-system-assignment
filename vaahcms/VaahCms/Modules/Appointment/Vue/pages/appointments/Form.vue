@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onMounted, ref, watch} from "vue";
+import {onMounted, ref, watch} from "vue";
 import { useAppointmentStore } from '../../stores/store-appointments'
 
 import VhField from './../../vaahvue/vue-three/primeflex/VhField.vue'
@@ -35,24 +35,6 @@ function formatTimeWithAmPm(time) {
 
     return `${hour}:${minutes} ${amPm}`;
 }
-const convertTo12HourFormat = (time) => {
-    if (!time) return '';
-
-    const [hours, minutes] = time.split(':').map(Number);
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12;
-    return `${formattedHours}:${minutes < 10 ? '0' + minutes : minutes} ${ampm}`;
-};
-
-const formattedSlotTime = computed({
-    get() {
-        return convertTo12HourFormat(store.item?.slot_start_time);
-    },
-    set(value) {
-        store.item.slot_start_time = value;
-    }
-});
-
 //--------form_menu
 const handleDateChange = (newDate, property) => {
     if (newDate && store.item[property] !== undefined) {
@@ -234,7 +216,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                             placeholder="Select Appointment Date"
                         />
                         <Calendar
-                            v-model="formattedSlotTime"
+                            v-model="store.item.slot_start_time"
                             :pt="{
                                   monthPicker:{class:'w-15rem'},
                                   yearPicker:{class:'w-15rem'}

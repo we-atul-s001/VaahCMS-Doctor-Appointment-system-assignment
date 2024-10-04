@@ -159,7 +159,7 @@ function formatTime(time) {
 
                         <template v-else-if="column === 'doctor'">
                             <VhViewRow :label="column"
-                                       :value="value.name"
+                                       :value="value?.name?value.name:'NA'"
                             />
                         </template>
 

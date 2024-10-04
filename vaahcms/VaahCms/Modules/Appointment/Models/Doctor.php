@@ -455,6 +455,8 @@ class Doctor extends VaahModel
                 ];
 
 
+                $appointment->status = 2;
+                $appointment->save();
                 $subject = 'Appointment Cancellation Notice';
 
 
@@ -463,7 +465,6 @@ class Doctor extends VaahModel
         }
 
 
-        Appointment::whereIn('doctor_id', $items_id)->forceDelete();
 
         self::whereIn('id', $items_id)->forceDelete();
 

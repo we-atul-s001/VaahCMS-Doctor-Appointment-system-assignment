@@ -47,7 +47,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data.patient?.name}}
+                     {{prop.data.patient?.name || 'N/A'}}
                  </template>
 
              </Column>
@@ -56,7 +56,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data.doctor?.name}}
+                     {{prop.data.doctor?.name || 'N/A'}}
                  </template>
 
              </Column>
