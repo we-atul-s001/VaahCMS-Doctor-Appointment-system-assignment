@@ -484,7 +484,7 @@ class Doctor extends VaahModel
         $message_patient = sprintf(
             'Hello, your appointment with Dr. %s has been canceled as the doctor is unavailable. Please select a different doctor to reschedule your appointment.',
             $doctor->name,
-        
+
         );
 
 
@@ -573,7 +573,6 @@ class Doctor extends VaahModel
         $response['data'] = $item;
 
         return $response;
-
     }
     //-------------------------------------------------
     public static function updateItem($request, $id)

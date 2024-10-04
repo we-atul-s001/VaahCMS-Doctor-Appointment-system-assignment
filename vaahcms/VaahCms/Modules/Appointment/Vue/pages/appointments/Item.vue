@@ -36,7 +36,15 @@ const toggleItemMenu = (event) => {
     item_menu_state.value.toggle(event);
 };
 //--------/toggle item menu
+function formatTime(time) {
+    if (!time) return '';
 
+    const [hours, minutes] = time.split(':');
+    const period = +hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = (+hours % 12) || 12;
+
+    return `${formattedHours}:${minutes} ${period}`;
+}
 </script>
 <template>
 
@@ -155,6 +163,9 @@ const toggleItemMenu = (event) => {
                             />
                         </template>
 
+                        <template v-else-if="column === 'slot_start_time'">
+                            <VhViewRow :label="column" :value="formatTime(value)" />
+                        </template>
                         <template v-else-if="column === 'patient'">
                             <VhViewRow :label="column"
                                        :value="value.name"
