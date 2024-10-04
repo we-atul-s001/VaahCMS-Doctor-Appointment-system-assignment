@@ -167,7 +167,7 @@ class Doctor extends VaahModel
         if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
             if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
                 $response['success'] = false;
-                $response['messages'][] = "Shift end time is not valid time";
+                $response['errors'][] = "Shift end time is not valid time";
                 return $response;
             }
         }
