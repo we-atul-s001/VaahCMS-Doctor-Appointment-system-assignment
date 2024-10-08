@@ -343,7 +343,7 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time',
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_hour',
             'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
