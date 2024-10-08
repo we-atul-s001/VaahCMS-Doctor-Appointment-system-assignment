@@ -36,6 +36,7 @@ class Doctor extends VaahModel
         'slug',
         'email',
         'phone',
+        'price_per_hour',
         'specialization',
         'shift_start_time',
         'shift_end_time',
@@ -836,6 +837,8 @@ class Doctor extends VaahModel
 
 
         $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
+
+        $inputs['price_per_hour'] = $faker->numberBetween(100, 1000);
 
 
         $inputs['is_active'] = $faker->randomElement([1]);
