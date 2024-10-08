@@ -805,19 +805,38 @@ class Doctor extends VaahModel
             'except' => self::getUnFillableColumns()
         ]);
         $fillable = VaahSeeder::fill($request);
-        if(!$fillable['success']){
+        if (!$fillable['success']) {
             return $fillable;
         }
         $inputs = $fillable['data']['fill'];
 
         $faker = Factory::create();
 
+
+        $inputs['name'] = $faker->name;
+        $inputs['slug'] = Str::slug($inputs['name']);
+        $phone_length = rand(7, 16);
+        $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
+        $inputs['specialization'] = $faker->word;
+        $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
+
+        do {
+
+            $inputs['shift_end_time'] = $faker->time($format = 'g:i A', $min = '12:00 PM', $max = '11:59 PM');
+
+            $start_time = \DateTime::createFromFormat('g:i A', $inputs['shift_start_time']);
+            $end_time = \DateTime::createFromFormat('g:i A', $inputs['shift_end_time']);
+
+        } while ($end_time <= $start_time);
+
+        $inputs['is_active'] = $faker->randomElement([1]);
+
         /*
          * You can override the filled variables below this line.
          * You should also return relationship from here
          */
 
-        if(!$is_response_return){
+        if (!$is_response_return) {
             return $inputs;
         }
 
@@ -825,6 +844,7 @@ class Doctor extends VaahModel
         $response['data']['fill'] = $inputs;
         return $response;
     }
+
 
     //-------------------------------------------------
     //-------------------------------------------------
