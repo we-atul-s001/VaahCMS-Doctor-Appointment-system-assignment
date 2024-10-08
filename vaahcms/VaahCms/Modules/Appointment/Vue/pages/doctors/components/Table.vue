@@ -5,20 +5,7 @@ import {useDoctorStore} from '../../../stores/store-doctors'
 const store = useDoctorStore();
 const useVaah = vaah();
 
-function formatTimeWithAmPm(time) {
-    if (!time) return '';
 
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes);
-    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
-
-    let hour = date.getHours() % 12;
-    if (hour === 0) hour = 12;
-
-    return `${hour}:${minutes} ${amPm}`;
-}
 </script>
 
 <template>
@@ -97,7 +84,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
+                     {{ prop.data.shift_start_time }}
 
                  </template>
 
@@ -109,7 +96,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
+                     {{ prop.data.shift_end_time }}
                  </template>
 
              </Column>

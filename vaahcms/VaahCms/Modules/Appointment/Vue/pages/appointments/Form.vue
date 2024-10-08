@@ -194,8 +194,8 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     <b>
                         Shift Time-</b>
 
-                    {{formatTimeWithAmPm(store.item?.doctor?.shift_start_time)}} -
-                    {{formatTimeWithAmPm(store.item?.doctor?.shift_end_time)}}
+                    {{store.item?.doctor?.shift_start_time}} -
+                    {{store.item?.doctor?.shift_end_time}}
                     (Please Select the time in the given time slot).
 
                 </VhField>

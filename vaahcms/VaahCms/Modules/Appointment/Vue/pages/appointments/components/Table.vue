@@ -5,20 +5,6 @@ import { useAppointmentStore } from '../../../stores/store-appointments'
 const store = useAppointmentStore();
 const useVaah = vaah();
 
-function formatTimeWithAmPm(time) {
-    if (!time) return '';
-
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes);
-    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
-
-    let hour = date.getHours() % 12;
-    if (hour === 0) hour = 12;
-
-    return `${hour}:${minutes} ${amPm}`;
-}
 </script>
 
 <template>
@@ -65,7 +51,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data?.date}} at {{formatTimeWithAmPm(prop.data.slot_start_time)}}
+                     {{prop.data?.date}} at {{prop.data.slot_start_time}}
                  </template>
 
              </Column>

@@ -80,23 +80,13 @@ class Appointment extends VaahModel
 
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('H:i');
+                    ->format('g:i A');
             },
         );
     }
 
     //-------------------------------------------------
-    protected function slotEndTime(): Attribute
-    {
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
+
 
     //-------------------------------------------------
     public function patient()

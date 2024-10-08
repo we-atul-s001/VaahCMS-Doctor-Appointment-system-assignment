@@ -212,7 +212,7 @@ class Doctor extends VaahModel
 
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('H:i');
+                    ->format('g:i A');
             },
         );
     }
@@ -229,14 +229,15 @@ class Doctor extends VaahModel
     protected function shiftEndTime(): Attribute
     {
         return Attribute::make(
-            get: function (string $value = null,) {
+            get: function (string $value = null) {
                 $timezone = Session::get('user_timezone');
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('H:i');
+                    ->format('g:i A');
             },
         );
     }
+
 
 
     //-------------------------------------------------
