@@ -50,6 +50,15 @@ const toggleBulkMenuState = (event) => {
                 <Menu ref="selected_menu_state"
                       :model="store.list_selected_menu"
                       :popup="true" />
+                <Button
+                    type="button"
+                    class="p-button-sm"
+                    :disabled="Object.keys(route.params).length"
+                    data-testid="doctors-actions-show-filters"
+                    @click="store.quick_filters = !store.quick_filters">
+                    Quick Filters
+                    <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
+                </Button>
                 <!--/selected_menu-->
 
             </div>
@@ -76,6 +85,8 @@ const toggleBulkMenuState = (event) => {
                                     class="p-button-sm"
                                     data-testid="doctors-actions-search-button"
                                     icon="pi pi-search"/>
+
+
                             <Button
                                 type="button"
                                 class="p-button-sm"
@@ -85,6 +96,8 @@ const toggleBulkMenuState = (event) => {
                                 Filters
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
                             </Button>
+
+
 
                             <Button
                                 type="button"
