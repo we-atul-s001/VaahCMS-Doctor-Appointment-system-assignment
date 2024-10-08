@@ -37,15 +37,6 @@ const toggleItemMenu = (event) => {
 };
 //--------/toggle item menu
 
-function formatTime(time) {
-    if (!time) return '';
-
-    const [hours, minutes] = time.split(':');
-    const period = +hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = (+hours % 12) || 12;
-
-    return `${formattedHours}:${minutes} ${period}`;
-}
 
 </script>
 <template>
@@ -158,11 +149,11 @@ function formatTime(time) {
                         </template>
 
                         <template v-else-if="column === 'shift_start_time'">
-                            <VhViewRow :label="column" :value="formatTime(value)" />
+                            <VhViewRow :label="column" :value="value" />
                         </template>
 
                         <template v-else-if="column === 'shift_end_time'">
-                            <VhViewRow :label="column" :value="formatTime(value)" />
+                            <VhViewRow :label="column" :value="value" />
                         </template>
                         <template v-else>
                             <VhViewRow :label="column"
