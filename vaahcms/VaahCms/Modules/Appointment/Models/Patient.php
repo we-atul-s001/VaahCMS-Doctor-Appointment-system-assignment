@@ -636,6 +636,13 @@ class Patient extends VaahModel
 
         $faker = Factory::create();
 
+        $inputs['name'] = $faker->name;
+        $inputs['slug'] = Str::slug($inputs['name']);
+        $inputs['email'] = $faker->email;
+        $phone_length = rand(7, 16);
+        $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
+        $inputs['is_active'] = $faker->randomElement([1]);
+
         /*
          * You can override the filled variables below this line.
          * You should also return relationship from here
