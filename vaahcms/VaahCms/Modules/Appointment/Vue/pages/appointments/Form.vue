@@ -197,7 +197,10 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     {{store.item?.doctor?.shift_start_time}} -
                     {{store.item?.doctor?.shift_end_time}}
                     (Please Select the time in the given time slot).
+                    <b>
+                        Price Per 30 Minutes Slot-</b>
 
+                    ₹ {{store.item?.doctor?.price_per_minutes}}
                 </VhField>
                 <VhField label="Date and Time" required>
                     <div class="p-inputgroup">
@@ -222,7 +225,11 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                                   yearPicker:{class:'w-15rem'}
                               }"
                             time-only
-                            showTime hourFormat="12"
+
+                            hourFormat="12"
+                            stepMinute="30"
+                            :showIcon="true"
+                            :inputStyle="{ pointerEvents: 'none' }"
                             placeholder="Appointment Time"
                         />
                     </div>
