@@ -40,7 +40,7 @@ class DoctorsController extends Controller
             $data['fillable']['columns'] = Doctor::getFillableColumns();
             $data['fillable']['except'] = Doctor::getUnFillableColumns();
             $data['empty_item'] = Doctor::getEmptyItem();
-            
+
 
 
             $data['actions'] = [];
