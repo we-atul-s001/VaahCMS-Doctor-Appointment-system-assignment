@@ -52,7 +52,7 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     protected $appends = [
-
+        'appointments_count'
     ];
 
     //-------------------------------------------------
@@ -81,6 +81,16 @@ class Doctor extends VaahModel
     }
 
 
+    //-------------------------------------------------
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
+    }
+
+    public function getAppointmentsCountAttribute(): int
+    {
+        return $this->appointments()->whereNotIn('status', [0, 2])->count();
+    }
 
     //-------------------------------------------------
     public static function getEmptyItem()

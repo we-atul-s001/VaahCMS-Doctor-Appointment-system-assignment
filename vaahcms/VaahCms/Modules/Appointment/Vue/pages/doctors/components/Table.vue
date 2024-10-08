@@ -109,6 +109,20 @@ const useVaah = vaah();
                      ₹ {{ prop.data.price_per_minutes }}
                  </template>
              </Column>
+
+             <Column field="totalAppointment" header="Appointments"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     <div style="display:flex; justify-content:center; align-items:center;">
+                         <Badge severity="info">{{ prop.data.appointments_count || 0 }}</Badge>
+                     </div>
+                 </template>
+
+
+             </Column>
+
              <Column field="updated_at" header="Updated"
                         v-if="store.isViewLarge()"
                         style="width:150px;"
