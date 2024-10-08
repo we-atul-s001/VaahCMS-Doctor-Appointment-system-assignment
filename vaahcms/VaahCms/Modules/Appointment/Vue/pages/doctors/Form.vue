@@ -212,12 +212,12 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     </div>
                 </VhField>
 
-                <VhField label="Price Per Hour">
+                <VhField label="Price Per Minutes">
                     <div class="p-inputgroup">
 
                         <InputText
-                            v-model="store.item.price_per_hour"
-                            placeholder="Price per Hour"
+                            v-model="store.item.price_per_minutes"
+                            placeholder="Price per Minutes"
                             type="number"
                             class="price-input"
                         />

@@ -100,13 +100,13 @@ const useVaah = vaah();
                  </template>
 
              </Column>
-             <Column field="price_per_hour" header="Price per Hour"
+             <Column field="price_per_mintues" header="Price per minutes"
                      v-if="store.isViewLarge()"
                      style="width:150px;"
                      :sortable="true">
 
                  <template #body="prop">
-                     ₹ {{ prop.data.price_per_hour }}
+                     ₹ {{ prop.data.price_per_minutes }}
                  </template>
              </Column>
              <Column field="updated_at" header="Updated"

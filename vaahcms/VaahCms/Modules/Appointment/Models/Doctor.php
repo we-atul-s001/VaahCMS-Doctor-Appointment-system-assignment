@@ -36,7 +36,7 @@ class Doctor extends VaahModel
         'slug',
         'email',
         'phone',
-        'price_per_hour',
+        'price_per_minutes',
         'specialization',
         'shift_start_time',
         'shift_end_time',
@@ -343,7 +343,7 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_hour',
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_minutes',
             'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
@@ -838,7 +838,7 @@ class Doctor extends VaahModel
 
         $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
 
-        $inputs['price_per_hour'] = $faker->numberBetween(100, 1000);
+        $inputs['price_per_minutes'] = $faker->numberBetween(100, 500);
 
 
         $inputs['is_active'] = $faker->randomElement([1]);
