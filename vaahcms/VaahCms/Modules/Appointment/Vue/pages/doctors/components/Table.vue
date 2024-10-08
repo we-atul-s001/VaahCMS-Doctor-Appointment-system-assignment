@@ -78,6 +78,18 @@ const useVaah = vaah();
 
              </Column>
 
+             <Column field="totalAppointment" header="Appointments"
+                     class="overflow-wrap-anywhere"
+                     :sortable="true">
+
+                 <template #body="prop">
+                     <div style="display:flex; justify-content:center; align-items:center;">
+                         <Badge severity="info">{{ prop.data.appointments_count || 0 }}</Badge>
+                     </div>
+                 </template>
+
+
+             </Column>
              <Column field="shift_start_time" header="Shift Start Time"
                      v-if="store.isViewLarge()"
                      style="width:150px;"
