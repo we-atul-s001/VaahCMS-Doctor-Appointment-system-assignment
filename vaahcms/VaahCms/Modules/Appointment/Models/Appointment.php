@@ -202,6 +202,9 @@ class Appointment extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
 //         check if Slot exist
         $item = self::where('patient_id', $inputs['patient_id'])
             ->where('doctor_id', $inputs['doctor_id'])->where('date', $inputs['date'])
@@ -680,7 +683,9 @@ class Appointment extends VaahModel
             return $validation;
         }
 
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         $item = self::where('id', $id)->withTrashed()->first();
 
         if (!$item) {

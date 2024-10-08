@@ -172,6 +172,10 @@ class Doctor extends VaahModel
             }
         }
 
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
+
         // check if name exist
         $item = self::where('name', $inputs['name'])->withTrashed()->first();
 
@@ -586,7 +590,9 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         // Check if name already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
@@ -820,19 +826,17 @@ class Doctor extends VaahModel
         $inputs['specialization'] = $faker->word;
         $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
 
-        do {
+        while (strpos($inputs['shift_start_time'], 'PM') !== false) {
+            $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
+        }
 
-            $inputs['shift_end_time'] = $faker->time($format = 'g:i A', $min = '12:00 PM', $max = '11:59 PM');
+        $shift_start_timestamp = strtotime($inputs['shift_start_time']);
+
+        $shift_end_timestamp = $shift_start_timestamp + (4 * 60 * 60);
 
 
-            $start_time = \DateTime::createFromFormat('g:i A', $inputs['shift_start_time']);
-            $end_time = \DateTime::createFromFormat('g:i A', $inputs['shift_end_time']);
+        $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
 
-
-            $interval = $start_time->diff($end_time);
-            $hours_difference = $interval->h + ($interval->days * 24);
-
-        } while ($hours_difference < 4);
 
         $inputs['is_active'] = $faker->randomElement([1]);
 
