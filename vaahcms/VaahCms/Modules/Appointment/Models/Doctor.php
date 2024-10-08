@@ -824,10 +824,15 @@ class Doctor extends VaahModel
 
             $inputs['shift_end_time'] = $faker->time($format = 'g:i A', $min = '12:00 PM', $max = '11:59 PM');
 
+
             $start_time = \DateTime::createFromFormat('g:i A', $inputs['shift_start_time']);
             $end_time = \DateTime::createFromFormat('g:i A', $inputs['shift_end_time']);
 
-        } while ($end_time <= $start_time);
+
+            $interval = $start_time->diff($end_time);
+            $hours_difference = $interval->h + ($interval->days * 24);
+
+        } while ($hours_difference < 4);
 
         $inputs['is_active'] = $faker->randomElement([1]);
 
