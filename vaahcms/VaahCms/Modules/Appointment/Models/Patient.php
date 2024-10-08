@@ -178,7 +178,9 @@ class Patient extends VaahModel
             $response['messages'][] = $error_message;
             return $response;
         }
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         $item = new self();
         $item->fill($inputs);
         $item->save();
@@ -486,6 +488,9 @@ class Patient extends VaahModel
         $validation = self::validation($inputs, $id);
         if (!$validation['success']) {
             return $validation;
+        }
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
         }
 
         // check if name exist
