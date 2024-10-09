@@ -118,6 +118,24 @@ class DoctorsController extends Controller
         }
     }
     //----------------------------------------------------------
+
+    public function getDoctorStatus(Request $request, $id)
+        {
+            try{
+                return Doctor::getDoctorStatus($id);
+            }catch (\Exception $e) {
+                $response = [];
+                $response['success'] = false;
+                if (env('APP_DEBUG')) {
+                    $response['errors'][] = $e->getMessage();
+                    $response['hint'] = $e->getTrace();
+                }else{
+                    $response['errors'][] = trans("vaahcms-general.something_went_wrong");
+                }
+                return $response;
+            }
+        }
+    //----------------------------------------------------------
     public function deleteList(Request $request)
     {
         try{

@@ -490,7 +490,7 @@ export const useDoctorStore = defineStore({
             this.appointments_count=item.appointments_count;
             if (item.id) {
                 await vaah().ajax(
-                    ajax_url +'/' + item.id,
+                    ajax_url + '/get-doctor-status'+'/' + item.id,
                     this.openStatusPanelAfter
                 );
             }
