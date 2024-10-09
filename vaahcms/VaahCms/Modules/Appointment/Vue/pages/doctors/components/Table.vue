@@ -7,18 +7,18 @@ const store = useDoctorStore();
 const useVaah = vaah();
 
 
-const visibleRight = ref(false)
-const currentAppointmentCount = ref(0);
-const appointmentDetails = ref([]);
-const bookedAppointments = ref([]);
-const cancelledAppointments = ref([]);
+const visible_right = ref(false)
+const current_appointment_count = ref(0);
+const appointment_details = ref([]);
+const booked_appointments = ref([]);
+const cancelled_appointments = ref([]);
 function openSidebar(appointmentsCount, appointmentsList) {
-    currentAppointmentCount.value = appointmentsCount;
-    appointmentDetails.value = appointmentsList;
+    current_appointment_count.value = appointmentsCount;
+    appointment_details.value = appointmentsList;
 
-    bookedAppointments.value = appointmentsList.filter(appointment => appointment.status === 1);
-    cancelledAppointments.value = appointmentsList.filter(appointment => appointment.status === 0);
-    visibleRight.value = true;
+    booked_appointments.value = appointmentsList.filter(appointment => appointment.status === 1);
+    cancelled_appointments.value = appointmentsList.filter(appointment => appointment.status === 0);
+    visible_right.value = true;
 }
 
 function formatTimeWithAmPm(time) {
@@ -221,15 +221,15 @@ function formatTimeWithAmPm(time) {
         </DataTable>
         <!--/table-->
         <!--Sidebar-->
-        <Sidebar v-model:visible="visibleRight"
+        <Sidebar v-model:visible="visible_right"
                  header="Doctor Appointment Details"
                  position="right"
                  style="width: 800px; font-size: 25px; overflow-x: hidden;">
 
             <TabView>
                 <!-- Booked Tab -->
-                <TabPanel :header="'Booked (' + currentAppointmentCount + ')'">
-                    <DataTable :value="bookedAppointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows">
+                <TabPanel :header="'Booked (' + current_appointment_count + ')'">
+                    <DataTable :value="booked_appointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows">
                         <Column field="id" header="ID" :sortable="true" :style="{ width: '80px' }">
                             <template #body="prop">
                                 {{ prop.data.id }}
@@ -290,20 +290,31 @@ function formatTimeWithAmPm(time) {
                 </TabPanel>
 
 
-                <TabPanel :header="'Cancelled (' + Math.max(cancelledAppointments, 0) + ')'">
-                    <DataTable :value="cancelledAppointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows" emptyMessage="No records available" style="width: 800px">
+                <TabPanel :header="'Cancelled (' + Math.max(cancelled_appointments, 0) + ')'">
+                    <DataTable :value="cancelled_appointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows" emptyMessage="No records available" style="width: 800px">
                         <Column field="id" header="ID" :sortable="true" :style="{ width: '80px' }">
                             <template #body="prop">
                                 {{ prop.data.id }}
                             </template>
                         </Column>
 
-                        <Column field="patient.name" header="Patient Name" :sortable="true" class="overflow-wrap-anywhere">
+                        <Column field="patient_name" header="Patient Name"
+                                class="overflow-wrap-anywhere"
+                                style="width:150px;"
+                                :sortable="true">
                             <template #body="prop">
-                                {{ prop.data.patient.name }}
+                                {{ prop.data.patient_name }}
                             </template>
                         </Column>
 
+                        <Column field="doctor_name" header="Doctor Name"
+                                class="overflow-wrap-anywhere"
+                                style="width:150px;"
+                                :sortable="true">
+                            <template #body="prop">
+                                {{ prop.data.doctor_name }}
+                            </template>
+                        </Column>
                         <Column field="date" header="Appointment Date" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
                                 {{ prop.data.date }}
