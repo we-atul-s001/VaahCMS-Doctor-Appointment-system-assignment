@@ -316,6 +316,36 @@ class Doctor extends VaahModel
         }
 
     }
+
+    //-------------------------------------------------
+    public function scopeIsFieldSearchFilter($query, $field_filter){
+        $filter_type = array_keys($field_filter);
+        if(count($field_filter) <= 0)
+        {
+            return $query;
+        }
+        foreach($filter_type as $filter){
+            $filter_value = $field_filter[$filter];
+            switch ($filter){
+                case 'specialization' :
+                    $query->where('specialization',$filter_value);
+                    break;
+                case 'price' :
+                    $parts = explode('-', $filter_value);
+                    $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
+                    $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
+                    $query->whereBetween('price',[$minPrice,$maxPrice]);
+                    break;
+                case 'timings' :
+                    $parts = explode('-', $filter_value);
+                    $minTime = Carbon::parse($parts[0])->format('H:i');
+                    $maxTime = Carbon::parse($parts[1])->format('H:i');
+                    $query->whereRaw('TIME(start_time) BETWEEN ? AND ?', [$minTime,$maxTime]);
+                    break;
+            }
+        }
+        return $query;
+    }
     //-------------------------------------------------
     public function scopeTrashedFilter($query, $filter)
     {
@@ -359,6 +389,9 @@ class Doctor extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
+        if($request->has('field_filter')){
+            $list->IsFieldSearchFilter($request->field_filter);
+        }
 
         $rows = config('vaahcms.per_page');
 
@@ -781,6 +814,7 @@ class Doctor extends VaahModel
             'name' => 'required|max:150',
             'email' => 'required|email' . ($id ? '|unique:vh_doctors,email,' . $id : '|unique:vh_doctors,email'),
             'phone' => 'required|min:7|max:16',
+            'price_per_minutes' => 'required|integer|max:100',
             'specialization' => 'required|max:150',
         );
 
@@ -807,6 +841,10 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function getSpecializationList()
+    {
+        return self::distinct()->pluck('specialization');
+}
     //-------------------------------------------------
     public static function seedSampleItems($records=100)
     {

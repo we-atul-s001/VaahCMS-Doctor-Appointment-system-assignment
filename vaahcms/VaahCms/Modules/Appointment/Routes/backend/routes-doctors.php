@@ -18,6 +18,9 @@ function () {
     /**
      * Get List
      */
+    Route::get('/specialization',  [DoctorsController::class, 'getSpecializationDoctorList'])
+        ->name('vh.backend.appointments.doctors.specialization.read');
+
     Route::get('/', [DoctorsController::class, 'getList'])
         ->name('vh.backend.appointment.doctors.list');
     /**
