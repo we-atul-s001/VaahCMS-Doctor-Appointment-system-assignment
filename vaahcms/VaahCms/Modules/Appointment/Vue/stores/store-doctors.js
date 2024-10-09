@@ -485,8 +485,9 @@ export const useDoctorStore = defineStore({
         async openStatusPanel(item)
         {
             this.show_status_panel = true;
-            this.product_id=item.id;
-            this.product_name=item.name;
+            this.appointment_id=item.id;
+             this.name = item.name;
+            this.appointments_count=item.appointments_count;
             if (item.id) {
                 await vaah().ajax(
                     ajax_url +'/' + item.id,
