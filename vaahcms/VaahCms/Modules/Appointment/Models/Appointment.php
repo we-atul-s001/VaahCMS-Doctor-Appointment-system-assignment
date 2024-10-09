@@ -86,7 +86,12 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-
+    public static function formatTime($time, $format = 'g:i A')
+    {
+        return Carbon::parse($time)
+            ->setTimezone("ASIA/KOLKATA")
+            ->format($format);
+    }
 
     //-------------------------------------------------
     public function patient()
@@ -100,7 +105,11 @@ class Appointment extends VaahModel
     public function doctor()
     {
         return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
-            ->select('id','name','shift_start_time','shift_end_time','specialization','price_per_minutes');
+
+
+
+            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_minutes');
+
     }
 
     //-------------------------------------------------
@@ -258,8 +267,8 @@ class Appointment extends VaahModel
             ->where(function ($query) use ($slot_time) {
 
                 $query->whereBetween('slot_start_time', [
-                    $slot_time->copy()->subMinutes(15),
-                    $slot_time->copy()->addMinutes(15)
+                    $slot_time->copy()->subMinutes(30),
+                    $slot_time->copy()->addMinutes(30)
                 ]);
             })->get();
 
@@ -294,7 +303,7 @@ class Appointment extends VaahModel
         $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
         use ($start_time) {
             $query
-                ->where('slot_end_time', '>', $start_time);
+                ->where('slot_start_time', '>', $start_time);
         })->withTrashed()->exists();
         if ($slots_exist) {
             return 'No Slot Available';
@@ -302,13 +311,6 @@ class Appointment extends VaahModel
         else{
             return false;        }
 
-    }
-    //-------------------------------------------------
-    public static function formatTime($time, $format = 'H:i:s A')
-    {
-        return Carbon::parse($time)
-            ->setTimezone("ASIA/KOLKATA")
-            ->format($format);
     }
 
     //-------------------------------------------------

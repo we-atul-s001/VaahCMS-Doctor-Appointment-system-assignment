@@ -45,7 +45,7 @@ class AppointmentsController extends Controller
             $data['fillable']['except'] = Appointment::getUnFillableColumns();
             $data['empty_item'] = Appointment::getEmptyItem();
             $data['patients'] = Patient::where('is_active',1)->select('id','name')->get();
-            $data['doctors'] = Doctor::where('is_active',1)->select('id','name','shift_start_time','shift_end_time','specialization','email')->get();
+            $data['doctors'] = Doctor::where('is_active',1)->select('id','name','shift_start_time','shift_end_time','specialization','email', 'price_per_minutes')->get();
             $data['actions'] = [];
 
             $response['success'] = true;
