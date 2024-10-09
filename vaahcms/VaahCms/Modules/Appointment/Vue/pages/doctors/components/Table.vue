@@ -1,26 +1,30 @@
 <script setup>
-import { vaah } from '../../../vaahvue/pinia/vaah'
-import { useDoctorStore } from '../../../stores/store-doctors'
-import { ref } from 'vue';
+import { vaah } from '../../../vaahvue/pinia/vaah';
+import { useDoctorStore } from '../../../stores/store-doctors';
+import { ref, computed } from 'vue';
 
 const store = useDoctorStore();
 const useVaah = vaah();
 
-
-const visible_right = ref(false)
+const visible_right = ref(false);
 const current_appointment_count = ref(0);
+const current_cancelled_appointment_count = ref(0);
 const appointment_details = ref([]);
 const booked_appointments = ref([]);
 const cancelled_appointments = ref([]);
+
 function openSidebar(appointmentsCount, appointmentsList) {
     current_appointment_count.value = appointmentsCount;
     appointment_details.value = appointmentsList;
 
     booked_appointments.value = appointmentsList.filter(appointment => appointment.status === 1);
-    cancelled_appointments.value = appointmentsList.filter(appointment => appointment.status === 0);
+    cancelled_appointments.value = appointmentsList.filter(appointment => appointment.status === 0 || appointment.status === 2);
+
+
+    current_cancelled_appointment_count.value = cancelled_appointments.value.length;
+
     visible_right.value = true;
 }
-
 function formatTimeWithAmPm(time) {
     if (!time) return '';
 
@@ -124,6 +128,7 @@ function formatTimeWithAmPm(time) {
                 </template>
 
             </Column>
+
             <Column field="price_per_mintues" header="Price per minutes"
                     v-if="store.isViewLarge()"
                     style="width:150px;"
@@ -132,8 +137,7 @@ function formatTimeWithAmPm(time) {
                     <div style="position: relative; display: inline-block;">
                         ₹ {{ prop.data.price_per_minutes }}
                         <badge severity="info"
-                                style="position: absolute; top: -10px; right: -28px; font-size: 12px;
-
+                               style="position: absolute; top: -10px; right: -28px; font-size: 12px;
                                 color: #fff; border-radius: 50%; padding: 5px 8px; height: 24px; width: 24px;
                                 display: flex; justify-content: center; align-items: center;"
                                @click="openSidebar(prop.data.appointments_count, prop.data.appointments_list)">
@@ -142,7 +146,6 @@ function formatTimeWithAmPm(time) {
                     </div>
                 </template>
             </Column>
-
 
             <Column field="updated_at" header="Updated"
                     v-if="store.isViewLarge()"
@@ -197,19 +200,14 @@ function formatTimeWithAmPm(time) {
                                 v-tooltip.top="'Trash'"
                                 icon="pi pi-trash" />
 
-
                         <Button class="p-button-tiny p-button-success p-button-text"
                                 data-testid="doctors-table-action-restore"
                                 v-if="store.isViewLarge() && prop.data.deleted_at"
                                 @click="store.itemAction('restore', prop.data)"
                                 v-tooltip.top="'Restore'"
                                 icon="pi pi-replay" />
-
-
                     </div>
-
                 </template>
-
             </Column>
 
             <template #empty>
@@ -220,6 +218,7 @@ function formatTimeWithAmPm(time) {
 
         </DataTable>
         <!--/table-->
+
         <!--Sidebar-->
         <Sidebar v-model:visible="visible_right"
                  header="Doctor Appointment Details"
@@ -245,14 +244,7 @@ function formatTimeWithAmPm(time) {
                             </template>
                         </Column>
 
-                        <Column field="doctor_name" header="Doctor Name"
-                                class="overflow-wrap-anywhere"
-                                style="width:150px;"
-                                :sortable="true">
-                            <template #body="prop">
-                                {{ prop.data.doctor_name }}
-                            </template>
-                        </Column>
+
 
 
                         <Column field="price_per_minutes" header="Price per Minute"
@@ -270,17 +262,15 @@ function formatTimeWithAmPm(time) {
                             </template>
                         </Column>
 
-                        <Column field="slot_start_time" header="Booking Time" :sortable="true" class="overflow-wrap-anywhere">
+                        <Column field="time" header="Time" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
-                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}<!-- Displaying the start time -->
+                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
                             </template>
                         </Column>
 
-
-
-                        <Column field="reason" header="Reason" :sortable="true" class="overflow-wrap-anywhere">
+                        <Column field="status" header="Status" :sortable="true">
                             <template #body="prop">
-                                {{ prop.data.reason || 'N/A' }}
+                                <Badge v-if="prop.data.status === 1" value="Booked" severity="success"></Badge>
                             </template>
                         </Column>
                         <template #empty="prop">
@@ -289,9 +279,9 @@ function formatTimeWithAmPm(time) {
                     </DataTable>
                 </TabPanel>
 
-
-                <TabPanel :header="'Cancelled (' + Math.max(cancelled_appointments, 0) + ')'">
-                    <DataTable :value="cancelled_appointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows" emptyMessage="No records available" style="width: 800px">
+                <!-- Cancelled Tab -->
+                <TabPanel :header="'Cancelled (' + current_cancelled_appointment_count + ')'">
+                    <DataTable :value="cancelled_appointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows">
                         <Column field="id" header="ID" :sortable="true" :style="{ width: '80px' }">
                             <template #body="prop">
                                 {{ prop.data.id }}
@@ -307,31 +297,33 @@ function formatTimeWithAmPm(time) {
                             </template>
                         </Column>
 
-                        <Column field="doctor_name" header="Doctor Name"
+
+
+                        <Column field="price_per_minutes" header="Price per Minute"
                                 class="overflow-wrap-anywhere"
                                 style="width:150px;"
                                 :sortable="true">
                             <template #body="prop">
-                                {{ prop.data.doctor_name }}
+                                ₹ {{ prop.data.price_per_minutes }}
                             </template>
                         </Column>
+
                         <Column field="date" header="Appointment Date" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
                                 {{ prop.data.date }}
                             </template>
                         </Column>
 
-                        <Column field="slot_start_time" header="Start Time" :sortable="true" class="overflow-wrap-anywhere">
+                        <Column field="time" header="Time" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
                                 {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
                             </template>
                         </Column>
 
-
-
-                        <Column field="reason" header="Reason" :sortable="true" class="overflow-wrap-anywhere">
+                        <Column field="status" header="Status" :sortable="true">
                             <template #body="prop">
-                                {{ prop.data.reason || 'N/A' }}
+                                <Badge v-if="prop.data.status === 0" value="Rescheduled" severity="info"></Badge>
+                                <Badge v-else-if="prop.data.status === 2" value="Cancelled By Patient" severity="danger" style="width: 180px"></Badge>
                             </template>
                         </Column>
                         <template #empty="prop">
@@ -340,18 +332,7 @@ function formatTimeWithAmPm(time) {
                     </DataTable>
                 </TabPanel>
             </TabView>
-
         </Sidebar>
-        <!--paginator-->
-        <Paginator v-if="store.query.rows"
-                   v-model:rows="store.query.rows"
-                   :totalRecords="store.list.total"
-                   :first="((store.query.page??1)-1)*store.query.rows"
-                   @page="store.paginate($event)"
-                   :rowsPerPageOptions="store.rows_per_page"
-                   class="bg-white-alpha-0 pt-2">
-        </Paginator>
-        <!--/paginator-->
-
+        <!--/Sidebar-->
     </div>
 </template>

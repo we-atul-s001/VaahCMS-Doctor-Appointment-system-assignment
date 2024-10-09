@@ -74,7 +74,6 @@ class Doctor extends VaahModel
             return [
                 'id' => $appointment->id,
                 'patient_name' => $appointment->patient->name,
-                'doctor_name' => $appointment->doctor->name,
                 'price_per_minutes' => $appointment->doctor->price_per_minutes,
                 'status' => $appointment->status,
                 'date' => $appointment->date,
