@@ -5,9 +5,9 @@ use VaahCms\Modules\Appointment\Http\Controllers\Backend\DoctorsController;
 Route::group(
     [
         'prefix' => 'backend/appointment/doctors',
-        
+
         'middleware' => ['web', 'has.backend.access'],
-        
+
 ],
 function () {
     /**

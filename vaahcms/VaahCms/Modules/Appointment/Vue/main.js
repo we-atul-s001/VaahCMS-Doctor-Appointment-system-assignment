@@ -16,6 +16,11 @@ import StyleClass from 'primevue/styleclass';
 import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
+import Sidebar from 'primevue/sidebar';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+
+
 //-------------/PrimeVue Imports
 
 //-------------CRUD PrimeVue Imports
@@ -71,6 +76,9 @@ app.component('ConfirmDialog', ConfirmDialog);
 app.component('Menu', Menu);
 app.component('ProgressBar', ProgressBar);
 app.component('Toast', Toast);
+app.component('Sidebar', Sidebar);
+app.component('TabView', TabView);
+app.component('TabPanel', TabPanel);
 
 //-------------/PrimeVue Use
 

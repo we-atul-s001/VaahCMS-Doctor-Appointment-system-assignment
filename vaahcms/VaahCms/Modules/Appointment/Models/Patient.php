@@ -301,6 +301,7 @@ class Patient extends VaahModel
 
 
     }
+    //-------------------------------------------------
 
     //-------------------------------------------------
     public static function updateList($request)
