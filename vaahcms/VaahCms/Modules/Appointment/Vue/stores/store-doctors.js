@@ -482,23 +482,6 @@ export const useDoctorStore = defineStore({
         },
         //---------------------------------------------------------------------
 
-        async openStatusPanel(item)
-        {
-            this.show_status_panel = true;
-            this.appointment_id=item.id;
-             this.name = item.name;
-            this.appointments_count=item.appointments_count;
-            if (item.id) {
-                await vaah().ajax(
-                    ajax_url + '/get-doctor-status'+'/' + item.id,
-                    this.openStatusPanelAfter
-                );
-            }
-        },
-        openStatusPanelAfter(data, res) {
-
-            this.$router.push({name: 'doctors.index', query: this.query});
-        },
         //---------------------------------------------------------------------
         async getFormInputs () {
             let params = {

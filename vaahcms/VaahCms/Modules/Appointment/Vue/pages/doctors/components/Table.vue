@@ -1,11 +1,25 @@
 <script setup>
-import {vaah} from '../../../vaahvue/pinia/vaah'
-import {useDoctorStore} from '../../../stores/store-doctors'
-import DoctorStatus from '../components/DoctorStatus.vue'
+import { vaah } from '../../../vaahvue/pinia/vaah'
+import { useDoctorStore } from '../../../stores/store-doctors'
+import { ref } from 'vue';
 
 const store = useDoctorStore();
 const useVaah = vaah();
 
+
+const visibleRight = ref(false)
+const currentAppointmentCount = ref(0);
+const appointmentDetails = ref([]);
+const bookedAppointments = ref([]);
+const cancelledAppointments = ref([]);
+function openSidebar(appointmentsCount, appointmentsList) {
+    currentAppointmentCount.value = appointmentsCount;
+    appointmentDetails.value = appointmentsList;
+
+    bookedAppointments.value = appointmentsList.filter(appointment => appointment.status === 1);
+    cancelledAppointments.value = appointmentsList.filter(appointment => appointment.status === 0);
+    visibleRight.value = true;
+}
 
 function formatTimeWithAmPm(time) {
     if (!time) return '';
@@ -24,10 +38,9 @@ function formatTimeWithAmPm(time) {
 </script>
 
 <template>
-
     <div v-if="store.list">
         <!--table-->
-         <DataTable :value="store.list.data"
+        <DataTable :value="store.list.data"
                    dataKey="id"
                    :rowClass="store.setRowClass"
                    class="p-datatable-sm p-datatable-hoverable-rows"
@@ -58,94 +71,89 @@ function formatTimeWithAmPm(time) {
 
             </Column>
 
-             <Column field="email" header="Email"
-                     class="overflow-wrap-anywhere"
-                     style="width:500px;"
-                     :sortable="true">
+            <Column field="email" header="Email"
+                    class="overflow-wrap-anywhere"
+                    style="width:500px;"
+                    :sortable="true">
 
-                 <template #body="prop">
+                <template #body="prop">
+                    {{prop.data.email}}
+                </template>
 
-                     {{prop.data.email}}
-                 </template>
+            </Column>
 
-             </Column>
+            <Column field="phone" header="Phone"
+                    class="overflow-wrap-anywhere"
+                    style="width:150px;"
+                    :sortable="true">
 
-             <Column field="phone" header="Phone"
-                     class="overflow-wrap-anywhere"
-                     style="width:150px;"
-                     :sortable="true">
+                <template #body="prop">
+                    {{prop.data.phone}}
+                </template>
 
-                 <template #body="prop">
+            </Column>
 
-                     {{prop.data.phone}}
-                 </template>
+            <Column field="specialization" header="Specialization"
+                    class="overflow-wrap-anywhere"
+                    :sortable="true">
 
-             </Column>
+                <template #body="prop">
+                    {{prop.data.specialization}}
+                </template>
 
-             <Column field="specialization" header="Specialization"
-                     class="overflow-wrap-anywhere"
-                     :sortable="true">
+            </Column>
 
-                 <template #body="prop">
+            <Column field="shift_start_time" header="Shift Start Time"
+                    v-if="store.isViewLarge()"
+                    style="width:150px;"
+                    :sortable="true">
 
-                     {{prop.data.specialization}}
-                 </template>
+                <template #body="prop">
+                    {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
+                </template>
 
-             </Column>
+            </Column>
 
-             <Column field="shift_start_time" header="Shift Start Time"
-                     v-if="store.isViewLarge()"
-                     style="width:150px;"
-                     :sortable="true">
+            <Column field="shift_end_time" header="Shift End Time"
+                    v-if="store.isViewLarge()"
+                    style="width:150px;"
+                    :sortable="true">
 
-                 <template #body="prop">
-                     {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
+                <template #body="prop">
+                    {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
+                </template>
 
-                 </template>
-
-             </Column>
-
-             <Column field="shift_end_time" header="Shift End Time"
-                     v-if="store.isViewLarge()"
-                     style="width:150px;"
-                     :sortable="true">
-
-                 <template #body="prop">
-                     {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
-                 </template>
-
-             </Column>
-             <Column field="price_per_mintues" header="Price per minutes"
-                     v-if="store.isViewLarge()"
-                     style="width:150px;"
-                     :sortable="true">
-                 <template #body="prop">
-                     <div style="position: relative; display: inline-block;">
-                         ₹ {{ prop.data.price_per_minutes }}
-                         <badge severity="info"
-                                 @click="store.openStatusPanel(prop.data)"
-                                 style="position: absolute; top: -10px; right: -28px; font-size: 12px;
+            </Column>
+            <Column field="price_per_mintues" header="Price per minutes"
+                    v-if="store.isViewLarge()"
+                    style="width:150px;"
+                    :sortable="true">
+                <template #body="prop">
+                    <div style="position: relative; display: inline-block;">
+                        ₹ {{ prop.data.price_per_minutes }}
+                        <badge severity="info"
+                                style="position: absolute; top: -10px; right: -28px; font-size: 12px;
 
                                 color: #fff; border-radius: 50%; padding: 5px 8px; height: 24px; width: 24px;
                                 display: flex; justify-content: center; align-items: center;"
-                                >
-                             {{ prop.data.appointments_count || 0 }}
-                         </badge>
-                     </div>
-                 </template>
-             </Column>
+                               @click="openSidebar(prop.data.appointments_count, prop.data.appointments_list)">
+                            {{ prop.data.appointments_count || 0 }}
+                        </badge>
+                    </div>
+                </template>
+            </Column>
 
 
-             <Column field="updated_at" header="Updated"
-                        v-if="store.isViewLarge()"
-                        style="width:150px;"
-                        :sortable="true">
+            <Column field="updated_at" header="Updated"
+                    v-if="store.isViewLarge()"
+                    style="width:150px;"
+                    :sortable="true">
 
-                    <template #body="prop">
-                        {{useVaah.strToSlug(prop.data.updated_at)}}
-                    </template>
+                <template #body="prop">
+                    {{useVaah.strToSlug(prop.data.updated_at)}}
+                </template>
 
-                </Column>
+            </Column>
 
             <Column field="is_active" v-if="store.isViewLarge()"
                     :sortable="true"
@@ -202,18 +210,127 @@ function formatTimeWithAmPm(time) {
 
                 </template>
 
-
             </Column>
 
-             <template #empty>
-                 <div class="text-center py-3">
-                     No records found.
-                 </div>
-             </template>
+            <template #empty>
+                <div class="text-center py-3">
+                    No records found.
+                </div>
+            </template>
 
         </DataTable>
         <!--/table-->
+        <!--Sidebar-->
+        <Sidebar v-model:visible="visibleRight"
+                 header="Doctor Appointment Details"
+                 position="right"
+                 style="width: 800px; font-size: 25px; overflow-x: hidden;">
 
+            <TabView>
+                <!-- Booked Tab -->
+                <TabPanel :header="'Booked (' + currentAppointmentCount + ')'">
+                    <DataTable :value="bookedAppointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows">
+                        <Column field="id" header="ID" :sortable="true" :style="{ width: '80px' }">
+                            <template #body="prop">
+                                {{ prop.data.id }}
+                            </template>
+                        </Column>
+
+                        <Column field="patient_name" header="Patient Name"
+                                class="overflow-wrap-anywhere"
+                                style="width:150px;"
+                                :sortable="true">
+                            <template #body="prop">
+                                {{ prop.data.patient_name }}
+                            </template>
+                        </Column>
+
+                        <Column field="doctor_name" header="Doctor Name"
+                                class="overflow-wrap-anywhere"
+                                style="width:150px;"
+                                :sortable="true">
+                            <template #body="prop">
+                                {{ prop.data.doctor_name }}
+                            </template>
+                        </Column>
+
+
+                        <Column field="price_per_minutes" header="Price per Minute"
+                                class="overflow-wrap-anywhere"
+                                style="width:150px;"
+                                :sortable="true">
+                            <template #body="prop">
+                                ₹ {{ prop.data.price_per_minutes }}
+                            </template>
+                        </Column>
+
+                        <Column field="date" header="Appointment Date" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ prop.data.date }}
+                            </template>
+                        </Column>
+
+                        <Column field="slot_start_time" header="Booking Time" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}<!-- Displaying the start time -->
+                            </template>
+                        </Column>
+
+
+
+                        <Column field="reason" header="Reason" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ prop.data.reason || 'N/A' }}
+                            </template>
+                        </Column>
+                        <template #empty="prop">
+                            <div style="text-align: center; font-size: 12px; color: #888;">No records found.</div>
+                        </template>
+                    </DataTable>
+                </TabPanel>
+
+
+                <TabPanel :header="'Cancelled (' + Math.max(cancelledAppointments, 0) + ')'">
+                    <DataTable :value="cancelledAppointments" dataKey="id" class="p-datatable-sm p-datatable-hoverable-rows" emptyMessage="No records available" style="width: 800px">
+                        <Column field="id" header="ID" :sortable="true" :style="{ width: '80px' }">
+                            <template #body="prop">
+                                {{ prop.data.id }}
+                            </template>
+                        </Column>
+
+                        <Column field="patient.name" header="Patient Name" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ prop.data.patient.name }}
+                            </template>
+                        </Column>
+
+                        <Column field="date" header="Appointment Date" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ prop.data.date }}
+                            </template>
+                        </Column>
+
+                        <Column field="slot_start_time" header="Start Time" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
+                            </template>
+                        </Column>
+
+
+
+                        <Column field="reason" header="Reason" :sortable="true" class="overflow-wrap-anywhere">
+                            <template #body="prop">
+                                {{ prop.data.reason || 'N/A' }}
+                            </template>
+                        </Column>
+                        <template #empty="prop">
+                            <div style="text-align: center; font-size: 12px; color: #888;">No records found.</div>
+                        </template>
+                    </DataTable>
+                </TabPanel>
+            </TabView>
+
+        </Sidebar>
         <!--paginator-->
         <Paginator v-if="store.query.rows"
                    v-model:rows="store.query.rows"
@@ -224,7 +341,6 @@ function formatTimeWithAmPm(time) {
                    class="bg-white-alpha-0 pt-2">
         </Paginator>
         <!--/paginator-->
-      <DoctorStatus/>
-    </div>
 
+    </div>
 </template>

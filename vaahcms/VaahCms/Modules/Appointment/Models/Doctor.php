@@ -52,7 +52,8 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     protected $appends = [
-        'appointments_count'
+        'appointments_count',
+        'appointments_list'
     ];
 
     //-------------------------------------------------
@@ -64,6 +65,23 @@ class Doctor extends VaahModel
     public function getAppointmentsCountAttribute(): int
     {
         return $this->appointments()->whereNotIn('status', [0, 2])->count();
+    }
+
+    public function getAppointmentsListAttribute(): array
+    {
+
+        return $this->appointments()->with(['patient', 'doctor'])->get()->map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'patient_name' => $appointment->patient->name,
+                'doctor_name' => $appointment->doctor->name,
+                'price_per_minutes' => $appointment->doctor->price_per_minutes,
+                'status' => $appointment->status,
+                'date' => $appointment->date,
+                'slot_start_time' => $appointment->slot_start_time,
+                'reason' => $appointment->reason,
+            ];
+        })->toArray();
     }
 
     //-------------------------------------------------
@@ -868,45 +886,8 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     //-------------------------------------------------
     //-------------------------------------------------
-    public function appointmentStatus()
-    {
-        return $this->hasMany(Appointment::class);
-    }
     //-------------------------------------------------
 
-    public static function getDoctorStatus($id)
-    {
-
-        $doctor = Doctor::find($id);
-
-        if (!$doctor) {
-            return null;
-        }
-
-        $appointments = Appointment::where('doctor_id', $id)
-            ->with('patient')
-            ->get();
-
-        $status = [
-            'doctor_name' => $doctor->name,
-            'doctor_specialization' => $doctor->specialization,
-            'shift_start_time' => $doctor->shift_start_time,
-            'shift_end_time' => $doctor->shift_end_time,
-            'price_per_minutes' => $doctor->price_per_minutes,
-            'appointments' => []
-        ];
-
-        foreach ($appointments as $appointment) {
-            $status['appointments'][] = [
-                'appointment_id' => $appointment->id,
-                'patient_details' => $appointment->patient,
-                'appointment_time' => $appointment->slot_start_time,
-                'status' => $appointment->status // Adjust as necessary
-            ];
-        }
-
-        return $status;
-    }
 
 
 

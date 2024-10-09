@@ -20,9 +20,6 @@ function () {
      */
     Route::get('/', [DoctorsController::class, 'getList'])
         ->name('vh.backend.appointment.doctors.list');
-
-    Route::get('/get-doctor-status/{id}', [DoctorsController::class, 'getDoctorStatus'])
-        ->name('vh.backend.appointment.doctors.get-doctor-status');
     /**
      * Update List
      */
