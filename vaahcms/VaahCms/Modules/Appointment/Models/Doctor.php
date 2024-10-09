@@ -216,7 +216,7 @@ class Doctor extends VaahModel
 
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('g:i A');
+                    ->format('H:i');
             },
         );
     }
@@ -237,7 +237,7 @@ class Doctor extends VaahModel
                 $timezone = Session::get('user_timezone');
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('g:i A');
+                    ->format('H:i');
             },
         );
     }

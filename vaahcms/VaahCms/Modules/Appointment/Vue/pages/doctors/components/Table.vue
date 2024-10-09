@@ -6,6 +6,20 @@ const store = useDoctorStore();
 const useVaah = vaah();
 
 
+function formatTimeWithAmPm(time) {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+
+    let hour = date.getHours() % 12;
+    if (hour === 0) hour = 12;
+
+    return `${hour}:${minutes} ${amPm}`;
+}
 </script>
 
 <template>
@@ -84,7 +98,7 @@ const useVaah = vaah();
                      :sortable="true">
 
                  <template #body="prop">
-                     {{ prop.data.shift_start_time }}
+                     {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
 
                  </template>
 
@@ -96,7 +110,7 @@ const useVaah = vaah();
                      :sortable="true">
 
                  <template #body="prop">
-                     {{ prop.data.shift_end_time }}
+                     {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
                  </template>
 
              </Column>

@@ -80,7 +80,7 @@ class Appointment extends VaahModel
 
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
-                    ->format('g:i A');
+                    ->format('H:i');
             },
         );
     }
