@@ -301,6 +301,11 @@ class Patient extends VaahModel
 
 
     }
+    //-------------------------------------------------
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
 
     //-------------------------------------------------
     public static function updateList($request)
