@@ -481,6 +481,24 @@ export const useDoctorStore = defineStore({
             await this.getList();
         },
         //---------------------------------------------------------------------
+
+        async openStatusPanel(item)
+        {
+            this.show_status_panel = true;
+            this.product_id=item.id;
+            this.product_name=item.name;
+            if (item.id) {
+                await vaah().ajax(
+                    ajax_url +'/' + item.id,
+                    this.openStatusPanelAfter
+                );
+            }
+        },
+        openStatusPanelAfter(data, res) {
+
+            this.$router.push({name: 'doctors.index', query: this.query});
+        },
+        //---------------------------------------------------------------------
         async getFormInputs () {
             let params = {
                 model_namespace: this.model,

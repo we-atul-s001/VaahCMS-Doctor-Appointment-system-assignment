@@ -1,6 +1,7 @@
 <script setup>
 import {vaah} from '../../../vaahvue/pinia/vaah'
 import {useDoctorStore} from '../../../stores/store-doctors'
+import DoctorStatus from '../components/DoctorStatus.vue'
 
 const store = useDoctorStore();
 const useVaah = vaah();
@@ -118,9 +119,19 @@ function formatTimeWithAmPm(time) {
                      v-if="store.isViewLarge()"
                      style="width:150px;"
                      :sortable="true">
-
                  <template #body="prop">
-                     ₹ {{ prop.data.price_per_minutes }}
+                     <div style="position: relative; display: inline-block;">
+                         ₹ {{ prop.data.price_per_minutes }}
+                         <badge severity="info"
+                                 @click="store.openStatusPanel(prop.data)"
+                                 style="position: absolute; top: -10px; right: -28px; font-size: 12px;
+
+                                color: #fff; border-radius: 50%; padding: 5px 8px; height: 24px; width: 24px;
+                                display: flex; justify-content: center; align-items: center;"
+                                >
+                             {{ prop.data.appointments_count || 0 }}
+                         </badge>
+                     </div>
                  </template>
              </Column>
 
@@ -213,7 +224,7 @@ function formatTimeWithAmPm(time) {
                    class="bg-white-alpha-0 pt-2">
         </Paginator>
         <!--/paginator-->
-
+      <DoctorStatus/>
     </div>
 
 </template>
