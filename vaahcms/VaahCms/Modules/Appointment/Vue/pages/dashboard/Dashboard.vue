@@ -1,31 +1,37 @@
 
 <script setup>
 import {ref, onMounted} from 'vue';
-import axios from 'axios';
 import 'primeicons/primeicons.css';
+import {vaah} from '../../vaahvue/pinia/vaah';
+import {useRootStore} from '../../stores/root'
 
 
-const totalDoctors = ref(0);
-const totalPatients = ref(0);
-const totalBookedAppointments = ref(0);
-const totalCancelledAppointments = ref(0);
-const totalRescheduledAppointments = ref(0);
+const total_doctors = ref(0);
+const total_patients = ref(0);
+const total_booked_appointments = ref(0);
+const total_cancelled_appointments = ref(0);
+const total_rescheduled_appointments = ref(0);
+
+const useDashboardStore = useRootStore();
 
 onMounted(() => {
     fetchDashboardData();
 });
 
-// Fetch dashboard data from API
+
 const fetchDashboardData = async () => {
     try {
-        const response = await axios.get('http://127.0.0.1:8000/backend/appointment/doctors/doctor-count');
+        const ajax_url = useDashboardStore.ajax_url;
 
-        totalDoctors.value = response.data.totalDoctors;
-        totalPatients.value = response.data.totalPatients;
+        const response = await vaah().ajax(ajax_url+'/doctors/doctor-count');
 
-        totalBookedAppointments.value = response.data.totalBookedAppointments ;
-        totalCancelledAppointments.value = response.data.totalCancelledAppointments;
-        totalRescheduledAppointments.value = response.data.totalRescheduledAppointments;
+    total_doctors.value = response.data.totalDoctors;
+
+        total_patients.value = response.data.totalPatients;
+
+        total_booked_appointments.value = response.data.totalBookedAppointments ;
+        total_cancelled_appointments.value = response.data.totalCancelledAppointments;
+        total_rescheduled_appointments.value = response.data.totalRescheduledAppointments;
 
     } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -167,7 +173,7 @@ h2 {
                         Total Doctors
                     </div>
                     <div class="card-body">
-                        <h1>{{ totalDoctors }}</h1>
+                        <h1>{{ total_doctors }}</h1>
                     </div>
                 </div>
 
@@ -178,7 +184,7 @@ h2 {
                         Total Patients
                     </div>
                     <div class="card-body">
-                        <h1>{{ totalPatients }}</h1>
+                        <h1>{{ total_patients }}</h1>
                     </div>
                 </div>
 
@@ -189,7 +195,7 @@ h2 {
                         Total Booked Appointments
                     </div>
                     <div class="card-body">
-                        <h1>{{ totalBookedAppointments }}</h1>
+                        <h1>{{ total_booked_appointments }}</h1>
                     </div>
                 </div>
 
@@ -200,7 +206,7 @@ h2 {
                         Total Cancelled Appointments
                     </div>
                     <div class="card-body">
-                        <h1>{{ totalCancelledAppointments }}</h1>
+                        <h1>{{ total_cancelled_appointments }}</h1>
                     </div>
                 </div>
                 <!-- Card 5: Total Reschedule Appointments -->
@@ -210,7 +216,7 @@ h2 {
                         Total Reschedule Appointments
                     </div>
                     <div class="card-body">
-                        <h1>{{ totalRescheduledAppointments }}</h1>
+                        <h1>{{ total_rescheduled_appointments }}</h1>
                     </div>
                 </div>
             </div>
