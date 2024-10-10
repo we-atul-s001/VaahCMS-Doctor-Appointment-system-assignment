@@ -947,9 +947,16 @@ export const useDoctorStore = defineStore({
             console.log("File selected:", this.selected_file);
         },
         confirmBulkImport() {
-            if (this.selectedFile) {
-                this.form.type = 'bulk-import';
-                vaah().confirmDialogDelete(this.confirmBulkImportAfter);
+            if (selected_file.value) {
+                const fileType = selected_file.value.name.split('.').pop().toLowerCase();
+                if (fileType !== 'csv') {
+                    alert('Please select a valid CSV file.');
+                    return;
+                }
+
+                // Proceed with the bulk import logic here
+                console.log("Proceeding with CSV file:", selected_file.value);
+                show_import_dialog.value = false;
             } else {
                 alert("Please select a file before proceeding.");
             }
