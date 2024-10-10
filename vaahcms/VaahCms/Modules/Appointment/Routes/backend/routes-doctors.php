@@ -79,5 +79,6 @@ function () {
         ->name('vh.backend.appointment.doctors.item.action');
 
     //---------------------------------------------------------
-
+    Route::get('/specialization',  [DoctorsController::class, 'getSpecialization'])
+        ->name('vh.backend.appointments.doctors.specialization.read');
 });

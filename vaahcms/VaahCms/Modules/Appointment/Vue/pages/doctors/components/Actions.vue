@@ -47,6 +47,14 @@ const toggleBulkMenuState = (event) => {
                     <Badge v-if="store.action.items.length > 0"
                            :value="store.action.items.length" />
                 </Button>
+                <Button
+                    type="button"
+                    data-testid="doctors-actions-show-field-filters"
+                    class="p-button-sm"
+                    @click="store.showFieldFilters()">
+                    Apply field filters
+                    <Badge v-if="store.count_field_filters > 0" :value="store.count_field_filters"></Badge>
+                </Button>
                 <Menu ref="selected_menu_state"
                       :model="store.list_selected_menu"
                       :popup="true" />

@@ -292,6 +292,36 @@ class Doctor extends VaahModel
 
         return $query->orderBy($sort[0], $sort[1]);
     }
+
+    //-------------------------------------------------
+    public function scopeIsSpecializationFieldFilter($query, $field_filter){
+        $filter_type = array_keys($field_filter);
+        if(count($field_filter) <= 0)
+        {
+            return $query;
+        }
+        foreach($filter_type as $filter){
+            $filter_value = $field_filter[$filter];
+            switch ($filter){
+                case 'specialization' :
+                    $query->where('specialization',$filter_value);
+                    break;
+                case 'price' :
+                    $parts = explode('-', $filter_value);
+                    $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
+                    $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
+                    $query->whereBetween('price',[$minPrice,$maxPrice]);
+                    break;
+                case 'timings' :
+                    $parts = explode('-', $filter_value);
+                    $minTime = Carbon::parse($parts[0])->format('H:i');
+                    $maxTime = Carbon::parse($parts[1])->format('H:i');
+                    $query->whereRaw('TIME(start_time) BETWEEN ? AND ?', [$minTime,$maxTime]);
+                    break;
+            }
+        }
+        return $query;
+    }
     //-------------------------------------------------
     public function scopeIsActiveFilter($query, $filter)
     {
@@ -359,7 +389,10 @@ class Doctor extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
-
+        if($request->has('field_filter')){
+            $list->isFieldSpecializationFilter($request->field_filter);
+        }
+        
         $rows = config('vaahcms.per_page');
 
         if($request->has('rows'))
@@ -903,6 +936,10 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function getSpecialization()
+    {
+        return self::distinct()->pluck('specialization');
+    }
     //-------------------------------------------------
     //-------------------------------------------------
 

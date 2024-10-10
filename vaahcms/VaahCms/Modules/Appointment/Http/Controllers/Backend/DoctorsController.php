@@ -272,4 +272,21 @@ class DoctorsController extends Controller
             return $response;
         }
     }
+
+    //----------------------------------------------------------
+    public function getSpecialization(){
+        try{
+            return Doctor::getSpecialization();
+        }catch (\Exception $e){
+            $response = [];
+            $response['success'] = false;
+            if(env('APP_DEBUG')){
+                $response['errors'][] = $e->getMessage();
+                $response['hint'] = $e->getTrace();
+            } else{
+                $response['errors'][] = trans("vaahcms-general.something_went_wrong");
+            }
+            return $response;
+        }
+    }
 }

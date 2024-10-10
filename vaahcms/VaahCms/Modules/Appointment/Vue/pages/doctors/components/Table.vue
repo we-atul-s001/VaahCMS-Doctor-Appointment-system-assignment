@@ -44,6 +44,7 @@ function formatTimeWithAmPm(time) {
 <template>
     <div v-if="store.list">
         <!--table-->
+        {{store.query.field_filter}}
         <DataTable :value="store.list.data"
                    dataKey="id"
                    :rowClass="store.setRowClass"

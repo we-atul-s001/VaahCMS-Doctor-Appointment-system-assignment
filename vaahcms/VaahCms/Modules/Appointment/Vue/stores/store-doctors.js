@@ -20,6 +20,11 @@ let empty_states = {
             sort: null,
         },
     },
+    field_filter: {
+        price: null,
+        specialization: null,
+        timings: null
+    },
     action: {
         type: null,
         items: [],
@@ -65,6 +70,7 @@ export const useDoctorStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
+        specializations: null,
         form_menu_list: []
     }),
     getters: {
@@ -155,6 +161,7 @@ export const useDoctorStore = defineStore({
                 }, { deep: true }
             )
         },
+
         //---------------------------------------------------------------------
         watchStates()
         {
@@ -936,6 +943,21 @@ export const useDoctorStore = defineStore({
 
         },
         //---------------------------------------------------------------------
+        showFieldFilters() {
+            this.show_field_filters = !this.show_field_filters;
+        },
+        async getSpecializationList() {
+            try {
+                const res = await vaah().ajax(this.ajax_url.concat('/specialization'));
+                if (res && res.data) {
+                    this.specializations = res.data;
+                } else {
+                    console.error("No data received from the AJAX call");
+                }
+            } catch (error) {
+                console.error("Error fetching specialization list:", error);
+            }
+        },
     }
 });
 
