@@ -86,21 +86,22 @@ const toggleBulkMenuState = (event) => {
                                 Bulk Import
                             </Button>
                             <Dialog
-                                v-model="store.show_import_dialog"
+                                v-model:visible="store.show_import_dialog"
                                 header="Bulk Import"
                                 :visible="store.show_import_dialog"
                                 :modal="true"
                                 :closable="true"
                                 :width="400"
+                                class="custom-dialog"
                                 @hide="store.onHideDialog()"
                             >
-                                <div>
+                                <div class="dialog-content">
                                     <h4>Select a File for Import</h4>
-                                    <input type="file" accept=".csv" @change="store.onFileSelect()" />
+                                    <input type="file" accept=".csv" class="file-input" @change="store.onFileSelect()" />
                                 </div>
-                                <div class="p-dialog-footer">
-                                    <Button label="Cancel" @click="store.show_import_dialog = false" />
-                                    <Button label="Import" class="p-button-primary" @click="store.confirmBulkImport()" />
+                                <div class="p-dialog-footer custom-footer">
+                                    <Button label="Cancel" @click="store.show_import_dialog = false" class="cancel-btn" />
+                                    <Button label="Import" class="p-button-primary import-btn" @click="store.confirmBulkImport()" />
                                 </div>
                             </Dialog>
                             <Button
@@ -152,3 +153,65 @@ const toggleBulkMenuState = (event) => {
 
     </div>
 </template>
+<style scoped>
+
+.custom-dialog {
+    max-width: 500px;
+    width: 100%;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+
+.dialog-content {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+
+.file-input {
+    display: block;
+    margin: 20px auto;
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+
+.custom-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 10px;
+}
+
+
+.cancel-btn {
+    background-color: #ff4d4f;
+    border-color: #ff4d4f;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.cancel-btn:hover {
+    background-color: #ff7875;
+    border-color: #ff7875;
+}
+
+.import-btn {
+    background-color: #1890ff;
+    border-color: #1890ff;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.import-btn:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+}
+</style>
