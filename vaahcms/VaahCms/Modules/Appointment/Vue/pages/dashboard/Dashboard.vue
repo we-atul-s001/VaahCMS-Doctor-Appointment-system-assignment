@@ -1,76 +1,3 @@
-<template>
-    <div style="margin-top: 8px;">
-        <!-- Dashboard Title -->
-        <h1 class="text-4xl">Dashboard</h1>
-
-        <!-- Card Section with Equal Spacing -->
-        <section style="margin-top: 20px;">
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
-                <!-- Card 1 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Inventories
-                    </div>
-                    <div class="card-body">
-                        <h2>999,000</h2>
-                        <span class="growth-text">↑ +45.20 /month</span>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                </div>
-
-                <!-- Card 2 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Cost of Inventories
-                    </div>
-                    <div class="card-body">
-                        <h2>$499,250</h2>
-                        <span class="growth-text">↑ +45.20 /month</span>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Items Reserved
-                    </div>
-                    <div class="card-body">
-                        <h2>399,150</h2>
-                        <span class="growth-text">↑ +45.20 /month</span>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                </div>
-
-                <!-- Card 4 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Low Inventories
-                        <button class="view-button">View</button>
-                    </div>
-                    <div class="card-body">
-                        <h2>5,100</h2>
-                        <span class="decline-text">↓ -452 /month</span>
-                        <div class="chart-placeholder"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chart Section -->
-        <section style="margin-top: 40px;">
-            <h2 class="text-2xl">Chart Section</h2>
-            <div>
-                <Chart type="bar" :data="chartData" :options="chartOptions" />
-            </div>
-        </section>
-    </div>
-</template>
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import 'primeicons/primeicons.css';
@@ -226,3 +153,74 @@ h2 {
     margin-bottom: 20px;
 }
 </style>
+
+<template>
+    <div style="margin-top: 8px;">
+        <!-- Dashboard Title -->
+        <h1 class="text-4xl">Dashboard</h1>
+
+        <!-- Card Section with Equal Spacing -->
+        <section style="margin-top: 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                <!-- Card 1 -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Doctor
+                    </div>
+                    <div class="card-body">
+                        <h1>999,000</h1>
+
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Patients
+                    </div>
+                    <div class="card-body">
+                        <h1>$499,250</h1>
+
+
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Booked Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>399,150</h1>
+
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                     Total Cancelled Appointments
+
+                    </div>
+                    <div class="card-body">
+                        <h1>5,100</h1>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section style="margin-top: 40px;">
+            <h2 class="text-2xl">Chart Section</h2>
+            <div>
+                <Chart type="bar" :data="chartData" :options="chartOptions" />
+            </div>
+        </section>
+    </div>
+</template>
+
