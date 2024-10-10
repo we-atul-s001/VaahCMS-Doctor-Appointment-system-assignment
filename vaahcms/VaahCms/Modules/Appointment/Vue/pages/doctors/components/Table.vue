@@ -129,7 +129,7 @@ function formatTimeWithAmPm(time) {
 
             </Column>
 
-            <Column field="price_per_mintues" header="Price per minutes"
+            <Column field="price_per_mintues" header="Price per Session"
                     v-if="store.isViewLarge()"
                     style="width:150px;"
                     :sortable="true">
@@ -247,7 +247,7 @@ function formatTimeWithAmPm(time) {
 
 
 
-                        <Column field="price_per_minutes" header="Price per Minute"
+                        <Column field="price_per_minutes" header="Price per Session"
                                 class="overflow-wrap-anywhere"
                                 style="width:150px;"
                                 :sortable="true">
@@ -299,7 +299,7 @@ function formatTimeWithAmPm(time) {
 
 
 
-                        <Column field="price_per_minutes" header="Price per Minute"
+                        <Column field="price_per_minutes" header="Price per Session"
                                 class="overflow-wrap-anywhere"
                                 style="width:150px;"
                                 :sortable="true">
@@ -323,7 +323,7 @@ function formatTimeWithAmPm(time) {
                         <Column field="status" header="Status" :sortable="true">
                             <template #body="prop">
                                 <Badge v-if="prop.data.status === 0" value="Rescheduled" severity="info"></Badge>
-                                <Badge v-else-if="prop.data.status === 2" value="Cancelled By Patient" severity="danger" style="width: 180px"></Badge>
+                                <Badge v-else-if="prop.data.status === 2" value="Cancelled" severity="danger"></Badge>
                             </template>
                         </Column>
                         <template #empty="prop">

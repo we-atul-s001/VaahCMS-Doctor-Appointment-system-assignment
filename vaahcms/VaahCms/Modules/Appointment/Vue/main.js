@@ -19,6 +19,12 @@ import Tooltip from 'primevue/tooltip';
 import Sidebar from 'primevue/sidebar';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
+import Card from 'primevue/card';
+
+import Chart from 'primevue/chart';
+
+
+
 
 
 //-------------/PrimeVue Imports
@@ -79,6 +85,8 @@ app.component('Toast', Toast);
 app.component('Sidebar', Sidebar);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
+app.component('Card', Card);
+app.component('Chart', Chart);
 
 //-------------/PrimeVue Use
 
