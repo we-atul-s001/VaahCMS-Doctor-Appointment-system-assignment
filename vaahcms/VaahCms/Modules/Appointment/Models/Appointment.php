@@ -108,7 +108,7 @@ class Appointment extends VaahModel
 
 
 
-            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_minutes');
+            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_session');
 
     }
 

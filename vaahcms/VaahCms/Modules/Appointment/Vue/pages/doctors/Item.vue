@@ -131,7 +131,7 @@ function formatTime(time) {
                     <template v-for="(value, column) in store.item ">
 
                         <template v-if="column === 'created_by' || column === 'updated_by'
-                        || column === 'deleted_by'">
+                        || column === 'deleted_by' || column === 'appointments_list'">
                         </template>
 
                         <template v-else-if="column === 'id' || column === 'uuid'">
@@ -162,6 +162,10 @@ function formatTime(time) {
 
                         <template v-else-if="column === 'shift_end_time'">
                             <VhViewRow :label="column" :value="formatTime(value)" />
+                        </template>
+
+                        <template v-else-if="column === 'price_per_session'">
+                            <VhViewRow :label="column" :value="value" />
                         </template>
                         <template v-else>
                             <VhViewRow :label="column"

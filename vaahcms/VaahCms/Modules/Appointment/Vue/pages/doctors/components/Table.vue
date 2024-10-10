@@ -129,13 +129,13 @@ function formatTimeWithAmPm(time) {
 
             </Column>
 
-            <Column field="price_per_mintues" header="Price per Session"
+            <Column field="price_per_session" header="Price per Session"
                     v-if="store.isViewLarge()"
                     style="width:150px;"
                     :sortable="true">
                 <template #body="prop">
                     <div style="position: relative; display: inline-block;">
-                        ₹ {{ prop.data.price_per_minutes }}
+                        ₹ {{ prop.data.price_per_session }}
                         <badge severity="info"
                                style="position: absolute; top: -10px; right: -28px; font-size: 12px;
                                 color: #fff; border-radius: 50%; padding: 5px 8px; height: 24px; width: 24px;
@@ -247,12 +247,12 @@ function formatTimeWithAmPm(time) {
 
 
 
-                        <Column field="price_per_minutes" header="Price per Session"
+                        <Column field="price_per_session" header="Price per Session"
                                 class="overflow-wrap-anywhere"
                                 style="width:150px;"
                                 :sortable="true">
                             <template #body="prop">
-                                ₹ {{ prop.data.price_per_minutes }}
+                                ₹ {{ prop.data.price_per_session }}
                             </template>
                         </Column>
 
@@ -299,12 +299,12 @@ function formatTimeWithAmPm(time) {
 
 
 
-                        <Column field="price_per_minutes" header="Price per Session"
+                        <Column field="price_per_session" header="Price per Session"
                                 class="overflow-wrap-anywhere"
                                 style="width:150px;"
                                 :sortable="true">
                             <template #body="prop">
-                                ₹ {{ prop.data.price_per_minutes }}
+                                ₹ {{ prop.data.price_per_session }}
                             </template>
                         </Column>
 

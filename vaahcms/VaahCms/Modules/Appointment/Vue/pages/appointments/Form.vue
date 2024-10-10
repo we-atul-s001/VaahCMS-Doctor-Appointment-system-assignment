@@ -197,10 +197,11 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     {{formatTimeWithAmPm(store.item?.doctor?.shift_start_time)}} -
                     {{formatTimeWithAmPm(store.item?.doctor?.shift_end_time)}}
                     (Please Select the time in the given time slot).
+                    <br>
                     <b>
-                        Price Per 30 Minutes Slot-</b>
+                        Price Per Session-</b>
 
-                    ₹ {{store.item?.doctor?.price_per_minutes}}
+                    ₹ {{store.item?.doctor?.price_per_session}}
                 </VhField>
                 <VhField label="Date and Time" required>
                     <div class="p-inputgroup">
