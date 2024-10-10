@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 import 'primeicons/primeicons.css';
 
 // Chart data and options
