@@ -1,77 +1,15 @@
-<template>
-    <div style="margin-top: 8px;">
-        <!-- Dashboard Title -->
-        <h1 className="text-4xl">Dashboard</h1>
-
-        <!-- Card Section with Equal Spacing -->
-        <section style="margin-top: 20px;">
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
-                <!-- Card 1: Total Doctors -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Doctors
-                    </div>
-                    <div class="card-body">
-                        <h1>{{ totalDoctors }}</h1>
-                    </div>
-                </div>
-
-                <!-- Card 2: Total Patients -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Patients
-                    </div>
-                    <div class="card-body">
-                        <h1>{{ totalPatients }}</h1>
-                    </div>
-                </div>
-
-                <!-- Card 3: Total Booked Appointments -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Booked Appointments
-                    </div>
-                    <div class="card-body">
-                        <h1>{{ totalBookedAppointments }}</h1>
-                    </div>
-                </div>
-
-                <!-- Card 4: Total Cancelled Appointments -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Cancelled Appointments
-                    </div>
-                    <div class="card-body">
-                        <h1>{{ totalCancelledAppointments }}</h1>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chart Section -->
-        <section style="margin-top: 40px;">
-            <h2 className="text-2xl">Chart Section</h2>
-            <div>
-                <Chart type="bar" :data="chartData" :options="chartOptions"/>
-            </div>
-        </section>
-    </div>
-</template>
 
 <script setup>
 import {ref, onMounted} from 'vue';
 import axios from 'axios';
 import 'primeicons/primeicons.css';
 
-// Reactive state for total counts
+
 const totalDoctors = ref(0);
 const totalPatients = ref(0);
 const totalBookedAppointments = ref(0);
 const totalCancelledAppointments = ref(0);
+const totalRescheduledAppointments = ref(0);
 
 onMounted(() => {
     fetchDashboardData();
@@ -87,6 +25,8 @@ const fetchDashboardData = async () => {
 
         totalBookedAppointments.value = response.data.totalBookedAppointments ;
         totalCancelledAppointments.value = response.data.totalCancelledAppointments;
+        totalRescheduledAppointments.value = response.data.totalRescheduledAppointments;
+
     } catch (error) {
         console.error('Error fetching dashboard stats:', error);
     }
@@ -212,3 +152,78 @@ h2 {
     margin-bottom: 20px;
 }
 </style>
+<template>
+    <div style="margin-top: 8px;">
+        <!-- Dashboard Title -->
+        <h1 className="text-4xl">Dashboard</h1>
+
+        <!-- Card Section with Equal Spacing -->
+        <section style="margin-top: 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                <!-- Card 1: Total Doctors -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Doctors
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalDoctors }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Patients -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Patients
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalPatients }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 3: Total Booked Appointments -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Booked Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalBookedAppointments }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 4: Total Cancelled Appointments -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Cancelled Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalCancelledAppointments }}</h1>
+                    </div>
+                </div>
+                <!-- Card 5: Total Reschedule Appointments -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Reschedule Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalRescheduledAppointments }}</h1>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section style="margin-top: 40px;">
+            <h2 className="text-2xl">Chart Section</h2>
+            <div>
+                <Chart type="bar" :data="chartData" :options="chartOptions"/>
+            </div>
+        </section>
+    </div>
+</template>
+
+
