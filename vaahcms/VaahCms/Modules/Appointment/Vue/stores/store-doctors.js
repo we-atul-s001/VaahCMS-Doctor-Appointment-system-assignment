@@ -939,7 +939,6 @@ export const useDoctorStore = defineStore({
         },
         //---------------------------------------------------------------------
         handleBulkImport() {
-            console.log('handleBulkImport');
             this.show_import_dialog = true;
         },
         onFileSelect(event) {

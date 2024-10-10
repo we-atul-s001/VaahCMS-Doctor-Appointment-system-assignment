@@ -80,4 +80,9 @@ function () {
 
     //---------------------------------------------------------
 
+    /**
+     * Bulk Import
+     */
+    Route::post('/bulk-import', [DoctorsController::class, 'bulkImport'])
+        ->name('vh.backend.appointment.doctors.bulk-import');
 });
