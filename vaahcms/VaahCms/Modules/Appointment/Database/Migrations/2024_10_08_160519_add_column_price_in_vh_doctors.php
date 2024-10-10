@@ -15,7 +15,7 @@ class AddColumnPriceInVhDoctors extends Migration
     {
 
         Schema::table('vh_doctors', function (Blueprint $table) {
-            $table->integer('price_per_minutes')->nullable()->index();
+            $table->integer('price_per_session')->nullable()->index();
             //----/common fields
 
         });

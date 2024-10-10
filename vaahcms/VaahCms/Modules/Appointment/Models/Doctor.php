@@ -36,7 +36,7 @@ class Doctor extends VaahModel
         'slug',
         'email',
         'phone',
-        'price_per_minutes',
+        'price_per_session',
         'specialization',
         'shift_start_time',
         'shift_end_time',
@@ -74,7 +74,7 @@ class Doctor extends VaahModel
             return [
                 'id' => $appointment->id,
                 'patient_name' => $appointment->patient->name,
-                'price_per_minutes' => $appointment->doctor->price_per_minutes,
+                'price_per_session' => $appointment->doctor->price_per_session,
                 'status' => $appointment->status,
                 'date' => $appointment->date,
                 'slot_start_time' => $appointment->slot_start_time,
@@ -367,7 +367,7 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_minutes',
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_session',
             'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
@@ -588,7 +588,7 @@ class Doctor extends VaahModel
     public static function getItem($id)
     {
 
-        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','is_active', 'created_at', 'updated_at')
+        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','price_per_session','is_active', 'created_at', 'updated_at')
             ->where('id', $id)
             ->withTrashed()
             ->first();
@@ -862,7 +862,7 @@ class Doctor extends VaahModel
 
         $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
 
-        $inputs['price_per_minutes'] = $faker->numberBetween(100, 500);
+        $inputs['price_per_session'] = $faker->numberBetween(100, 500);
 
 
         $inputs['is_active'] = $faker->randomElement([1]);
