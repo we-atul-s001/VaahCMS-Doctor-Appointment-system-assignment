@@ -903,6 +903,13 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function bulkImport(Request $request)
+    {
+        $inputs = $request->all();
+        $validator = \Validator::make($inputs, [
+            'file' => 'required|mimes:csv,txt|max:2048',
+        ]);
+    }
     //-------------------------------------------------
     //-------------------------------------------------
 
