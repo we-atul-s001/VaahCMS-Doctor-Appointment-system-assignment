@@ -46,6 +46,12 @@ class ExtendController extends Controller
         ];
 
         $links[0]['items'][] = [
+            'icon' => 'home',
+            'label'=> 'Dashboard',
+            'link'=> route('vh.backend.appointment'),
+        ];
+
+        $links[0]['items'][] = [
             'icon' => 'user',
             'label'=> 'Doctors',
             'link'=> route('vh.backend.appointment')."#/doctors",
