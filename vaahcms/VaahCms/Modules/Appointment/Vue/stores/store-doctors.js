@@ -65,7 +65,9 @@ export const useDoctorStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
-        form_menu_list: []
+        form_menu_list: [],
+        show_import_dialog: false,
+        selected_file: null,
     }),
     getters: {
 
@@ -936,6 +938,37 @@ export const useDoctorStore = defineStore({
 
         },
         //---------------------------------------------------------------------
+        handleBulkImport() {
+            console.log('handleBulkImport');
+            this.show_import_dialog = true;
+        },
+        onFileSelect(event) {
+            this.selected_file = event.target.files[0];
+            console.log("File selected:", this.selected_file);
+        },
+        confirmBulkImport() {
+            if (this.selectedFile) {
+                this.form.type = 'bulk-import';
+                vaah().confirmDialogDelete(this.confirmBulkImportAfter);
+            } else {
+                alert("Please select a file before proceeding.");
+            }
+        },
+
+
+        confirmBulkImportAfter() {
+
+            console.log("Bulk import initiated with file:", this.selected_file);
+
+            this.show_import_dialog = false;
+            this.selected_file = null;
+        },
+
+
+        onHideDialog() {
+            this.showImportDialog = false;
+            this.selected_file = null;
+        },
     }
 });
 

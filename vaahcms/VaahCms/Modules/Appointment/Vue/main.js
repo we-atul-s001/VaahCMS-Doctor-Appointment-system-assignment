@@ -21,6 +21,9 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Card from 'primevue/card';
 
+import Dialog from 'primevue/dialog';
+
+
 import Chart from 'primevue/chart';
 
 
@@ -87,6 +90,7 @@ app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
 app.component('Card', Card);
 app.component('Chart', Chart);
+app.component('Dialog', Dialog);
 
 //-------------/PrimeVue Use
 
