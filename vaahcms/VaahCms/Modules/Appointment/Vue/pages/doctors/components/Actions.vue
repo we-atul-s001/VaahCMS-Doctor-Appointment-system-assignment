@@ -77,7 +77,32 @@ const toggleBulkMenuState = (event) => {
                                     data-testid="doctors-actions-search-button"
                                     icon="pi pi-search"/>
 
-
+                            <Button
+                                type="button"
+                                class="p-button-sm"
+                                :disabled="Object.keys(route.params).length"
+                                data-testid="doctors-actions-bulk-import"
+                                @click="store.handleBulkImport()">
+                                Bulk Import
+                            </Button>
+                            <Dialog
+                                v-model="store.show_import_dialog"
+                                header="Bulk Import"
+                                :visible="store.show_import_dialog"
+                                :modal="true"
+                                :closable="true"
+                                :width="400"
+                                @hide="store.onHideDialog()"
+                            >
+                                <div>
+                                    <h4>Select a File for Import</h4>
+                                    <input type="file" accept=".csv" @change="store.onFileSelect()" />
+                                </div>
+                                <div class="p-dialog-footer">
+                                    <Button label="Cancel" @click="store.show_import_dialog = false" />
+                                    <Button label="Import" class="p-button-primary" @click="store.confirmBulkImport()" />
+                                </div>
+                            </Dialog>
                             <Button
                                 type="button"
                                 class="p-button-sm"
