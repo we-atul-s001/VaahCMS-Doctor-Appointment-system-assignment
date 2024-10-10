@@ -1,6 +1,96 @@
+<template>
+    <div style="margin-top: 8px;">
+        <!-- Dashboard Title -->
+        <h1 className="text-4xl">Dashboard</h1>
+
+        <!-- Card Section with Equal Spacing -->
+        <section style="margin-top: 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+                <!-- Card 1: Total Doctors -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Doctors
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalDoctors }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Patients -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Patients
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalPatients }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 3: Total Booked Appointments -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Booked Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalBookedAppointments }}</h1>
+                    </div>
+                </div>
+
+                <!-- Card 4: Total Cancelled Appointments -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <i class="pi pi-file" style="margin-right: 8px;"></i>
+                        Total Cancelled Appointments
+                    </div>
+                    <div class="card-body">
+                        <h1>{{ totalCancelledAppointments }}</h1>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chart Section -->
+        <section style="margin-top: 40px;">
+            <h2 className="text-2xl">Chart Section</h2>
+            <div>
+                <Chart type="bar" :data="chartData" :options="chartOptions"/>
+            </div>
+        </section>
+    </div>
+</template>
+
 <script setup>
-import { ref, onMounted } from 'vue';
+import {ref, onMounted} from 'vue';
+import axios from 'axios';
 import 'primeicons/primeicons.css';
+
+// Reactive state for total counts
+const totalDoctors = ref(0);
+const totalPatients = ref(0);
+const totalBookedAppointments = ref(0);
+const totalCancelledAppointments = ref(0);
+
+onMounted(() => {
+    fetchDashboardData();
+});
+
+// Fetch dashboard data from API
+const fetchDashboardData = async () => {
+    try {
+        const response = await axios.get('http://127.0.0.1:8000/backend/appointment/doctors/doctor-count');
+
+        totalDoctors.value = response.data.totalDoctors;
+        totalPatients.value = response.data.totalPatients;
+
+        totalBookedAppointments.value = response.data.totalBookedAppointments ;
+        totalCancelledAppointments.value = response.data.totalCancelledAppointments;
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+    }
+};
 
 // Chart data and options
 const chartData = ref();
@@ -105,40 +195,9 @@ const setChartOptions = () => {
     justify-content: space-between;
 }
 
-.card-body h2 {
+.card-body h1 {
     font-size: 2rem;
     margin: 0;
-}
-
-.growth-text {
-    color: #22c55e; /* Green for growth */
-    margin-bottom: 10px;
-}
-
-.decline-text {
-    color: #f43f5e; /* Red for decline */
-    margin-bottom: 10px;
-}
-
-.chart-placeholder {
-    height: 40px;
-    background: #e5e7eb;
-    border-radius: 5px;
-}
-
-.view-button {
-    background-color: #e5e7eb;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    color: #424242;
-    margin-left: auto;
-    cursor: pointer;
-}
-
-.view-button:hover {
-    background-color: #d4d4d8;
 }
 
 /* Section Styling */
@@ -153,74 +212,3 @@ h2 {
     margin-bottom: 20px;
 }
 </style>
-
-<template>
-    <div style="margin-top: 8px;">
-        <!-- Dashboard Title -->
-        <h1 class="text-4xl">Dashboard</h1>
-
-        <!-- Card Section with Equal Spacing -->
-        <section style="margin-top: 20px;">
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
-                <!-- Card 1 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Doctor
-                    </div>
-                    <div class="card-body">
-                        <h1>999,000</h1>
-
-                    </div>
-                </div>
-
-                <!-- Card 2 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Patients
-                    </div>
-                    <div class="card-body">
-                        <h1>$499,250</h1>
-
-
-                    </div>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Booked Appointments
-                    </div>
-                    <div class="card-body">
-                        <h1>399,150</h1>
-
-                    </div>
-                </div>
-
-                <!-- Card 4 -->
-                <div class="stat-card">
-                    <div class="card-header">
-                        <i class="pi pi-file" style="margin-right: 8px;"></i>
-                     Total Cancelled Appointments
-
-                    </div>
-                    <div class="card-body">
-                        <h1>5,100</h1>
-
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Chart Section -->
-        <section style="margin-top: 40px;">
-            <h2 class="text-2xl">Chart Section</h2>
-            <div>
-                <Chart type="bar" :data="chartData" :options="chartOptions" />
-            </div>
-        </section>
-    </div>
-</template>
-

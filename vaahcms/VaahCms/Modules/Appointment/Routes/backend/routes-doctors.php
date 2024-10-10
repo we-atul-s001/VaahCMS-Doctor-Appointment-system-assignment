@@ -20,6 +20,13 @@ function () {
      */
     Route::get('/', [DoctorsController::class, 'getList'])
         ->name('vh.backend.appointment.doctors.list');
+
+    /**
+     * Get Doctors Count
+     */
+    Route::get('/doctor-count', [DoctorsController::class, 'getDoctorsCount'])
+        ->name('vh.backend.appointment.doctors.count');
+
     /**
      * Update List
      */

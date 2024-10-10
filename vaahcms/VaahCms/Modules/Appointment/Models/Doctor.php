@@ -883,6 +883,23 @@ class Doctor extends VaahModel
 
 
     //-------------------------------------------------
+    public static function getDoctorsCountList()
+    {
+        $total_doctors = Doctor::count();
+        $total_patients = Patient::count();
+
+        // Count appointments based on the status
+        $total_booked_appointments = Appointment::where('status', 1)->count();
+        $total_cancelled_appointments = Appointment::whereIn('status', [0, 2])->count();
+
+        return response()->json([
+            'totalDoctors' => $total_doctors,
+            'totalPatients' => $total_patients,
+            'totalBookedAppointments' => $total_booked_appointments,
+            'totalCancelledAppointments' => $total_cancelled_appointments,
+        ]);
+    }
+
     //-------------------------------------------------
     //-------------------------------------------------
     //-------------------------------------------------
