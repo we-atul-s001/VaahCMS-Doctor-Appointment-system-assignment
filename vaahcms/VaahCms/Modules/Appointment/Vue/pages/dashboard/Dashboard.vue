@@ -38,6 +38,8 @@ const fetchDashboardData = async () => {
 };
 
 const setChartData = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+
     return {
         labels: ['Doctors', 'Patients', 'Booked Appointments', 'Cancelled Appointments', 'Rescheduled Appointments'],
         datasets: [
