@@ -944,40 +944,42 @@ export const useDoctorStore = defineStore({
         handleBulkImport() {
             this.show_import_dialog = true;
         },
+
         onFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
                 this.selected_file = file;
             }
         },
+
         async confirmBulkImport() {
-            // Check if a file is selected
             if (!this.selected_file) {
                 console.error('No file selected for import.');
-                alert('Please select a file before proceeding.');
+
                 return;
             }
 
-            // Check the file type
             const fileType = this.selected_file.name.split('.').pop().toLowerCase();
             if (fileType !== 'xlsx' && fileType !== 'csv') {
                 alert('Please select a valid CSV or XLSX file.');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', this.selected_file);
-
             try {
-
                 const fileContent = await this.readFileContent(this.selected_file, fileType);
+                console.log('File Content: ', fileContent)
+                if (!fileContent.records && fileContent.records.length === 0) {
+                    console.error('No data found in the file.');
 
+                    return;
+                }
 
                 const mappedData = this.mapHeaders(fileContent);
-                console.log("Mapped Data:", mappedData);
+
+                this.fetchDataFromHeaders(fileContent);
 
 
-                const options = {
+                let options = {
                     method: 'POST',
                     body: JSON.stringify(mappedData),
                     headers: {
@@ -993,47 +995,81 @@ export const useDoctorStore = defineStore({
 
                 if (response && response.success) {
                     console.log("Data imported successfully:", response.data);
-                    alert('Data imported successfully!');
+
                 } else {
                     console.error("Import failed:", response.message || 'Unknown error');
-                    alert('Import failed: ' + (response.message || 'Unknown error'));
+
                 }
             } catch (error) {
                 console.error("Error importing data:", error);
-                alert('An error occurred while importing data.');
+
             }
 
             this.show_import_dialog = false;
         },
 
+        fetchDataFromHeaders(fileContent) {
+            const headerData = {};
+
+            fileContent.headers.forEach((header, index) => {
+                const trimmedHeader = header.trim();
+                headerData[trimmedHeader] = [];
+
+
+                fileContent.records.forEach((record) => {
+                    if (Array.isArray(record) && record[index] !== undefined) {
+
+                        headerData[trimmedHeader].push(record[index] !== null ? record[index].trim() : '');
+                    } else if (record && typeof record === 'object') {
+
+                        if (trimmedHeader in record) {
+                            headerData[trimmedHeader].push(record[trimmedHeader] !== null ? record[trimmedHeader].trim() : '');
+                        } else {
+
+                            headerData[trimmedHeader].push('');
+                        }
+                    } else {
+
+                        headerData[trimmedHeader].push('');
+                    }
+                });
+            });
+
+            return headerData;
+        },
+
         async readFileContent(file, fileType) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = e.target.result;
-                    let parsedData;
 
-                    if (fileType === 'csv') {
-                        parsedData = this.parseCSV(data);
-                    } else if (fileType === 'xlsx') {
-
-                        parsedData = this.parseXLSX(data);
-                    }
-
-                    resolve(parsedData);
-                };
-                reader.onerror = (error) => reject(error);
-
-                reader.readAsArrayBuffer(file);
+                if (fileType === 'csv') {
+                    reader.onload = (e) => {
+                        const data = e.target.result;
+                        const parsedData = this.parseCSV(data);
+                        resolve(parsedData);
+                    };
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsText(file);
+                } else if (fileType === 'xlsx') {
+                    reader.onload = (e) => {
+                        const data = e.target.result;
+                        const parsedData = this.parseXLSX(data);
+                        resolve(parsedData);
+                    };
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                }
             });
         },
+
+
         parseCSV(data) {
             const rows = data.split('\n').map(row => row.split(','));
-            const headers = rows[0]; // First row contains headers
+            const headers = rows[0];
             const records = rows.slice(1).map(row => {
                 const record = {};
                 headers.forEach((header, index) => {
-                    record[header.trim()] = row[index] ? row[index].trim() : '';
+                    record[header.trim()] = row[index] ? row[index].trim() : ''; // Ensure to trim spaces
                 });
                 return record;
             });
@@ -1064,34 +1100,55 @@ export const useDoctorStore = defineStore({
             const headers = fileContent.headers;
 
             headers.forEach((header, index) => {
-                headerMapping[header.trim()] = fileContent.records.map(record => {
-                    return record[index] ? record[index].trim() : '';
+                const trimmedHeader = header.trim();
+                headerMapping[trimmedHeader] = [];
+
+                fileContent.records.forEach((record, recordIndex) => {
+
+
+                    if (Array.isArray(record) && record[index] !== undefined) {
+
+                        headerMapping[trimmedHeader].push(record[index] !== null ? record[index].trim() : '');
+                    }
+                    // Handle case if record is an object
+                    else if (record && typeof record === 'object') {
+
+                        if (trimmedHeader in record) {
+                            headerMapping[trimmedHeader].push(record[trimmedHeader] !== null ? record[trimmedHeader].trim() : '');
+                        } else {
+
+                            headerMapping[trimmedHeader].push('');
+                        }
+                    } else {
+                        headerMapping[trimmedHeader].push('');
+                    }
                 });
             });
 
-            console.log("Header Mapping:", headerMapping);
 
-            // Log the data for each header dynamically
+
             headers.forEach(header => {
-                console.log(`${header.trim()}:`, headerMapping[header.trim()]);
+                const trimmedHeader = header.trim();
+                console.log(`${trimmedHeader}:`, headerMapping[trimmedHeader]);
             });
 
             return headerMapping;
         },
 
 
+
         confirmBulkImportAfter() {
-            console.log("Bulk import initiated with file:", this.selected_file);
+
+            this.show_import_dialog = false;
+            this.selected_file = null;
+        },
+
+        onHideDialog() {
             this.show_import_dialog = false;
             this.selected_file = null;
         },
 
 
-
-        onHideDialog() {
-            this.showImportDialog = false;
-            this.selected_file = null;
-        },
     }
 });
 

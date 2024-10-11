@@ -99,7 +99,7 @@ const toggleBulkMenuState = (event) => {
                                     <h4>Select a File for Import</h4>
                                     <input
                                         type="file"
-                                        accept=".xlsx"
+                                        accept=".csv"
                                         class="file-input"
                                         @change="store.onFileSelect($event)"
                                     />
