@@ -52,6 +52,7 @@ export const useDoctorStore = defineStore({
         route_prefix: 'doctors.',
         view: 'large',
         show_filters: false,
+        quick_filters_doctors: false,
         list_view_width: 12,
         form: {
             type: 'Create',
@@ -110,6 +111,7 @@ export const useDoctorStore = defineStore({
                     this.view = 'small';
                     this.list_view_width = 6;
                     this.show_filters = false;
+                    this.quick_filters_doctors = false;
                     break
             }
         },
