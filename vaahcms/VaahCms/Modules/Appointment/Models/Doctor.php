@@ -849,8 +849,8 @@ class Doctor extends VaahModel
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
         $inputs['specialization'] = $faker->word;
-        $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
-
+        $inputs['shift_start_time'] = self::formatTime($faker->time($format = 'g:i A', $max = '11:59 AM'));
+        
         while (strpos($inputs['shift_start_time'], 'PM') !== false) {
             $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
         }
