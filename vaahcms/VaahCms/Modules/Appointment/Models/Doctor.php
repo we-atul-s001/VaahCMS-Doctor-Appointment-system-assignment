@@ -906,53 +906,60 @@ class Doctor extends VaahModel
     public static function bulkImport(Request $request)
     {
         try {
-            {
-
-                $inputs = $request->all();
-//                $validator = \Validator::make($inputs, [
-//                    'file' => 'required|mimes:xlsx,txt|max:2048',
-//                ]);
-//
-//                if ($validator->fails()) {
-//                    return response()->json(['errors' => $validator->errors()], 422);
-//                }
-
-                // Handle the file upload
-                if ($request->hasFile('file')) {
-                    $file = $request->file('file');
-                    $filePath = $file->getRealPath();
-
-                    // Open the file
-                    if (($handle = fopen($filePath, 'r')) !== false) {
-                        $header = fgetcsv($handle); // Get the header row
-
-
-                        while (($row = fgetcsv($handle)) !== false) {
-
-                            $data = array_combine($header, $row);
-
-                            $slug = str_slug($data['name']);
-
-                            $doctorData = [
-                                'name' => $data['name'],
-                                'slug' => $slug,
-                                'email' => $data['email'],
-                                'phone' => $data['phone'],
-                                'specialization' => $data['specialization'],
-                            ];
-
-                            \DB::table('vh_doctors')->insert($doctorData);
-                        }
-                        fclose($handle);
-                    }
+            // Validate the file upload
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $extension = $file->getClientOriginalExtension();
+                if (!in_array($extension, ['xls', 'xlsx', 'csv'])) {
+                    return response()->json(['message' => 'Invalid file type. Only CSV files are allowed.'], 422);
                 }
 
-                return response()->json(['message' => 'Bulk import successful'], 200);
+                $filePath = $file->getRealPath();
+                if (($handle = fopen($filePath, 'r')) !== false) {
+                    $header = fgetcsv($handle); // Get the header row
+
+                    while (($row = fgetcsv($handle)) !== false) {
+                        $data = array_combine($header, $row);
+
+                        // Validate required fields
+                        $validator = \Validator::make($data, [
+                            'name' => 'required|string',
+                            'email' => 'required|email',
+                            'phone' => 'required|string',
+                            'specialization' => 'required|string',
+                        ]);
+
+                        if ($validator->fails()) {
+                            return response()->json(['errors' => $validator->errors()], 422);
+                        }
+
+                        $slug = str_slug($data['name']);
+                        $doctorData = [
+                            'name' => $data['name'],
+                            'slug' => $slug,
+                            'email' => $data['email'],
+                            'phone' => $data['phone'],
+                            'specialization' => $data['specialization'],
+                        ];
+
+                        \DB::table('vh_doctors')->insert($doctorData);
+                    }
+                    fclose($handle);
+                }
             }
+
+            return response()->json(['message' => 'Bulk import successful'], 200);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Bulk import failed'], 500);
+            \Log::error('Bulk import error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Bulk import failed',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
         }
     }
+
     //-------------------------------------------------
     //-------------------------------------------------
 

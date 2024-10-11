@@ -3,6 +3,8 @@ import {acceptHMRUpdate, defineStore} from 'pinia'
 import qs from 'qs'
 import {vaah} from '../vaahvue/pinia/vaah'
 import {ref} from 'vue'
+import * as XLSX from 'xlsx';
+
 
 let model_namespace = 'VaahCms\\Modules\\Appointment\\Models\\Doctor';
 
@@ -967,9 +969,20 @@ export const useDoctorStore = defineStore({
             formData.append('file', this.selected_file);
 
             try {
+
+                const fileContent = await this.readFileContent(this.selected_file, fileType);
+
+
+                const mappedData = this.mapHeaders(fileContent);
+                console.log("Mapped Data:", mappedData);
+
+
                 const options = {
                     method: 'POST',
-                    body: formData, // Include the FormData in the options
+                    body: JSON.stringify(mappedData),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 };
 
                 const response = await vaah().ajax(
@@ -978,7 +991,6 @@ export const useDoctorStore = defineStore({
                     options
                 );
 
-                // Check the structure of the response
                 if (response && response.success) {
                     console.log("Data imported successfully:", response.data);
                     alert('Data imported successfully!');
@@ -991,9 +1003,82 @@ export const useDoctorStore = defineStore({
                 alert('An error occurred while importing data.');
             }
 
-            // Close the import dialog
             this.show_import_dialog = false;
         },
+
+        async readFileContent(file, fileType) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = e.target.result;
+                    let parsedData;
+
+                    if (fileType === 'csv') {
+                        parsedData = this.parseCSV(data);
+                    } else if (fileType === 'xlsx') {
+
+                        parsedData = this.parseXLSX(data);
+                    }
+
+                    resolve(parsedData);
+                };
+                reader.onerror = (error) => reject(error);
+
+                reader.readAsArrayBuffer(file);
+            });
+        },
+        parseCSV(data) {
+            const rows = data.split('\n').map(row => row.split(','));
+            const headers = rows[0]; // First row contains headers
+            const records = rows.slice(1).map(row => {
+                const record = {};
+                headers.forEach((header, index) => {
+                    record[header.trim()] = row[index] ? row[index].trim() : '';
+                });
+                return record;
+            });
+            return { headers, records };
+        },
+
+        parseXLSX(data) {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+            const headers = jsonData[0]; // First row contains headers
+            const records = jsonData.slice(1).map(row => {
+                const record = {};
+                headers.forEach((header, index) => {
+
+                    record[header.trim()] = (row[index] !== undefined && row[index] !== null)
+                        ? String(row[index]).trim()
+                        : '';
+                });
+                return record;
+            });
+            return { headers, records };
+        },
+
+        mapHeaders(fileContent) {
+            const headerMapping = {};
+            const headers = fileContent.headers;
+
+            headers.forEach((header, index) => {
+                headerMapping[header.trim()] = fileContent.records.map(record => {
+                    return record[index] ? record[index].trim() : '';
+                });
+            });
+
+            console.log("Header Mapping:", headerMapping);
+
+            // Log the data for each header dynamically
+            headers.forEach(header => {
+                console.log(`${header.trim()}:`, headerMapping[header.trim()]);
+            });
+
+            return headerMapping;
+        },
+
 
         confirmBulkImportAfter() {
             console.log("Bulk import initiated with file:", this.selected_file);
