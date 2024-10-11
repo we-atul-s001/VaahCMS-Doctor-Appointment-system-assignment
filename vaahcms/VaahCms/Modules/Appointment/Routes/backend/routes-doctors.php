@@ -80,4 +80,10 @@ function () {
 
     //---------------------------------------------------------
 
+    /**
+     * Get Specicalizations
+     */
+
+    Route::get('/specialization',  [DoctorsController::class, 'getSpecializations'])
+        ->name('vh.backend.appointments.doctors.specialization.read');
 });

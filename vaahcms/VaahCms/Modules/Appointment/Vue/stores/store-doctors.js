@@ -19,6 +19,11 @@ let empty_states = {
             trashed: null,
             sort: null,
         },
+        field_filter: {
+            price: null,
+            specialization: null,
+            timings: null
+        },
     },
     action: {
         type: null,
@@ -66,7 +71,8 @@ export const useDoctorStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
-        form_menu_list: []
+        form_menu_list: [],
+        specializations: null
     }),
     getters: {
 
@@ -936,6 +942,13 @@ export const useDoctorStore = defineStore({
 
             this.form_menu_list = form_menu;
 
+        },
+        async getSpecializationList(){
+            await vaah().ajax(
+                this.ajax_url.concat('/specialization'),
+                (data,res) => {
+                    this.specializations = res.data;
+                });
         },
         //---------------------------------------------------------------------
     }

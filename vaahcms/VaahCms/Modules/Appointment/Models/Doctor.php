@@ -903,6 +903,9 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function getSpecializations(){
+        return self::distinct()->pluck('specialization');
+    }
     //-------------------------------------------------
     //-------------------------------------------------
 
