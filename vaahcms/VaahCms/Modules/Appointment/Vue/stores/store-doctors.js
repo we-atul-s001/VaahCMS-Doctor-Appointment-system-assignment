@@ -955,7 +955,7 @@ export const useDoctorStore = defineStore({
         async confirmBulkImport() {
             if (!this.selected_file) {
                 console.error('No file selected for import.');
-
+                alert('Please select a file before proceeding.');
                 return;
             }
 
@@ -966,47 +966,54 @@ export const useDoctorStore = defineStore({
             }
 
             try {
+                // Read the file content
                 const fileContent = await this.readFileContent(this.selected_file, fileType);
-                console.log('File Content: ', fileContent)
-                if (!fileContent.records && fileContent.records.length === 0) {
-                    console.error('No data found in the file.');
 
+                // Check if records are available
+                if (!fileContent.records || fileContent.records.length === 0) {
+                    console.error('No data found in the file.');
+                    alert('The file does not contain any data.');
                     return;
                 }
 
-                const mappedData = this.mapHeaders(fileContent);
+                // Map the records data directly for import
+                const dataToImport = fileContent.records;
 
-                this.fetchDataFromHeaders(fileContent);
-
-
-                let options = {
-                    method: 'POST',
-                    body: JSON.stringify(mappedData),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                // Prepare the request payload
+                const payload = {
+                    headers: fileContent.headers, // Sending headers for mapping purposes
+                    records: dataToImport          // Sending the actual data to be inserted
                 };
 
+                // Send the POST request with the mapped data
                 const response = await vaah().ajax(
                     this.ajax_url + '/bulk-import',
                     this.confirmBulkImportAfter,
-                    options
+                    {
+                        method: 'POST',
+                        body: JSON.stringify(payload),   // Send JSON payload
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    }
                 );
 
                 if (response && response.success) {
                     console.log("Data imported successfully:", response.data);
-
+                    alert('Data imported successfully!');
                 } else {
                     console.error("Import failed:", response.message || 'Unknown error');
-
+                    alert('Import failed: ' + (response.message || 'Unknown error'));
                 }
             } catch (error) {
                 console.error("Error importing data:", error);
-
+                alert('An error occurred while importing data.');
             }
 
             this.show_import_dialog = false;
         },
+
+
 
         fetchDataFromHeaders(fileContent) {
             const headerData = {};
@@ -1064,12 +1071,12 @@ export const useDoctorStore = defineStore({
 
 
         parseCSV(data) {
-            const rows = data.split('\n').map(row => row.split(','));
-            const headers = rows[0];
-            const records = rows.slice(1).map(row => {
+            const rows = data.split('\n').map(row => row.split(',').map(cell => cell.trim())); // Trim spaces for each cell
+            const headers = rows[0].filter(header => header); // Filter out any empty headers
+            const records = rows.slice(1).filter(row => row.length > 0).map(row => { // Remove empty rows
                 const record = {};
                 headers.forEach((header, index) => {
-                    record[header.trim()] = row[index] ? row[index].trim() : ''; // Ensure to trim spaces
+                    record[header] = (row[index] !== undefined && row[index] !== null) ? String(row[index]).trim() : ''; // Ensure to trim spaces
                 });
                 return record;
             });
@@ -1081,19 +1088,17 @@ export const useDoctorStore = defineStore({
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-            const headers = jsonData[0]; // First row contains headers
-            const records = jsonData.slice(1).map(row => {
+            const headers = jsonData[0].filter(header => header); // Filter out any empty headers
+            const records = jsonData.slice(1).filter(row => row.length > 0).map(row => {
                 const record = {};
                 headers.forEach((header, index) => {
-
-                    record[header.trim()] = (row[index] !== undefined && row[index] !== null)
-                        ? String(row[index]).trim()
-                        : '';
+                    record[header] = (row[index] !== undefined && row[index] !== null) ? String(row[index]).trim() : ''; // Ensure to trim spaces
                 });
                 return record;
             });
             return { headers, records };
         },
+
 
         mapHeaders(fileContent) {
             const headerMapping = {};
@@ -1142,6 +1147,7 @@ export const useDoctorStore = defineStore({
             this.show_import_dialog = false;
             this.selected_file = null;
         },
+
 
         onHideDialog() {
             this.show_import_dialog = false;

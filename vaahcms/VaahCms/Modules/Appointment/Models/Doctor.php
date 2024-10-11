@@ -906,49 +906,30 @@ class Doctor extends VaahModel
     public static function bulkImport(Request $request)
     {
         try {
-            // Validate the file upload
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $extension = $file->getClientOriginalExtension();
-                if (!in_array($extension, ['xls', 'xlsx', 'csv'])) {
-                    return response()->json(['message' => 'Invalid file type. Only CSV files are allowed.'], 422);
-                }
+            // Retrieve the 'records' data from the request
+            $data = $request->input('records'); // Ensure 'records' data is retrieved
 
-                $filePath = $file->getRealPath();
-                if (($handle = fopen($filePath, 'r')) !== false) {
-                    $header = fgetcsv($handle); // Get the header row
+            // Check if the data exists and is not empty
+            if (!$data || empty($data)) {
+                return response()->json(['message' => 'No data found for import.'], 422);
+            }
 
-                    while (($row = fgetcsv($handle)) !== false) {
-                        $data = array_combine($header, $row);
+            // Loop through each record and insert it into the database
+            foreach ($data as $record) {
+                $doctorData = [
+                    'name' => $record['name'] ?? '',
+                    'slug' => str_slug($record['name'] ?? ''),
+                    'email' => $record['email'] ?? '',
+                    'phone' => $record['phone'] ?? '',
+                    'specialization' => $record['specialization'] ?? '',
+                ];
 
-                        // Validate required fields
-                        $validator = \Validator::make($data, [
-                            'name' => 'required|string',
-                            'email' => 'required|email',
-                            'phone' => 'required|string',
-                            'specialization' => 'required|string',
-                        ]);
-
-                        if ($validator->fails()) {
-                            return response()->json(['errors' => $validator->errors()], 422);
-                        }
-
-                        $slug = str_slug($data['name']);
-                        $doctorData = [
-                            'name' => $data['name'],
-                            'slug' => $slug,
-                            'email' => $data['email'],
-                            'phone' => $data['phone'],
-                            'specialization' => $data['specialization'],
-                        ];
-
-                        \DB::table('vh_doctors')->insert($doctorData);
-                    }
-                    fclose($handle);
-                }
+                // Insert the data into vh_doctors table
+                \DB::table('vh_doctors')->insert($doctorData);
             }
 
             return response()->json(['message' => 'Bulk import successful'], 200);
+
         } catch (\Exception $e) {
             \Log::error('Bulk import error: ' . $e->getMessage());
             return response()->json([
@@ -959,6 +940,8 @@ class Doctor extends VaahModel
             ], 500);
         }
     }
+
+
 
     //-------------------------------------------------
     //-------------------------------------------------
