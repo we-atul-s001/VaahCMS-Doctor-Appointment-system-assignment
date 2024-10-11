@@ -10,7 +10,6 @@ const confirm = useConfirm();
 const toast = useToast();
 const currency_sign = '$';
 
-//define your time intervals here in order to update the range list
 const time_range = [
     '09:00 AM-12:00 PM',
     '12:00 PM-03:00 PM',
@@ -19,7 +18,6 @@ const time_range = [
     '09:00 PM-12:00 AM'
 ];
 
-//define your price intervals here in order to update the range list
 const price_range = [
     '0-20',
     '20-40',

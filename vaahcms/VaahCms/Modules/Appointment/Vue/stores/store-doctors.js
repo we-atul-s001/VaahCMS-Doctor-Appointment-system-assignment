@@ -66,6 +66,7 @@ export const useDoctorStore = defineStore({
         },
         is_list_loading: null,
         count_filters: 0,
+        count_filters_doctors: 0,
         list_selected_menu: [],
         list_bulk_menu: [],
         list_create_menu: [],
@@ -170,7 +171,12 @@ export const useDoctorStore = defineStore({
                 {
                     this.delayedSearch();
                 },{deep: true}
-            )
+            ),
+                watch(this.query.field_filter, (newVal,oldVal) =>
+                    {
+                        this.delayedSearch();
+                    },{deep: true}
+                )
         },
         //---------------------------------------------------------------------
          watchItem(name)
@@ -593,10 +599,16 @@ export const useDoctorStore = defineStore({
         countFilters: function (query)
         {
             this.count_filters = 0;
+            this.count_filters_doctors = 0;
             if(query && query.filter)
             {
                 let filter = vaah().cleanObject(query.filter);
                 this.count_filters = Object.keys(filter).length;
+            }
+            else if (query.quick_filters_doctors)
+            {
+                let filter = vaah().cleanObject(query.quick_filters_doctors);
+                this.count_filters_doctors = Object.keys(filter).length;
             }
         },
         //---------------------------------------------------------------------
@@ -624,6 +636,10 @@ export const useDoctorStore = defineStore({
             for(let key in this.query.filter)
             {
                 this.query.filter[key] = null;
+            }
+            for(let key in this.query.quick_filters_doctors)
+            {
+                this.query.quick_filters_doctors[key] = null;
             }
             await this.updateUrlQueryString(this.query);
         },
@@ -942,6 +958,9 @@ export const useDoctorStore = defineStore({
 
             this.form_menu_list = form_menu;
 
+        },
+        showFieldFilters(){
+            this.quick_filters_doctors = !this.quick_filters_doctors;
         },
         async getSpecializationList(){
             await vaah().ajax(

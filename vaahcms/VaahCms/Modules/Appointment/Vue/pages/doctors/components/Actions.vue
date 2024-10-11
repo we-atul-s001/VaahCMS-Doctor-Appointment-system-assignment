@@ -49,13 +49,11 @@ const toggleBulkMenuState = (event) => {
                 </Button>
                 <Button
                     type="button"
+                    data-testid="doctors-actions-show-field-filters"
                     class="p-button-sm"
-                    :disabled="Object.keys(route.params).length"
-                    data-testid="doctors-actions-quick-filters"
-                    @click="store.quick_filters_doctors = !store.quick_filters_doctors">
-                    Apply Doctor Filters
-                    <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
-                </Button>
+                    label="Apply field filters"
+                    @click="store.showFieldFilters()">
+              </Button>
 
                 <Menu ref="selected_menu_state"
                       :model="store.list_selected_menu"
