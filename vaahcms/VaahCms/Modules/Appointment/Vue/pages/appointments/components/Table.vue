@@ -4,7 +4,6 @@ import { useAppointmentStore } from '../../../stores/store-appointments'
 
 const store = useAppointmentStore();
 const useVaah = vaah();
-
 function formatTimeWithAmPm(time) {
     if (!time) return '';
 
@@ -47,7 +46,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data.patient?.name}}
+                     {{prop.data.patient?.name || 'N/A'}}
                  </template>
 
              </Column>
@@ -56,7 +55,7 @@ function formatTimeWithAmPm(time) {
                      :sortable="true">
 
                  <template #body="prop">
-                     {{prop.data.doctor?.name}}
+                     {{prop.data.doctor?.name || 'N/A'}}
                  </template>
 
              </Column>

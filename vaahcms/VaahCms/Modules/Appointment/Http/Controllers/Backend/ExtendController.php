@@ -41,8 +41,34 @@ class ExtendController extends Controller
         $links[0] = [
             'icon' => 'table',
             'label'=> 'Appointment',
-            'link'=> route('vh.backend.appointment')
+            'link'=> route('vh.backend.appointment'),
+            'items' => [],
         ];
+
+        $links[0]['items'][] = [
+            'icon' => 'home',
+            'label'=> 'Dashboard',
+            'link'=> route('vh.backend.appointment'),
+        ];
+
+        $links[0]['items'][] = [
+            'icon' => 'user',
+            'label'=> 'Doctors',
+            'link'=> route('vh.backend.appointment')."#/doctors",
+        ];
+
+        $links[0]['items'][] = [
+            'icon' => 'users',
+            'label'=> 'Patients',
+            'link'=> route('vh.backend.appointment')."#/patients",
+        ];
+
+        $links[0]['items'][] = [
+            'icon' => 'calendar',
+            'label'=> 'Book Appointments',
+            'link'=> route('vh.backend.appointment')."#/appointments",
+        ];
+
 
 
         if(version_compare(config('vaahcms.version'), '2.0.0', '<' )){

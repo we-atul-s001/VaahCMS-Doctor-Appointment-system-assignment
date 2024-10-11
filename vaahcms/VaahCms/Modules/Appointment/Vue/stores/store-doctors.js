@@ -481,6 +481,8 @@ export const useDoctorStore = defineStore({
             await this.getList();
         },
         //---------------------------------------------------------------------
+
+        //---------------------------------------------------------------------
         async getFormInputs () {
             let params = {
                 model_namespace: this.model,

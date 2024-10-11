@@ -37,6 +37,15 @@ const toggleItemMenu = (event) => {
 };
 //--------/toggle item menu
 
+function formatTime(time) {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+    const period = +hours >= 12 ? 'PM' : 'AM';
+    const formattedHours = (+hours % 12) || 12;
+
+    return `${formattedHours}:${minutes} ${period}`;
+}
 </script>
 <template>
 
@@ -122,7 +131,7 @@ const toggleItemMenu = (event) => {
                     <template v-for="(value, column) in store.item ">
 
                         <template v-if="column === 'created_by' || column === 'updated_by'
-                        || column === 'deleted_by'">
+                        || column === 'deleted_by' || column === 'appointments_list'">
                         </template>
 
                         <template v-else-if="column === 'id' || column === 'uuid'">
@@ -147,6 +156,17 @@ const toggleItemMenu = (event) => {
                             />
                         </template>
 
+                        <template v-else-if="column === 'shift_start_time'">
+                            <VhViewRow :label="column" :value="formatTime(value)" />
+                        </template>
+
+                        <template v-else-if="column === 'shift_end_time'">
+                            <VhViewRow :label="column" :value="formatTime(value)" />
+                        </template>
+
+                        <template v-else-if="column === 'price_per_session'">
+                            <VhViewRow :label="column" :value="value" />
+                        </template>
                         <template v-else>
                             <VhViewRow :label="column"
                                        :value="value"

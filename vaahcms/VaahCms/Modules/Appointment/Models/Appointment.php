@@ -86,16 +86,11 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    protected function slotEndTime(): Attribute
+    public static function formatTime($time, $format = 'g:i A')
     {
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
+        return Carbon::parse($time)
+            ->setTimezone("ASIA/KOLKATA")
+            ->format($format);
     }
 
     //-------------------------------------------------
@@ -110,7 +105,11 @@ class Appointment extends VaahModel
     public function doctor()
     {
         return $this->belongsTo(Doctor::class, 'doctor_id', 'id')
-            ->select('id','name','shift_start_time','shift_end_time','specialization');
+
+
+
+            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_session');
+
     }
 
     //-------------------------------------------------
@@ -199,7 +198,8 @@ class Appointment extends VaahModel
     public static function createItem($request)
     {
 
-        $check_status = self::checkAppointmentTime($request->input('slot_start_time'),$request->input('date'), $request->input('doctor_id'));
+        $check_status = self::checkAppointmentTime($request->input('slot_start_time'),
+            $request->input('date'), $request->input('doctor_id'));
 
         if(count($check_status) > 0){
             $response['errors'][] = 'Slot is already booked. Please select 15 minutes later slot';
@@ -210,6 +210,9 @@ class Appointment extends VaahModel
         $validation = self::validation($inputs);
         if (!$validation['success']) {
             return $validation;
+        }
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
         }
 //         check if Slot exist
         $item = self::where('patient_id', $inputs['patient_id'])
@@ -254,21 +257,33 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function checkAppointmentTime($slot_start_time, $appointment_date, $doctorId)
     {
+
         $slot_time = Carbon::parse($slot_start_time);
+
         $slot_date = $appointment_date;
 
         $appointments = Appointment::where('doctor_id', $doctorId)
             ->where('date', $slot_date)
             ->where(function ($query) use ($slot_time) {
+
                 $query->whereBetween('slot_start_time', [
-                    $slot_time->copy()->subMinutes(15),
-                    $slot_time->copy()->addMinutes(15)
+                    $slot_time->copy()->subMinutes(30),
+                    $slot_time->copy()->addMinutes(30)
                 ]);
             })->get();
 
+        if ($appointments->isEmpty()) {
 
-        return $appointments->isEmpty() ? [] : $appointments;
+            return [];
+        }
+
+        return [
+            'status' => 'unavailable',
+            'message' => 'The selected slot is unavailable. Please select a different time.',
+            'conflicting_appointments' => $appointments
+        ];
     }
+
 
 //-------------------------------------------------
     public static function checkDoctorSlot($data)
@@ -288,7 +303,7 @@ class Appointment extends VaahModel
         $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
         use ($start_time) {
             $query
-                ->where('slot_end_time', '>', $start_time);
+                ->where('slot_start_time', '>', $start_time);
         })->withTrashed()->exists();
         if ($slots_exist) {
             return 'No Slot Available';
@@ -296,13 +311,6 @@ class Appointment extends VaahModel
         else{
             return false;        }
 
-    }
-    //-------------------------------------------------
-    public static function formatTime($time, $format = 'H:i:s A')
-    {
-        return Carbon::parse($time)
-            ->setTimezone("ASIA/KOLKATA")
-            ->format($format);
     }
 
     //-------------------------------------------------
@@ -677,7 +685,9 @@ class Appointment extends VaahModel
             return $validation;
         }
 
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         $item = self::where('id', $id)->withTrashed()->first();
 
         if (!$item) {

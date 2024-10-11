@@ -40,6 +40,7 @@ class DoctorsController extends Controller
             $data['fillable']['columns'] = Doctor::getFillableColumns();
             $data['fillable']['except'] = Doctor::getUnFillableColumns();
             $data['empty_item'] = Doctor::getEmptyItem();
+            $data['count_appointment'] = (new \VaahCms\Modules\Appointment\Models\Doctor)->getAppointmentsCountAttribute();
 
 
             $data['actions'] = [];
@@ -116,6 +117,24 @@ class DoctorsController extends Controller
 
         }
     }
+    //----------------------------------------------------------
+
+    public function getDoctorStatus(Request $request, $id)
+        {
+            try{
+                return Doctor::getDoctorStatus($id);
+            }catch (\Exception $e) {
+                $response = [];
+                $response['success'] = false;
+                if (env('APP_DEBUG')) {
+                    $response['errors'][] = $e->getMessage();
+                    $response['hint'] = $e->getTrace();
+                }else{
+                    $response['errors'][] = trans("vaahcms-general.something_went_wrong");
+                }
+                return $response;
+            }
+        }
     //----------------------------------------------------------
     public function deleteList(Request $request)
     {
@@ -237,5 +256,20 @@ class DoctorsController extends Controller
     }
     //----------------------------------------------------------
 
-
+    public function getDoctorsCount(Request $request)
+    {
+        try {
+            return Doctor::getDoctorsCountList($request);
+        } catch (\Exception $e) {
+            $response = [];
+            $response['success'] = false;
+            if (env('APP_DEBUG')) {
+                $response['errors'][] = $e->getMessage();
+                $response['hint'] = $e->getTrace();
+            } else {
+                $response['errors'][] = trans("vaahcms-general.something_went_wrong");
+            }
+            return $response;
+        }
+    }
 }

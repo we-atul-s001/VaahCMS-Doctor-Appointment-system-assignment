@@ -212,7 +212,18 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     </div>
                 </VhField>
 
+                <VhField label="Price Per Session">
+                    <div class="p-inputgroup">
 
+                        <InputText
+                            v-model="store.item.price_per_session"
+                            placeholder="Price per Session"
+                            type="number"
+                            class="price-input"
+                        />
+                        <div class="required-field hidden"></div>
+                    </div>
+                </VhField>
                 <VhField label="Is Active">
                     <InputSwitch v-bind:false-value="0"
                                  v-bind:true-value="1"

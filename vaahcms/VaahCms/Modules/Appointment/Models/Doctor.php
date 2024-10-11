@@ -36,6 +36,7 @@ class Doctor extends VaahModel
         'slug',
         'email',
         'phone',
+        'price_per_session',
         'specialization',
         'shift_start_time',
         'shift_end_time',
@@ -51,11 +52,36 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     protected $appends = [
-
+        'appointments_count',
+        'appointments_list'
     ];
 
     //-------------------------------------------------
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id', 'id');
+    }
 
+    public function getAppointmentsCountAttribute(): int
+    {
+        return $this->appointments()->whereNotIn('status', [0, 2])->count();
+    }
+
+    public function getAppointmentsListAttribute(): array
+    {
+
+        return $this->appointments()->with(['patient', 'doctor'])->get()->map(function ($appointment) {
+            return [
+                'id' => $appointment->id,
+                'patient_name' => $appointment->patient->name,
+                'price_per_session' => $appointment->doctor->price_per_session,
+                'status' => $appointment->status,
+                'date' => $appointment->date,
+                'slot_start_time' => $appointment->slot_start_time,
+                'reason' => $appointment->reason,
+            ];
+        })->toArray();
+    }
 
     //-------------------------------------------------
     public static function getUnFillableColumns()
@@ -78,7 +104,6 @@ class Doctor extends VaahModel
         );
         return $fillable_columns;
     }
-
 
 
     //-------------------------------------------------
@@ -167,9 +192,13 @@ class Doctor extends VaahModel
         if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
             if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
                 $response['success'] = false;
-                $response['messages'][] = "Shift end time is not valid time";
+                $response['errors'][] = "Shift end time is not valid time";
                 return $response;
             }
+        }
+
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
         }
 
         // check if name exist
@@ -229,7 +258,7 @@ class Doctor extends VaahModel
     protected function shiftEndTime(): Attribute
     {
         return Attribute::make(
-            get: function (string $value = null,) {
+            get: function (string $value = null) {
                 $timezone = Session::get('user_timezone');
                 return Carbon::parse($value)
                     ->setTimezone($timezone)
@@ -237,6 +266,7 @@ class Doctor extends VaahModel
             },
         );
     }
+
 
 
     //-------------------------------------------------
@@ -337,7 +367,7 @@ class Doctor extends VaahModel
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time',
+        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_session',
             'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
@@ -396,6 +426,8 @@ class Doctor extends VaahModel
             case 'trash':
                 self::whereIn('id', $items_id)
                     ->get()->each->delete();
+                Appointment::whereIn('doctor_id', $items_id)
+                    ->get()->each->delete();
                 break;
             case 'restore':
                 self::whereIn('id', $items_id)->onlyTrashed()
@@ -435,6 +467,35 @@ class Doctor extends VaahModel
         }
 
         $items_id = collect($inputs['items'])->pluck('id')->toArray();
+
+        $appointments = Appointment::whereIn('doctor_id', $items_id)->get();
+
+        foreach ($appointments as $appointment) {
+
+            $patient = Patient::find($appointment->patient_id);
+
+
+            if ($patient) {
+
+                $inputs = [
+                    'doctor_id' => $appointment->doctor_id,
+                    'patient_email' => $patient->email,
+                    'date' => $appointment->date,
+                    'slot_start_time' => $appointment->slot_start_time,
+                ];
+
+
+                $appointment->status = 2;
+                $appointment->save();
+                $subject = 'Appointment Cancellation Notice';
+
+
+                self::sendCancelAppointmentMail($inputs, $subject);
+            }
+        }
+
+
+
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
@@ -443,6 +504,25 @@ class Doctor extends VaahModel
 
         return $response;
     }
+    //-------------------------------------------------
+    public static function sendCancelAppointmentMail($inputs, $subject)
+    {
+
+        $doctor = Doctor::find($inputs['doctor_id']);
+
+
+
+        $message_patient = sprintf(
+            'Hello, your appointment with Dr. %s has been canceled as the doctor is unavailable. Please select a different doctor to reschedule your appointment.',
+            $doctor->name,
+
+        );
+
+
+        VaahMail::dispatchGenericMail($subject, $message_patient, $inputs['patient_email']);
+    }
+
+
     //-------------------------------------------------
     public static function listAction($request, $type): array
     {
@@ -508,7 +588,7 @@ class Doctor extends VaahModel
     public static function getItem($id)
     {
 
-        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','is_active', 'created_at', 'updated_at')
+        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','price_per_session','is_active', 'created_at', 'updated_at')
             ->where('id', $id)
             ->withTrashed()
             ->first();
@@ -524,7 +604,6 @@ class Doctor extends VaahModel
         $response['data'] = $item;
 
         return $response;
-
     }
     //-------------------------------------------------
     public static function updateItem($request, $id)
@@ -536,7 +615,9 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         // Check if name already exists
         $item = self::where('id', '!=', $id)
             ->withTrashed()
@@ -614,7 +695,7 @@ class Doctor extends VaahModel
             $patient = Patient::find($appointment->patient_id);
             $date = Carbon::parse($appointment->date)->toDateString();
 
-            $appointment_url = "http://127.0.0.1:8000/backend/appointment#/appointments";
+            $appointment_url = vh_get_assets_base_url(). '/backend/appointment#/appointments/form/'.$appointment->id;
 
             $message_patient = sprintf(
                 'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
@@ -755,19 +836,43 @@ class Doctor extends VaahModel
             'except' => self::getUnFillableColumns()
         ]);
         $fillable = VaahSeeder::fill($request);
-        if(!$fillable['success']){
+        if (!$fillable['success']) {
             return $fillable;
         }
         $inputs = $fillable['data']['fill'];
 
         $faker = Factory::create();
 
+
+        $inputs['name'] = $faker->name;
+        $inputs['slug'] = Str::slug($inputs['name']);
+        $phone_length = rand(7, 16);
+        $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
+        $inputs['specialization'] = $faker->word;
+        $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
+
+        while (strpos($inputs['shift_start_time'], 'PM') !== false) {
+            $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
+        }
+
+        $shift_start_timestamp = strtotime($inputs['shift_start_time']);
+
+        $shift_end_timestamp = $shift_start_timestamp + (4 * 60 * 60);
+
+
+        $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
+
+        $inputs['price_per_session'] = $faker->numberBetween(100, 500);
+
+
+        $inputs['is_active'] = $faker->randomElement([1]);
+
         /*
          * You can override the filled variables below this line.
          * You should also return relationship from here
          */
 
-        if(!$is_response_return){
+        if (!$is_response_return) {
             return $inputs;
         }
 
@@ -776,9 +881,32 @@ class Doctor extends VaahModel
         return $response;
     }
 
+
+    //-------------------------------------------------
+    public static function getDoctorsCountList()
+    {
+        $total_doctors = Doctor::count();
+        $total_patients = Patient::count();
+
+
+        $total_booked_appointments = Appointment::where('status', 1)->count();
+        $total_cancelled_appointments = Appointment::whereIn('status', [2])->count();
+        $total_rescheduled_appointments = Appointment::whereIn('status', [0])->count();
+
+        return response()->json([
+            'totalDoctors' => $total_doctors,
+            'totalPatients' => $total_patients,
+            'totalBookedAppointments' => $total_booked_appointments,
+            'totalCancelledAppointments' => $total_cancelled_appointments,
+            'totalRescheduledAppointments' => $total_rescheduled_appointments
+        ]);
+    }
+
     //-------------------------------------------------
     //-------------------------------------------------
     //-------------------------------------------------
+
+
 
 
 }

@@ -76,6 +76,8 @@ const toggleBulkMenuState = (event) => {
                                     class="p-button-sm"
                                     data-testid="doctors-actions-search-button"
                                     icon="pi pi-search"/>
+
+
                             <Button
                                 type="button"
                                 class="p-button-sm"
@@ -85,6 +87,8 @@ const toggleBulkMenuState = (event) => {
                                 Filters
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
                             </Button>
+
+
 
                             <Button
                                 type="button"

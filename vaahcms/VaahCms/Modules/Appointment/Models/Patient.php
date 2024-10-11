@@ -178,7 +178,9 @@ class Patient extends VaahModel
             $response['messages'][] = $error_message;
             return $response;
         }
-
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
+        }
         $item = new self();
         $item->fill($inputs);
         $item->save();
@@ -299,6 +301,7 @@ class Patient extends VaahModel
 
 
     }
+    //-------------------------------------------------
 
     //-------------------------------------------------
     public static function updateList($request)
@@ -385,6 +388,8 @@ class Patient extends VaahModel
         }
 
         $items_id = collect($inputs['items'])->pluck('id')->toArray();
+        Appointment::whereIn('patient_id', $items_id)
+            ->forceDelete();
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
@@ -484,6 +489,9 @@ class Patient extends VaahModel
         $validation = self::validation($inputs, $id);
         if (!$validation['success']) {
             return $validation;
+        }
+        if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
+            $inputs['is_active'] = 1;
         }
 
         // check if name exist
@@ -633,6 +641,13 @@ class Patient extends VaahModel
         $inputs = $fillable['data']['fill'];
 
         $faker = Factory::create();
+
+        $inputs['name'] = $faker->name;
+        $inputs['slug'] = Str::slug($inputs['name']);
+        $inputs['email'] = $faker->email;
+        $phone_length = rand(7, 16);
+        $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
+        $inputs['is_active'] = $faker->randomElement([1]);
 
         /*
          * You can override the filled variables below this line.

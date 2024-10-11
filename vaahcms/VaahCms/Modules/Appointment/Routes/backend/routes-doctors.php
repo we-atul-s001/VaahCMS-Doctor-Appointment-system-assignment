@@ -5,9 +5,9 @@ use VaahCms\Modules\Appointment\Http\Controllers\Backend\DoctorsController;
 Route::group(
     [
         'prefix' => 'backend/appointment/doctors',
-        
+
         'middleware' => ['web', 'has.backend.access'],
-        
+
 ],
 function () {
     /**
@@ -20,6 +20,13 @@ function () {
      */
     Route::get('/', [DoctorsController::class, 'getList'])
         ->name('vh.backend.appointment.doctors.list');
+
+    /**
+     * Get Doctors Count
+     */
+    Route::get('/doctor-count', [DoctorsController::class, 'getDoctorsCount'])
+        ->name('vh.backend.appointment.doctors.count');
+
     /**
      * Update List
      */
