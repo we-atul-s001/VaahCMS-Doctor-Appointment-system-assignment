@@ -97,7 +97,13 @@ const toggleBulkMenuState = (event) => {
                             >
                                 <div class="dialog-content">
                                     <h4>Select a File for Import</h4>
-                                    <input type="file" accept=".csv" class="file-input" @change="store.onFileSelect()" />
+                                    <input
+                                        type="file"
+                                        accept=".xlsx"
+                                        class="file-input"
+                                        @change="store.onFileSelect($event)"
+                                    />
+
                                 </div>
                                 <div class="p-dialog-footer custom-footer">
                                     <Button label="Cancel" @click="store.show_import_dialog = false" class="cancel-btn" />

@@ -2,6 +2,7 @@ import {watch} from 'vue'
 import {acceptHMRUpdate, defineStore} from 'pinia'
 import qs from 'qs'
 import {vaah} from '../vaahvue/pinia/vaah'
+import {ref} from 'vue'
 
 let model_namespace = 'VaahCms\\Modules\\Appointment\\Models\\Doctor';
 
@@ -67,7 +68,7 @@ export const useDoctorStore = defineStore({
         item_menu_state: null,
         form_menu_list: [],
         show_import_dialog: false,
-        selected_file: null,
+        selected_file: ref(null),
     }),
     getters: {
 
@@ -942,33 +943,64 @@ export const useDoctorStore = defineStore({
             this.show_import_dialog = true;
         },
         onFileSelect(event) {
-            this.selected_file = event.target.files[0];
-            console.log("File selected:", this.selected_file);
-        },
-        confirmBulkImport() {
-            if (selected_file.value) {
-                const fileType = selected_file.value.name.split('.').pop().toLowerCase();
-                if (fileType !== 'csv') {
-                    alert('Please select a valid CSV file.');
-                    return;
-                }
-
-                // Proceed with the bulk import logic here
-                console.log("Proceeding with CSV file:", selected_file.value);
-                show_import_dialog.value = false;
-            } else {
-                alert("Please select a file before proceeding.");
+            const file = event.target.files[0];
+            if (file) {
+                this.selected_file = file;
             }
         },
+        async confirmBulkImport() {
+            // Check if a file is selected
+            if (!this.selected_file) {
+                console.error('No file selected for import.');
+                alert('Please select a file before proceeding.');
+                return;
+            }
 
+            // Check the file type
+            const fileType = this.selected_file.name.split('.').pop().toLowerCase();
+            if (fileType !== 'xlsx' && fileType !== 'csv') {
+                alert('Please select a valid CSV or XLSX file.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', this.selected_file);
+
+            try {
+                const options = {
+                    method: 'POST',
+                    body: formData, // Include the FormData in the options
+                };
+
+                const response = await vaah().ajax(
+                    this.ajax_url + '/bulk-import',
+                    this.confirmBulkImportAfter,
+                    options
+                );
+
+                // Check the structure of the response
+                if (response && response.success) {
+                    console.log("Data imported successfully:", response.data);
+                    alert('Data imported successfully!');
+                } else {
+                    console.error("Import failed:", response.message || 'Unknown error');
+                    alert('Import failed: ' + (response.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error("Error importing data:", error);
+                alert('An error occurred while importing data.');
+            }
+
+            // Close the import dialog
+            this.show_import_dialog = false;
+        },
 
         confirmBulkImportAfter() {
-
             console.log("Bulk import initiated with file:", this.selected_file);
-
             this.show_import_dialog = false;
             this.selected_file = null;
         },
+
 
 
         onHideDialog() {

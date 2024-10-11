@@ -905,10 +905,53 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     public static function bulkImport(Request $request)
     {
-        $inputs = $request->all();
-        $validator = \Validator::make($inputs, [
-            'file' => 'required|mimes:csv,txt|max:2048',
-        ]);
+        try {
+            {
+
+                $inputs = $request->all();
+//                $validator = \Validator::make($inputs, [
+//                    'file' => 'required|mimes:xlsx,txt|max:2048',
+//                ]);
+//
+//                if ($validator->fails()) {
+//                    return response()->json(['errors' => $validator->errors()], 422);
+//                }
+
+                // Handle the file upload
+                if ($request->hasFile('file')) {
+                    $file = $request->file('file');
+                    $filePath = $file->getRealPath();
+
+                    // Open the file
+                    if (($handle = fopen($filePath, 'r')) !== false) {
+                        $header = fgetcsv($handle); // Get the header row
+
+
+                        while (($row = fgetcsv($handle)) !== false) {
+
+                            $data = array_combine($header, $row);
+
+                            $slug = str_slug($data['name']);
+
+                            $doctorData = [
+                                'name' => $data['name'],
+                                'slug' => $slug,
+                                'email' => $data['email'],
+                                'phone' => $data['phone'],
+                                'specialization' => $data['specialization'],
+                            ];
+
+                            \DB::table('vh_doctors')->insert($doctorData);
+                        }
+                        fclose($handle);
+                    }
+                }
+
+                return response()->json(['message' => 'Bulk import successful'], 200);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Bulk import failed'], 500);
+        }
     }
     //-------------------------------------------------
     //-------------------------------------------------
