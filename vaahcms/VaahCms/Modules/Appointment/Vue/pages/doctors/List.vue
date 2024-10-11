@@ -7,7 +7,8 @@ import {useRootStore} from '../../stores/root'
 
 import Actions from "./components/Actions.vue";
 import Table from "./components/Table.vue";
-import Filters from './components/Filters.vue'
+import Filters from './components/Filters.vue';
+import DoctorFilter from './components/DoctorFilter.vue';
 
 const store = useDoctorStore();
 const root = useRootStore();
@@ -130,6 +131,7 @@ const toggleCreateMenu = (event) => {
 
          <Filters/>
 
+        <DoctorFilter/>
         <RouterView/>
 
     </div>
