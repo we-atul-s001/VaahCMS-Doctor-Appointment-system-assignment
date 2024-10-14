@@ -51,6 +51,12 @@ function () {
     Route::post('/', [DoctorsController::class, 'createItem'])
         ->name('vh.backend.appointment.doctors.create');
     /**
+     * Get Specialization
+     */
+
+    Route::get('/specialization',  [DoctorsController::class, 'getSpecializations'])
+        ->name('vh.backend.appointments.doctors.specialization.read');
+    /**
      * Get Item
      */
     Route::get('/{id}', [DoctorsController::class, 'getItem'])
@@ -79,5 +85,6 @@ function () {
         ->name('vh.backend.appointment.doctors.item.action');
 
     //---------------------------------------------------------
+
 
 });

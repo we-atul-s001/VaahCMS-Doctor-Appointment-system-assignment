@@ -352,6 +352,35 @@ class Doctor extends VaahModel
         }
 
     }
+    public function scopeIsFieldFilter($query, $field_filter){
+        $filter_type = array_keys($field_filter);
+        if(count($field_filter) <= 0)
+        {
+            return $query;
+        }
+        foreach($filter_type as $filter){
+            $filter_value = $field_filter[$filter];
+            switch ($filter){
+                case 'specialization' :
+                    $query->where('specialization',$filter_value);
+                    break;
+                case 'price' :
+                    $parts = explode('-', $filter_value);
+                    $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
+                    $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
+                    $query->whereBetween('price_per_session',[$minPrice,$maxPrice]);
+                    break;
+                case 'timings' :
+                    $parts = explode('-', $filter_value);
+                    $min_time = Carbon::parse($parts[0])->format('g:i A');
+                    $max_time = Carbon::parse($parts[1])->format('g:i A');
+                    $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time,$max_time]);
+                    break;
+            }
+        }
+        return $query;
+    }
+
     //-------------------------------------------------
     public static function getList($request)
     {
@@ -359,6 +388,9 @@ class Doctor extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
+        if($request->has('field_filter')){
+            $list->isFieldFilter($request->field_filter);
+        }
 
         $rows = config('vaahcms.per_page');
 
@@ -902,7 +934,21 @@ class Doctor extends VaahModel
         ]);
     }
 
+
     //-------------------------------------------------
+    public static function getSpecializations(){
+
+        $specializations = self::distinct()->pluck('specialization');
+        $time_ranges = self::select('shift_start_time', 'shift_end_time')->get();
+
+
+        return response()->json([
+            'specializations' => $specializations,
+            'time_ranges' => $time_ranges->toArray()
+        ]);
+
+    }
+
     //-------------------------------------------------
     //-------------------------------------------------
 
