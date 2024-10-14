@@ -966,32 +966,30 @@ export const useDoctorStore = defineStore({
             }
 
             try {
-                // Read the file content
                 const fileContent = await this.readFileContent(this.selected_file, fileType);
 
-                // Check if records are available
                 if (!fileContent.records || fileContent.records.length === 0) {
                     console.error('No data found in the file.');
                     alert('The file does not contain any data.');
                     return;
                 }
 
-                // Map the records data directly for import
-                const dataToImport = fileContent.records;
+                // Log the data to confirm its structure
+                console.log("Data to import:", fileContent.records);
 
-                // Prepare the request payload
+                // Assuming the records contain the expected fields
                 const payload = {
-                    headers: fileContent.headers, // Sending headers for mapping purposes
-                    records: dataToImport          // Sending the actual data to be inserted
+                    records: fileContent.records // Send the records directly
                 };
 
-                // Send the POST request with the mapped data
+                let url = this.ajax_url + '/bulk-import';
+                console.log("url", url);
                 const response = await vaah().ajax(
                     this.ajax_url + '/bulk-import',
                     this.confirmBulkImportAfter,
                     {
                         method: 'POST',
-                        body: JSON.stringify(payload),   // Send JSON payload
+                        body: JSON.stringify(payload),
                         headers: {
                             'Content-Type': 'application/json'
                         }
@@ -1012,6 +1010,7 @@ export const useDoctorStore = defineStore({
 
             this.show_import_dialog = false;
         },
+
 
 
 
@@ -1115,7 +1114,7 @@ export const useDoctorStore = defineStore({
 
                         headerMapping[trimmedHeader].push(record[index] !== null ? record[index].trim() : '');
                     }
-                    // Handle case if record is an object
+
                     else if (record && typeof record === 'object') {
 
                         if (trimmedHeader in record) {
