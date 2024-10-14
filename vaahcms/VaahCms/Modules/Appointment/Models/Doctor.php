@@ -372,9 +372,9 @@ class Doctor extends VaahModel
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
-                    $minTime = Carbon::parse($parts[0])->format('H:i');
-                    $maxTime = Carbon::parse($parts[1])->format('H:i');
-                    $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$minTime,$maxTime]);
+                    $min_time = Carbon::parse($parts[0])->format('g:i A');
+                    $max_time = Carbon::parse($parts[1])->format('g:i A');
+                    $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time,$max_time]);
                     break;
             }
         }

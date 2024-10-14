@@ -10,13 +10,7 @@ const confirm = useConfirm();
 const toast = useToast();
 const currency_sign = '₹';
 
-const time_range = [
-    '09:00 AM-12:00 PM',
-    '12:00 PM-03:00 PM',
-    '03:00 PM-06:00 PM',
-    '06:00 PM-09:00 PM',
-    '09:00 PM-12:00 AM'
-];
+
 
 const price_range = [
     '0-100',
