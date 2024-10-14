@@ -950,6 +950,30 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function bulkImport(Request $request)
+    {
+        $fileContents = $request->json()->all();
+        if(!$fileContents){
+            return ;
+        }
+
+        foreach ($fileContents as $content) {
+            //dd($content);
+            self::updateOrCreate(
+                ['email' => $content['email']],
+                [
+                    'name' => $content['name'],
+                    'email' => $content['email'],
+                   // 'price' => $content['price'],
+                    'phone' => $content['phone'],
+                    'specialization' => $content['specialization'],
+//                    'start_time' => Carbon::parse('Y-m-d h:i:s A'),
+//                    'end_time' => Carbon::parse('Y-m-d h:i:s A'),
+                ]
+            );
+        }
+        return response()->json(['message' => 'Doctors updated/created successfully!']);
+    }
     //-------------------------------------------------
 
 
