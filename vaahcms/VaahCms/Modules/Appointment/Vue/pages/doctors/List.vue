@@ -1,9 +1,9 @@
-    <script setup>
-import {onMounted, reactive, ref} from "vue";
-import {useRoute} from 'vue-router';
+<script setup>
+import { onMounted, reactive, ref, computed, watch } from "vue"; // Import watch
+import { useRoute } from 'vue-router';
 
-import {useDoctorStore} from '../../stores/store-doctors'
-import {useRootStore} from '../../stores/root'
+import { useDoctorStore } from '../../stores/store-doctors';
+import { useRootStore } from '../../stores/root';
 
 import Actions from "./components/Actions.vue";
 import Table from "./components/Table.vue";
@@ -17,41 +17,16 @@ const route = useRoute();
 import { useConfirm } from "primevue/useconfirm";
 const confirm = useConfirm();
 
-
 onMounted(async () => {
     document.title = 'Doctors - Appointment';
     store.item = null;
-    /**
-     * call onLoad action when List view loads
-     */
+
     await store.onLoad(route);
-
-    /**
-     * watch routes to update view, column width
-     * and get new item when routes get changed
-     */
     await store.watchRoutes(route);
-
-    /**
-     * watch states like `query.filter` to
-     * call specific actions if a state gets
-     * changed
-     */
     await store.watchStates();
-
-    /**
-     * fetch assets required for the crud
-     * operation
-     */
     await store.getAssets();
-
-    /**
-     * fetch list of records
-     */
     await store.getList();
-
     await store.getListCreateMenu();
-
 });
 
 //--------form_menu
@@ -62,12 +37,32 @@ const toggleCreateMenu = (event) => {
 //--------/form_menu
 
 
+const dynamicClass = computed(() => {
+    if (store.quick_filters_doctors) {
+        return 'col-9';
+    } else {
+        return 'col-' + (store.show_filters ? 9 : store.list_view_width);
+    }
+});
+
+
+watch(() => store.show_filters, (newValue) => {
+    if (newValue) {
+        store.quick_filters_doctors = false;
+    }
+});
+
+
+watch(() => store.quick_filters_doctors, (newValue) => {
+    if (newValue) {
+        store.show_filters = false;
+    }
+});
 </script>
 <template>
 
     <div class="grid" v-if="store.assets">
-
-        <div :class="'col-'+(store.show_filters?9:store.list_view_width)">
+        <div :class="dynamicClass">
             <Panel class="is-small">
 
                 <template class="p-1" #header>
