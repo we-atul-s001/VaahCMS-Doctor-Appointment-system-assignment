@@ -984,7 +984,8 @@ class Doctor extends VaahModel
            // dd($content);
         }
 
-        return response()->json(['message' => 'Doctors updated/created successfully!']);
+        $response['messages'][] = trans("vaahcms-general.imported_successfully");
+        return $response;
     }
     //-------------------------------------------------
 

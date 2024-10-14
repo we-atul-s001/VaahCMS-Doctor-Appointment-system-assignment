@@ -1016,15 +1016,16 @@ export const useDoctorStore = defineStore({
             }
         },
 
-        async importDoctors(fileData){
+        async importDoctors(file_data){
             await vaah().ajax(
-                this.ajax_url.concat('/bulkImport'),
+                this.ajax_url.concat('/bulkImport/doctor'),
+               
                 (data, res) => {
-                    console.log(res.data)
+                   this.getList();
                 },
                 {
-                    params: fileData,
-                    method: 'post',
+                    params: file_data,
+                    method: 'POST',
                     headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
             );
