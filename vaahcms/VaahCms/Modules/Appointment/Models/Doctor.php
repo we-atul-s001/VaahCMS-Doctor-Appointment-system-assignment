@@ -937,8 +937,18 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     public static function getSpecializations(){
-        return self::distinct()->pluck('specialization');
+
+        $specializations = self::distinct()->pluck('specialization');
+        $time_ranges = self::select('shift_start_time', 'shift_end_time')->get();
+
+
+        return response()->json([
+            'specializations' => $specializations,
+            'time_ranges' => $time_ranges->toArray()
+        ]);
+
     }
+
     //-------------------------------------------------
     //-------------------------------------------------
 

@@ -73,7 +73,8 @@ export const useDoctorStore = defineStore({
         item_menu_list: [],
         item_menu_state: null,
         form_menu_list: [],
-        specializations: null
+        specializations: null,
+        timings: null,
     }),
     getters: {
 
@@ -959,6 +960,20 @@ export const useDoctorStore = defineStore({
             this.form_menu_list = form_menu;
 
         },
+       formatTimeWithAmPm(time) {
+    if (!time) return '';
+
+    const [hours, minutes] = time.split(':');
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+
+    let hour = date.getHours() % 12;
+    if (hour === 0) hour = 12;
+
+    return `${hour}:${minutes} ${amPm}`;
+},
         showFieldFilters(){
             this.quick_filters_doctors = !this.quick_filters_doctors;
         },
@@ -966,7 +981,17 @@ export const useDoctorStore = defineStore({
             await vaah().ajax(
                 this.ajax_url.concat('/specialization'),
                 (data,res) => {
-                    this.specializations = res.data;
+                    this.specializations = res.data.specializations;
+                    if (Array.isArray(res.data.time_ranges)) {
+                        this.timings = res.data.time_ranges.map((item) => {
+                            return `${this.formatTimeWithAmPm(item.shift_start_time)} - ${this.formatTimeWithAmPm(item.shift_end_time)}`;
+                        });
+                    } else {
+                        console.error('time_ranges is not an array:', res.data.time_ranges);
+                        this.timings = [];
+                    }
+
+
                 });
         },
         //---------------------------------------------------------------------
