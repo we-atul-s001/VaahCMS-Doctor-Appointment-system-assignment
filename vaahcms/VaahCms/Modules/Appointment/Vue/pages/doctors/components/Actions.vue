@@ -51,7 +51,7 @@ const toggleBulkMenuState = (event) => {
                     type="button"
                     data-testid="doctors-actions-show-field-filters"
                     class="p-button-sm"
-                    label="Apply field filters"
+                    label="Apply doctor filters"
                     @click="store.showFieldFilters()">
               </Button>
 
