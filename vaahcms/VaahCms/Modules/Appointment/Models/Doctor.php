@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use Maatwebsite\Excel\Excel;
 use mysql_xdevapi\Exception;
 use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
@@ -988,7 +989,10 @@ class Doctor extends VaahModel
         return $response;
     }
     //-------------------------------------------------
-
+    public static function bulkExport(Request $request)
+    {
+        return Excel::download(new DoctorsExport,'doctorsList.csv');
+    }
 
 
 
