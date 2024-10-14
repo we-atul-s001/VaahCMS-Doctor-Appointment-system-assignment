@@ -71,9 +71,9 @@ const handleFileUpload = (event) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const contents = e.target.result;
-            const jsonData = csvToJson(contents);
-            console.log('Parsed JSON data:', jsonData);
-            importDoctors(jsonData);
+            const json_data = csvToJson(contents);
+            console.log('Parsed JSON data:', json_data);
+            importDoctors(json_data);
         };
         reader.readAsText(file);
     }
@@ -99,8 +99,8 @@ const exportDoctors = () => {
     store.exportDoctors();
 }
 
-const importDoctors = (jsonData) => {
-    store.importDoctors(jsonData);
+const importDoctors = (json_data) => {
+    store.importDoctors(json_data);
 }
 </script>
 <template>
