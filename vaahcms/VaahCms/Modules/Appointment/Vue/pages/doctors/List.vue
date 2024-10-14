@@ -166,13 +166,14 @@ const importDoctors = (json_data) => {
         <DoctorFilter />
         <RouterView />
 
-
-        <Dialog header="Upload Doctors CSV" :visible.sync="isDialogVisible" modal
-
-             :closable="true"
+        <Dialog header="Upload Doctors CSV"
+                :visible.sync="isDialogVisible"
+                modal
+                :closable="true"
                 :dismissable-mask="true"
                 :close-on-escape="true"
-           >
+                class="custom-dialog"
+        >
             <div class="p-fluid">
                 <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" />
             </div>
@@ -182,3 +183,39 @@ const importDoctors = (json_data) => {
         </Dialog>
     </div>
 </template>
+
+
+<style scoped>
+
+.custom-dialog {
+    max-width: 600px;
+    width: 100%;
+    height: auto;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.custom-dialog .p-dialog-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    border-radius: 10px 10px 0 0;
+}
+
+
+.custom-dialog .p-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+}
+
+.custom-dialog input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+</style>
