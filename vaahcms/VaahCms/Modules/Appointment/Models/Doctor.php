@@ -950,6 +950,43 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    /*
+     * It extracts the JSON data from the request.
+       It loops through each doctor record.
+       It uses the updateOrCreate method to either update an existing record or insert a new one
+        based on the doctor's email.
+       It ensures that shift times are correctly formatted, and marks the doctor as active.
+       Finally, it returns a success message.
+     *
+     */
+    public static function bulkImport(Request $request)
+    {
+        $file_contents = $request->json()->all();
+        if(!$file_contents){
+            return ;
+        }
+
+        foreach ($file_contents as $content) {
+
+            self::updateOrCreate(
+                ['email' => $content['email']],
+                [
+                    'name' => $content['name'],
+                    'email' => $content['email'],
+                   'price_per_session' => $content['price'],
+                    'phone' => $content['phone'],
+                    'specialization' => $content['specialization'],
+                    'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
+                    'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
+                    'is_active' => 1
+                ]
+            );
+           // dd($content);
+        }
+
+        $response['messages'][] = trans("vaahcms-general.imported_successfully");
+        return $response;
+    }
     //-------------------------------------------------
 
 
