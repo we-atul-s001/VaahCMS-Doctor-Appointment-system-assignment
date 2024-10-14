@@ -637,9 +637,9 @@ export const useDoctorStore = defineStore({
             {
                 this.query.filter[key] = null;
             }
-            for(let key in this.query.quick_filters_doctors)
+            for(let key in this.query.field_filter)
             {
-                this.query.quick_filters_doctors[key] = null;
+                this.query.field_filter[key] = null;
             }
             await this.updateUrlQueryString(this.query);
         },
