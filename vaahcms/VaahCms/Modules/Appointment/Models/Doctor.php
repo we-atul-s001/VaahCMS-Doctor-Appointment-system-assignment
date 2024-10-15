@@ -588,7 +588,7 @@ class Doctor extends VaahModel
             case 'create-5000-records':
             case 'create-10000-records':
 
-                if (!config('appoinments.is_dev')) {
+                if (!config('appointment.is_dev')) {
                     $response['success'] = false;
                     $response['errors'][] = 'User is not in the development environment.';
 
@@ -956,7 +956,6 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-
         try {
             $response = ['messages' => [], 'success' => true];
 
@@ -1009,6 +1008,7 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     /*
      * It uses the DoctorExport class to generate a CSV file containing all the doctor records.

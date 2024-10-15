@@ -59,7 +59,52 @@ const toggleCreateMenu = (event) => {
     create_menu.value.toggle(event);
 };
 //--------/form_menu
+const isDialogVisible = ref(false);
 
+const openFileDialog = () => {
+    isDialogVisible.value = true;
+};
+
+const fileInput = ref(null);
+
+const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const contents = e.target.result;
+            const json_data = csvToJson(contents);
+            console.log('Parsed JSON data:', json_data);
+            importAppointment(json_data);
+            isDialogVisible.value = false;
+        };
+        reader.readAsText(file);
+    }
+};
+
+const csvToJson = (csv) => {
+    const lines = csv.split('\n');
+    const result = [];
+    const headers = lines[0].split(',');
+
+    for (let i = 1; i < lines.length; i++) {
+        const obj = {};
+        const currentLine = lines[i].split(',');
+        for (let j = 0; j < headers.length; j++) {
+            obj[headers[j].trim()] = currentLine[j] ? currentLine[j].trim() : '';
+        }
+        result.push(obj);
+    }
+    return result;
+};
+
+const exportAppointment = () => {
+    store.exportAppointment();
+};
+
+const importAppointment = (json_data) => {
+    store.importAppointment(json_data);
+};
 
 </script>
 <template>
@@ -98,6 +143,14 @@ const toggleCreateMenu = (event) => {
                         Create
                     </Button>
 
+                        <Button @click="openFileDialog" class="import-btn">Upload CSV</Button>
+
+
+                        <Button label="Export CSV"
+                                @click="exportAppointment"
+                                class="export-btn"
+                                style="margin-left: 5px;"
+                        />
                     <Button data-testid="appointments-list-reload"
                             class="p-button-sm"
                             @click="store.getList()">
@@ -136,7 +189,23 @@ const toggleCreateMenu = (event) => {
 
         <RouterView/>
 
+        <Dialog header="Upload CSV"
+                :visible.sync="isDialogVisible"
+                modal
+                :closable="true"
+                :dismissable-mask="true"
+                :close-on-escape="true"
+                class="custom-dialog"
+        >
+            <div class="p-fluid">
+                <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" />
+            </div>
+            <template #footer>
+                <Button label="Close" @click="isDialogVisible = false" class="p-button-text" />
+            </template>
+        </Dialog>
     </div>
 
 
 </template>
+

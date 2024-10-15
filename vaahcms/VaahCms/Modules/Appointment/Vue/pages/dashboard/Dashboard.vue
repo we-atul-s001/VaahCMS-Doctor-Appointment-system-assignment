@@ -129,64 +129,63 @@ const setChartOptions = () => {
         <h1 className="text-4xl">Dashboard</h1>
 
         <!-- Card Section with Equal Spacing -->
-        <section style="margin-top: 20px;">
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
-                <!-- Card 1: Total Doctors -->
-                <div className="stat-card">
-                    <div className="card-header">
-                        <i className="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Doctors
-                    </div>
-                    <div className="card-body">
-                        <h1>{{ total_doctors }}</h1>
-                    </div>
-                </div>
 
-                <!-- Card 2: Total Patients -->
-                <div className="stat-card">
-                    <div className="card-header">
-                        <i className="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Patients
-                    </div>
-                    <div className="card-body">
-                        <h1>{{ total_patients }}</h1>
-                    </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+            <!-- Card 1: Total Doctors -->
+            <div className="stat-card">
+                <div className="card-header">
+                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+                    Total Doctors
                 </div>
-
-                <!-- Card 3: Total Booked Appointments -->
-                <div className="stat-card">
-                    <div className="card-header">
-                        <i className="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Booked Appointments
-                    </div>
-                    <div className="card-body">
-                        <h1>{{ total_booked_appointments }}</h1>
-                    </div>
-                </div>
-
-                <!-- Card 4: Total Cancelled Appointments -->
-                <div className="stat-card">
-                    <div className="card-header">
-                        <i className="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Cancelled Appointments
-                    </div>
-                    <div className="card-body">
-                        <h1>{{ total_cancelled_appointments }}</h1>
-                    </div>
-                </div>
-
-                <!-- Card 5: Total Rescheduled Appointments -->
-                <div className="stat-card">
-                    <div className="card-header">
-                        <i className="pi pi-file" style="margin-right: 8px;"></i>
-                        Total Rescheduled Appointments
-                    </div>
-                    <div className="card-body">
-                        <h1>{{ total_rescheduled_appointments }}</h1>
-                    </div>
+                <div className="card-body">
+                    <h1>{{ total_doctors }}</h1>
                 </div>
             </div>
-        </section>
+
+            <!-- Card 2: Total Patients -->
+            <div className="stat-card">
+                <div className="card-header">
+                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+                    Total Patients
+                </div>
+                <div className="card-body">
+                    <h1>{{ total_patients }}</h1>
+                </div>
+            </div>
+
+            <!-- Card 3: Total Booked Appointments -->
+            <div className="stat-card">
+                <div className="card-header">
+                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+                    Total Booked Appointments
+                </div>
+                <div className="card-body">
+                    <h1>{{ total_booked_appointments }}</h1>
+                </div>
+            </div>
+
+            <!-- Card 4: Total Cancelled Appointments -->
+            <div className="stat-card">
+                <div className="card-header">
+                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+                    Total Cancelled Appointments
+                </div>
+                <div className="card-body">
+                    <h1>{{ total_cancelled_appointments }}</h1>
+                </div>
+            </div>
+
+            <!-- Card 5: Total Rescheduled Appointments -->
+            <div className="stat-card">
+                <div className="card-header">
+                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+                    Total Rescheduled Appointments
+                </div>
+                <div className="card-body">
+                    <h1>{{ total_rescheduled_appointments }}</h1>
+                </div>
+            </div>
+        </div>
 
         <!-- Chart Section -->
         <section style="margin-top: 40px;">
