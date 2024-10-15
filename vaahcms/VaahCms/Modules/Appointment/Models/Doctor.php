@@ -1015,11 +1015,11 @@ class Doctor extends VaahModel
                 $response['errors'][] = "Duplicate records were found in the import data.";
             }
 
-           
+
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             } else {
-                $response['messages'][] = "No records were imported.";
+                $response['errors'][] = "No records were imported.";
             }
 
         } catch (Exception $e) {
