@@ -60,6 +60,8 @@ return [
     'status_required' => 'The status is required.',
     'saved_successfully' => 'Saved successfully.',
     'imported_successfully' => 'Imported successfully.',
+    'no_data_found' => 'No data found.',
+    'import_failed'=>'Import failed.',
     'end_time_wrong' => 'Shift End Time Wrong',
     'appointment_rescheduled_successfully' => 'Appointment rescheduled mail sent successfully.',
     'appointment_booked_successfully' => 'Appointment booked successfully.',
