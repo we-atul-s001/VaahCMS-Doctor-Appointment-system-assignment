@@ -588,7 +588,7 @@ class Doctor extends VaahModel
             case 'create-5000-records':
             case 'create-10000-records':
 
-                if (!config('appoinments.is_dev')) {
+                if (!config('appointment.is_dev')) {
                     $response['success'] = false;
                     $response['errors'][] = 'User is not in the development environment.';
 

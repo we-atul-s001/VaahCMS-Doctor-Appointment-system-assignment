@@ -867,13 +867,51 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     public static function bulkImport(Request $request)
     {
-        $file_contents = $request->json()->all();
-        if(!$file_contents){
-            return ;
+        try {
+            $file_contents = $request->json()->all();
+
+            if (!$file_contents) {
+                return ;
+            }
+
+            foreach ($file_contents as $content) {
+
+                $doctor = Doctor::where('name', $content['doctor_name'])
+                    ->where('specialization', $content['specialization'])
+                    ->first();
+
+
+                $patient = Patient::where('name', $content['patient_name'])->first();
+
+
+                if (!$doctor) {
+                    return response()->json(['error' => "Doctor {$content['doctor_name']} with specialization {$content['specialization']} not found"], 404);
+                }
+
+                if (!$patient) {
+                    return response()->json(['error' => "Patient {$content['patient_name']} not found"], 404);
+                }
+
+                $doctorEmail = $doctor->email;
+
+                self::updateOrCreate(
+                    [
+                        'doctor_id' => $doctor->id,
+                        'patient_id' => $patient->id,
+                        'specialization' => $content['specialization'],
+//                        'shift_start_time' => $content['shift_start_time'],
+//                        'shift_end_time' => $content['shift_end_time'],
+                    ]
+                );
+            }
+
+            $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            return $response;
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
-        dd($file_contents);
     }
-    //-------------------------------------------------
+        //-------------------------------------------------
     //-------------------------------------------------
 
 

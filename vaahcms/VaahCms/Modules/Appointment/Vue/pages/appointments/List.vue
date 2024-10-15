@@ -75,7 +75,7 @@ const handleFileUpload = (event) => {
             const contents = e.target.result;
             const json_data = csvToJson(contents);
             console.log('Parsed JSON data:', json_data);
-            importDoctors(json_data);
+            importAppointment(json_data);
             isDialogVisible.value = false;
         };
         reader.readAsText(file);
@@ -209,54 +209,3 @@ const importAppointment = (json_data) => {
 
 </template>
 
-<style scoped>
-
-.custom-dialog {
-    max-width: 600px;
-    width: 100%;
-    height: auto;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-
-.custom-dialog .p-dialog-header {
-    background-color: #007bff;
-    color: white;
-    padding: 10px;
-    border-radius: 10px 10px 0 0;
-}
-
-
-.custom-dialog .p-dialog-footer {
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px;
-}
-
-.custom-dialog input[type="file"] {
-    width: 100%;
-    padding: 10px;
-    margin-top: 10px;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-}
-.import-btn {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin-left: 5px;
-}
-.export-btn {
-    background-color: mediumvioletred;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 5px 10px;
-    margin-left: 5px;
-    margin-right: 5px;
-}
-</style>
