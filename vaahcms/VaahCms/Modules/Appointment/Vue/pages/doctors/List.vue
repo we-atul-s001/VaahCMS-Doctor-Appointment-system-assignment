@@ -127,12 +127,13 @@ const importDoctors = (json_data) => {
                             Create
                         </Button>
 
-                        <!-- Upload Doctors CSV Button -->
-                        <Button @click="openFileDialog">Upload Doctors CSV</Button>
 
-                        <!-- Export Doctors Button -->
+                        <Button @click="openFileDialog" class="import-btn">Upload Doctors CSV</Button>
+
+
                         <Button label="Export Doctors"
                                 @click="exportDoctors"
+                                class="export-btn"
                                 style="margin-left: 5px;"
                         />
 
@@ -217,5 +218,22 @@ const importDoctors = (json_data) => {
     margin-top: 10px;
     border: 1px solid #ced4da;
     border-radius: 5px;
+}
+.import-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-left: 5px;
+}
+.export-btn {
+    background-color: mediumvioletred;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 </style>

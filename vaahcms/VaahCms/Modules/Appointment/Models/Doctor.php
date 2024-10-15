@@ -1,5 +1,6 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
+use App\ExportData\DoctorExport;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -8,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use Maatwebsite\Excel\Facades\Excel;
 use mysql_xdevapi\Exception;
 use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
@@ -93,6 +95,7 @@ class Doctor extends VaahModel
             'deleted_by',
         ];
     }
+
     //-------------------------------------------------
     public static function getFillableColumns()
     {
@@ -112,8 +115,7 @@ class Doctor extends VaahModel
         $model = new self();
         $fillable = $model->getFillable();
         $empty_item = [];
-        foreach ($fillable as $column)
-        {
+        foreach ($fillable as $column) {
             $empty_item[$column] = null;
         }
 
@@ -205,7 +207,7 @@ class Doctor extends VaahModel
         $item = self::where('name', $inputs['name'])->withTrashed()->first();
 
         if ($item) {
-            $error_message = "This name is already exist".($item->deleted_at?' in trash.':'.');
+            $error_message = "This name is already exist" . ($item->deleted_at ? ' in trash.' : '.');
             $response['success'] = false;
             $response['messages'][] = $error_message;
             return $response;
@@ -215,7 +217,7 @@ class Doctor extends VaahModel
         $item = self::where('slug', $inputs['slug'])->withTrashed()->first();
 
         if ($item) {
-            $error_message = "This slug is already exist".($item->deleted_at?' in trash.':'.');
+            $error_message = "This slug is already exist" . ($item->deleted_at ? ' in trash.' : '.');
             $response['success'] = false;
             $response['messages'][] = $error_message;
             return $response;
@@ -230,6 +232,7 @@ class Doctor extends VaahModel
         return $response;
 
     }
+
     //-------------------------------------------------
 
     protected function shiftStartTime(): Attribute
@@ -268,13 +271,11 @@ class Doctor extends VaahModel
     }
 
 
-
     //-------------------------------------------------
     public function scopeGetSorted($query, $filter)
     {
 
-        if(!isset($filter['sort']))
-        {
+        if (!isset($filter['sort'])) {
             return $query->orderBy('id', 'desc');
         }
 
@@ -283,8 +284,7 @@ class Doctor extends VaahModel
 
         $direction = Str::contains($sort, ':');
 
-        if(!$direction)
-        {
+        if (!$direction) {
             return $query->orderBy($sort, 'asc');
         }
 
@@ -292,58 +292,56 @@ class Doctor extends VaahModel
 
         return $query->orderBy($sort[0], $sort[1]);
     }
+
     //-------------------------------------------------
     public function scopeIsActiveFilter($query, $filter)
     {
 
-        if(!isset($filter['is_active'])
+        if (!isset($filter['is_active'])
             || is_null($filter['is_active'])
             || $filter['is_active'] === 'null'
-        )
-        {
+        ) {
             return $query;
         }
         $is_active = $filter['is_active'];
 
-        if($is_active === 'true' || $is_active === true)
-        {
+        if ($is_active === 'true' || $is_active === true) {
             return $query->where('is_active', 1);
-        } else{
-            return $query->where(function ($q){
+        } else {
+            return $query->where(function ($q) {
                 $q->whereNull('is_active')
                     ->orWhere('is_active', 0);
             });
         }
 
     }
+
     //-------------------------------------------------
     public function scopeTrashedFilter($query, $filter)
     {
 
-        if(!isset($filter['trashed']))
-        {
+        if (!isset($filter['trashed'])) {
             return $query;
         }
         $trashed = $filter['trashed'];
 
-        if($trashed === 'include')
-        {
+        if ($trashed === 'include') {
             return $query->withTrashed();
-        } else if($trashed === 'only'){
+        } else if ($trashed === 'only') {
             return $query->onlyTrashed();
         }
 
     }
+
     //-------------------------------------------------
     public function scopeSearchFilter($query, $filter)
     {
 
-        if(!isset($filter['q']))
-        {
+        if (!isset($filter['q'])) {
             return $query;
         }
-        $search_array = explode(' ',$filter['q']);
-        foreach ($search_array as $search_item){
+        $search_array = explode(' ', $filter['q']);
+        foreach ($search_array as $search_item) {
             $query->where(function ($q1) use ($search_item) {
                 $q1->where('name', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
@@ -352,29 +350,30 @@ class Doctor extends VaahModel
         }
 
     }
-    public function scopeIsFieldFilter($query, $field_filter){
+
+    public function scopeIsFieldFilter($query, $field_filter)
+    {
         $filter_type = array_keys($field_filter);
-        if(count($field_filter) <= 0)
-        {
+        if (count($field_filter) <= 0) {
             return $query;
         }
-        foreach($filter_type as $filter){
+        foreach ($filter_type as $filter) {
             $filter_value = $field_filter[$filter];
-            switch ($filter){
+            switch ($filter) {
                 case 'specialization' :
-                    $query->where('specialization',$filter_value);
+                    $query->where('specialization', $filter_value);
                     break;
                 case 'price' :
                     $parts = explode('-', $filter_value);
                     $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
                     $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
-                    $query->whereBetween('price_per_session',[$minPrice,$maxPrice]);
+                    $query->whereBetween('price_per_session', [$minPrice, $maxPrice]);
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
                     $min_time = Carbon::parse($parts[0])->format('g:i A');
                     $max_time = Carbon::parse($parts[1])->format('g:i A');
-                    $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time,$max_time]);
+                    $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time, $max_time]);
                     break;
             }
         }
@@ -388,19 +387,18 @@ class Doctor extends VaahModel
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
-        if($request->has('field_filter')){
+        if ($request->has('field_filter')) {
             $list->isFieldFilter($request->field_filter);
         }
 
         $rows = config('vaahcms.per_page');
 
-        if($request->has('rows'))
-        {
+        if ($request->has('rows')) {
             $rows = $request->rows;
         }
 
-        $list = $list->select('id', 'name', 'email', 'phone','shift_start_time','price_per_session',
-            'shift_end_time','specialization','is_active', 'created_at', 'updated_at');
+        $list = $list->select('id', 'name', 'email', 'phone', 'shift_start_time', 'price_per_session',
+            'shift_end_time', 'specialization', 'is_active', 'created_at', 'updated_at');
         $list = $list->paginate($rows);
 
 
@@ -409,7 +407,6 @@ class Doctor extends VaahModel
 
         return $response;
     }
-
 
 
     //-------------------------------------------------
@@ -436,8 +433,7 @@ class Doctor extends VaahModel
             return $response;
         }
 
-        if(isset($inputs['items']))
-        {
+        if (isset($inputs['items'])) {
             $items_id = collect($inputs['items'])
                 ->pluck('id')
                 ->toArray();
@@ -451,7 +447,7 @@ class Doctor extends VaahModel
                     ->update(['is_active' => null]);
                 break;
             case 'activate':
-                $items->withTrashed()->where(function ($q){
+                $items->withTrashed()->where(function ($q) {
                     $q->where('is_active', 0)->orWhereNull('is_active');
                 })->update(['is_active' => 1]);
                 break;
@@ -527,7 +523,6 @@ class Doctor extends VaahModel
         }
 
 
-
         self::whereIn('id', $items_id)->forceDelete();
 
         $response['success'] = true;
@@ -536,12 +531,12 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function sendCancelAppointmentMail($inputs, $subject)
     {
 
         $doctor = Doctor::find($inputs['doctor_id']);
-
 
 
         $message_patient = sprintf(
@@ -561,7 +556,7 @@ class Doctor extends VaahModel
 
         $list = self::query();
 
-        if($request->has('filter')){
+        if ($request->has('filter')) {
             $list->getSorted($request->filter);
             $list->isActiveFilter($request->filter);
             $list->trashedFilter($request->filter);
@@ -570,7 +565,7 @@ class Doctor extends VaahModel
 
         switch ($type) {
             case 'activate-all':
-                $list->withTrashed()->where(function ($q){
+                $list->withTrashed()->where(function ($q) {
                     $q->where('is_active', 0)->orWhereNull('is_active');
                 })->update(['is_active' => 1]);
                 break;
@@ -593,7 +588,7 @@ class Doctor extends VaahModel
             case 'create-5000-records':
             case 'create-10000-records':
 
-                if(!config('appoinments.is_dev')){
+                if (!config('appoinments.is_dev')) {
                     $response['success'] = false;
                     $response['errors'][] = 'User is not in the development environment.';
 
@@ -602,7 +597,7 @@ class Doctor extends VaahModel
 
                 preg_match('/-(.*?)-/', $type, $matches);
 
-                if(count($matches) !== 2){
+                if (count($matches) !== 2) {
                     break;
                 }
 
@@ -616,20 +611,20 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function getItem($id)
     {
 
-        $item = self::select('id', 'name', 'phone', 'email', 'specialization','shift_start_time','shift_end_time','price_per_session','is_active', 'created_at', 'updated_at')
+        $item = self::select('id', 'name', 'phone', 'email', 'specialization', 'shift_start_time', 'shift_end_time', 'price_per_session', 'is_active', 'created_at', 'updated_at')
             ->where('id', $id)
             ->withTrashed()
             ->first();
 
 
-        if(!$item)
-        {
+        if (!$item) {
             $response['success'] = false;
-            $response['errors'][] = 'Record not found with ID: '.$id;
+            $response['errors'][] = 'Record not found with ID: ' . $id;
             return $response;
         }
         $response['success'] = true;
@@ -637,6 +632,7 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function updateItem($request, $id)
     {
@@ -718,7 +714,7 @@ class Doctor extends VaahModel
     public static function sendRescheduleMail($appointment, $subject)
     {
 
-        if(!$appointment->doctor_id || !$appointment->patient_id){
+        if (!$appointment->doctor_id || !$appointment->patient_id) {
             return false;
         }
 
@@ -727,7 +723,7 @@ class Doctor extends VaahModel
             $patient = Patient::find($appointment->patient_id);
             $date = Carbon::parse($appointment->date)->toDateString();
 
-            $appointment_url = vh_get_assets_base_url(). '/backend/appointment#/appointments/form/'.$appointment->id;
+            $appointment_url = vh_get_assets_base_url() . '/backend/appointment#/appointments/form/' . $appointment->id;
 
             $message_patient = sprintf(
                 'Hello, %s. Unfortunately, your appointment with Dr. %s on %s has been affected due to a change in the doctor\'s working hours. Please reschedule your appointment. <br><br>
@@ -748,11 +744,10 @@ class Doctor extends VaahModel
                 $patient->name,
                 $date
             );
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return false;
 
-    }
-
+        }
 
 
         VaahMail::dispatchGenericMail($subject, $message_doctor, $doctor->email);
@@ -776,11 +771,11 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
     //-------------------------------------------------
     public static function itemAction($request, $id, $type): array
     {
-        switch($type)
-        {
+        switch ($type) {
             case 'activate':
                 self::where('id', $id)
                     ->withTrashed()
@@ -804,6 +799,7 @@ class Doctor extends VaahModel
 
         return self::getItem($id);
     }
+
     //-------------------------------------------------
 
     public static function validation($inputs, $id = null)
@@ -840,16 +836,15 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     //-------------------------------------------------
-    public static function seedSampleItems($records=100)
+    public static function seedSampleItems($records = 100)
     {
 
         $i = 0;
 
-        while($i < $records)
-        {
+        while ($i < $records) {
             $inputs = self::fillItem(false);
 
-            $item =  new self();
+            $item = new self();
             $item->fill($inputs);
             $item->save();
 
@@ -981,14 +976,16 @@ class Doctor extends VaahModel
                     'is_active' => 1
                 ]
             );
-           // dd($content);
         }
 
         $response['messages'][] = trans("vaahcms-general.imported_successfully");
         return $response;
     }
     //-------------------------------------------------
-
+    public static function bulkExport()
+    {
+        return Excel::download(new DoctorExport,'doctorsList.csv');
+    }
 
 
 
