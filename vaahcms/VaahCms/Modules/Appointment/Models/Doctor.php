@@ -957,6 +957,7 @@ class Doctor extends VaahModel
     public static function bulkImport(Request $request)
     {
         $response = ['messages' => [], 'success' => true];
+        $duplicate_found = false;
 
         try {
             $file_contents = $request->json()->all();
@@ -975,7 +976,7 @@ class Doctor extends VaahModel
                 $existing_item = self::where('email', $cleaned_content['email'])->first();
 
                 if ($existing_item) {
-                    $response['errors'][] = "Record with email " . $cleaned_content['email'] . " already exists.";
+                    $duplicate_found = true;
                     continue;
                 }
 
@@ -1004,6 +1005,9 @@ class Doctor extends VaahModel
                 );
             }
 
+            if ($duplicate_found) {
+                $response['errors'][] = "Duplicate records were found in the import data.";
+            }
             if ($response['success']) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
