@@ -943,7 +943,7 @@ export const useAppointmentStore = defineStore({
             let file_data = null;
             try {
                 await vaah().ajax(
-                    this.ajax_url.concat('/bulkExport/doctor'),
+                    this.ajax_url.concat('/bulkExport/appointment'),
 
                     (data, res) => {
                         file_data = res.data;
@@ -953,7 +953,7 @@ export const useAppointmentStore = defineStore({
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', 'doctorsList.csv');
+                link.setAttribute('download', 'appointmentList.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();

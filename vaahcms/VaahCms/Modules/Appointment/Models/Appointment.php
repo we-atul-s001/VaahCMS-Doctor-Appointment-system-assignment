@@ -1,5 +1,6 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
+use App\ExportData\AppointmentExport;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Faker\Factory;
+use Maatwebsite\Excel\Facades\Excel;
 use WebReinvent\VaahCms\Libraries\VaahMail;
 use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
@@ -912,6 +914,12 @@ class Appointment extends VaahModel
         }
     }
         //-------------------------------------------------
+
+    public static function bulkExport()
+    {
+
+        return Excel::download(new AppointmentExport, 'appointmentsList.csv');
+}
     //-------------------------------------------------
 
 
