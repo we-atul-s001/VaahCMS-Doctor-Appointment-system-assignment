@@ -956,9 +956,9 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-        try {
-            $response = ['messages' => [], 'success' => true];
+        $response = ['messages' => [], 'success' => true];
 
+        try {
             $file_contents = $request->json()->all();
 
             if (!$file_contents) {
@@ -968,31 +968,38 @@ class Doctor extends VaahModel
 
             foreach ($file_contents as $content) {
 
-                $existingItem = self::where('email', $content['email'])->first();
+                $cleaned_content = array_map(function($value) {
+                    return trim($value, '"');
+                }, $content);
 
-                if ($existingItem) {
-                    $response['errors'][] = "Record with email " . $content['email'] . " already exists.";
+                $existing_item = self::where('email', $cleaned_content['email'])->first();
+
+                if ($existing_item) {
+                    $response['errors'][] = "Record with email " . $cleaned_content['email'] . " already exists.";
                     continue;
                 }
 
 
-                if (!isset($content['is_active']) || $content['is_active'] == 0) {
-                    $content['is_active'] = 1;
+                try {
+                    $shift_start_time = Carbon::parse($cleaned_content['shift_start_time'])->format('Y-m-d H:i:s');
+                    $shift_end_time = Carbon::parse($cleaned_content['shift_end_time'])->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    $response['errors'][] = "Invalid format for email " . $cleaned_content['email'] . ": " . $e->getMessage();
+                    continue;
                 }
 
-
                 self::updateOrCreate(
-                    ['email' => $content['email']],
+                    ['email' => $cleaned_content['email']],
                     [
-                        'name' => $content['name'],
-                        'slug' => Str::slug($content['name']),
-                        'email' => $content['email'],
-                        'price_per_session' => $content['price'],
-                        'phone' => $content['phone'],
-                        'specialization' => $content['specialization'],
-                        'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
-                        'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
-                        'is_active' => $content['is_active']
+                        'name' => $cleaned_content['name'],
+                        'slug' => Str::slug($cleaned_content['name']),
+                        'email' => $cleaned_content['email'],
+                        'price_per_session' => $cleaned_content['price'],
+                        'phone' => $cleaned_content['phone'],
+                        'specialization' => $cleaned_content['specialization'],
+                        'shift_start_time' => $shift_start_time,
+                        'shift_end_time' => $shift_end_time,
+                        'is_active' => 1
                     ]
                 );
             }
@@ -1008,6 +1015,7 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
 
     //-------------------------------------------------
     /*
