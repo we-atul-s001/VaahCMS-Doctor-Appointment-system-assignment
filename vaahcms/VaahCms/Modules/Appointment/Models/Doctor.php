@@ -956,32 +956,46 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-        $file_contents = $request->json()->all();
-        if(!$file_contents){
-            return ;
+
+        try {
+            $file_contents = $request->json()->all();
+
+            if (!$file_contents) {
+                $response['messages'][] = trans("vaahcms-general.no_data_found");
+                return $response;
+            }
+
+            foreach ($file_contents as $content) {
+                self::updateOrCreate(
+                    ['email' => $content['email']],
+                    [
+                        'name' => $content['name'],
+                        'slug' => Str::slug($content['name']),
+                        'email' => $content['email'],
+                        'price_per_session' => $content['price'],
+                        'phone' => $content['phone'],
+                        'specialization' => $content['specialization'],
+                        'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
+                        'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
+                        'is_active' => 1
+                    ]
+                );
+            }
+
+            $response['messages'][] = trans("vaahcms-general.imported_successfully");
+
+        } catch (Exception $e) {
+            $response['messages'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
         }
 
-        foreach ($file_contents as $content) {
-
-            self::updateOrCreate(
-                ['email' => $content['email']],
-                [
-                    'name' => $content['name'],
-                    'email' => $content['email'],
-                   'price_per_session' => $content['price'],
-                    'phone' => $content['phone'],
-                    'specialization' => $content['specialization'],
-                    'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
-                    'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
-                    'is_active' => 1
-                ]
-            );
-        }
-
-        $response['messages'][] = trans("vaahcms-general.imported_successfully");
         return $response;
     }
     //-------------------------------------------------
+    /*
+     * It uses the DoctorExport class to generate a CSV file containing all the doctor records.
+       It returns the file as a download.
+     *
+     */
     public static function bulkExport()
     {
         return Excel::download(new DoctorExport,'doctorsList.csv');
