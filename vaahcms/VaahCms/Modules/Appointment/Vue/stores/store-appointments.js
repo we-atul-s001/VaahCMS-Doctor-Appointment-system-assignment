@@ -938,6 +938,45 @@ export const useAppointmentStore = defineStore({
 
         },
         //---------------------------------------------------------------------
+
+        async exportAppointment(){
+            let file_data = null;
+            try {
+                await vaah().ajax(
+                    this.ajax_url.concat('/bulkExport/doctor'),
+
+                    (data, res) => {
+                        file_data = res.data;
+                    }
+                );
+                const blob = new Blob([file_data]);
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'doctorsList.csv');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        },
+
+        async importAppointment(file_data){
+            await vaah().ajax(
+                this.ajax_url.concat('/bulkImport/appointment'),
+
+                (data, res) => {
+                    this.getList();
+                },
+                {
+                    params: file_data,
+                    method: 'POST',
+                    headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            );
+        }
     }
 });
 

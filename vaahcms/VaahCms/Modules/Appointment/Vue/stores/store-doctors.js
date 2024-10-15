@@ -993,7 +993,8 @@ export const useDoctorStore = defineStore({
 
 
                 });
-        },async exportDoctors(){
+        },
+        async exportDoctors(){
             let file_data = null;
             try {
                 await vaah().ajax(

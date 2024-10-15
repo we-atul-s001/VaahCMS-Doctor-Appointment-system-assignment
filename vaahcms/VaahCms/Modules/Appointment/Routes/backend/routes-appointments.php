@@ -5,9 +5,9 @@ use VaahCms\Modules\Appointment\Http\Controllers\Backend\AppointmentsController;
 Route::group(
     [
         'prefix' => 'backend/appointment/appointments',
-        
+
         'middleware' => ['web', 'has.backend.access'],
-        
+
 ],
 function () {
     /**
@@ -72,5 +72,6 @@ function () {
         ->name('vh.backend.appointment.appointments.item.action');
 
     //---------------------------------------------------------
-
+    Route::post('/bulkImport/appointment', [AppointmentsController::class, 'bulkImport'])
+        ->name('vh.backend.appointment.appointments.bulk.import');
 });

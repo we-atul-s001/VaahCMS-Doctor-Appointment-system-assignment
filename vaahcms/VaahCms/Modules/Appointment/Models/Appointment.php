@@ -865,6 +865,14 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function bulkImport(Request $request)
+    {
+        $file_contents = $request->json()->all();
+        if(!$file_contents){
+            return ;
+        }
+        dd($file_contents);
+    }
     //-------------------------------------------------
     //-------------------------------------------------
 
