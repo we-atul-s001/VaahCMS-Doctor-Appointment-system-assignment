@@ -958,6 +958,8 @@ class Doctor extends VaahModel
     {
 
         try {
+            $response = ['messages' => [], 'success' => true];
+
             $file_contents = $request->json()->all();
 
             if (!$file_contents) {
@@ -966,6 +968,20 @@ class Doctor extends VaahModel
             }
 
             foreach ($file_contents as $content) {
+
+                $existingItem = self::where('email', $content['email'])->first();
+
+                if ($existingItem) {
+                    $response['errors'][] = "Record with email " . $content['email'] . " already exists.";
+                    continue;
+                }
+
+
+                if (!isset($content['is_active']) || $content['is_active'] == 0) {
+                    $content['is_active'] = 1;
+                }
+
+
                 self::updateOrCreate(
                     ['email' => $content['email']],
                     [
@@ -977,14 +993,17 @@ class Doctor extends VaahModel
                         'specialization' => $content['specialization'],
                         'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
                         'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
-                        'is_active' => 1
+                        'is_active' => $content['is_active']
                     ]
                 );
             }
 
-            $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            if ($response['success']) {
+                $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            }
 
         } catch (Exception $e) {
+            $response['success'] = false;
             $response['messages'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
         }
 
