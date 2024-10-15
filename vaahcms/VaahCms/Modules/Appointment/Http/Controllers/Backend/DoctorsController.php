@@ -321,4 +321,5 @@ class DoctorsController extends Controller
                 $response['errors'][] = trans("vaahcms-general.something_went_wrong");
             }
         }
+    }
 }
