@@ -957,22 +957,35 @@ class Doctor extends VaahModel
     public static function bulkImport(Request $request)
     {
         $file_contents = $request->json()->all();
-        if(!$file_contents){
-            return ;
+        if (!$file_contents) {
+            return;
         }
 
         foreach ($file_contents as $content) {
+            // Remove quotes from all values
+            $cleanedContent = array_map(function($value) {
+                return trim($value, '"'); // Remove leading and trailing quotes
+            }, $content);
+
+            // Ensure time fields are parsed correctly
+            try {
+                $shiftStartTime = Carbon::parse($cleanedContent['shift_start_time'])->format('Y-m-d H:i:s');
+                $shiftEndTime = Carbon::parse($cleanedContent['shift_end_time'])->format('Y-m-d H:i:s');
+            } catch (\Exception $e) {
+                // Handle parsing error (e.g., log it, return a response, etc.)
+                return response()->json(['error' => 'Invalid time format.'], 400);
+            }
 
             self::updateOrCreate(
-                ['email' => $content['email']],
+                ['email' => $cleanedContent['email']],
                 [
-                    'name' => $content['name'],
-                    'email' => $content['email'],
-                   'price_per_session' => $content['price'],
-                    'phone' => $content['phone'],
-                    'specialization' => $content['specialization'],
-                    'shift_start_time' => Carbon::parse($content['shift_start_time'])->format('Y-m-d H:i:s'),
-                    'shift_end_time' => Carbon::parse($content['shift_end_time'])->format('Y-m-d H:i:s'),
+                    'name' => $cleanedContent['name'],
+                    'email' => $cleanedContent['email'],
+                    'price_per_session' => $cleanedContent['price'],
+                    'phone' => $cleanedContent['phone'],
+                    'specialization' => $cleanedContent['specialization'],
+                    'shift_start_time' => $shiftStartTime,
+                    'shift_end_time' => $shiftEndTime,
                     'is_active' => 1
                 ]
             );
@@ -981,6 +994,7 @@ class Doctor extends VaahModel
         $response['messages'][] = trans("vaahcms-general.imported_successfully");
         return $response;
     }
+
     //-------------------------------------------------
     public static function bulkExport()
     {
