@@ -956,8 +956,9 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-        $response = ['messages' => [], 'success' => true];
+        $response = ['messages' => [], 'errors' => [], 'success' => true];
         $duplicate_found = false;
+        $records_processed = 0;
 
         try {
             $file_contents = $request->json()->all();
@@ -968,7 +969,7 @@ class Doctor extends VaahModel
             }
 
             foreach ($file_contents as $content) {
-
+                // Remove quotes from all values
                 $cleaned_content = array_map(function($value) {
                     return trim($value, '"');
                 }, $content);
@@ -985,9 +986,10 @@ class Doctor extends VaahModel
                     $shift_start_time = Carbon::parse($cleaned_content['shift_start_time'])->format('Y-m-d H:i:s');
                     $shift_end_time = Carbon::parse($cleaned_content['shift_end_time'])->format('Y-m-d H:i:s');
                 } catch (\Exception $e) {
-                    $response['errors'][] = "Invalid format for email " . $cleaned_content['email'] . ": " . $e->getMessage();
-                    continue;
+                    $response['errors'][] = "Invalid format for time fields in record with email: " . $cleaned_content['email'] . ". Error: " . $e->getMessage();
+                    continue; // Skip processing this record
                 }
+
 
                 self::updateOrCreate(
                     ['email' => $cleaned_content['email']],
@@ -1003,13 +1005,21 @@ class Doctor extends VaahModel
                         'is_active' => 1
                     ]
                 );
+
+
+                $records_processed++;
             }
+
 
             if ($duplicate_found) {
                 $response['errors'][] = "Duplicate records were found in the import data.";
             }
-            if ($response['success']) {
+
+           
+            if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            } else {
+                $response['messages'][] = "No records were imported.";
             }
 
         } catch (Exception $e) {
@@ -1019,6 +1029,7 @@ class Doctor extends VaahModel
 
         return $response;
     }
+
 
 
     //-------------------------------------------------
