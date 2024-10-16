@@ -981,7 +981,9 @@ export const useDoctorStore = defineStore({
             await vaah().ajax(
                 this.ajax_url.concat('/specialization'),
                 (data,res) => {
+                    this.getList();
                     this.specializations = res.data.specializations;
+
                     if (Array.isArray(res.data.time_ranges)) {
                         this.timings = res.data.time_ranges.map((item) => {
                             return `${this.formatTimeWithAmPm(item.shift_start_time)} - ${this.formatTimeWithAmPm(item.shift_end_time)}`;
