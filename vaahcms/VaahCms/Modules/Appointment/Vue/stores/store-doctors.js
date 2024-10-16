@@ -20,9 +20,9 @@ let empty_states = {
             sort: null,
         },
         field_filter: {
-            price: null,
-            specialization: null,
-            timings: null
+            price: [],
+            specialization: [],
+            timings: []
         },
     },
     action: {
@@ -73,8 +73,8 @@ export const useDoctorStore = defineStore({
         item_menu_list: [],
         item_menu_state: null,
         form_menu_list: [],
-        specializations: null,
-        timings: null,
+        specializations: [],
+        timings: [],
     }),
     getters: {
 
