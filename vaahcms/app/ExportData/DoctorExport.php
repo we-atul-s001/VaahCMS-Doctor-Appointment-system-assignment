@@ -27,13 +27,13 @@ class DoctorExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
-            'Name',
-            'Email',
-            'Phone',
-            'Specialization',
-            'Shift Start Time',
-            'Shift End Time',
+            'id',
+            'name',
+            'email',
+            'phone',
+            'specialization',
+            'shift_start_time',
+            'shift_end_time',
         ];
     }
 }

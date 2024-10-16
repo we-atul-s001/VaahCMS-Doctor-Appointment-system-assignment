@@ -983,7 +983,7 @@ class Doctor extends VaahModel
             }
 
             foreach ($file_contents as $content) {
-                // Remove quotes from all values
+
                 $cleaned_content = array_map(function($value) {
                     return trim($value, '"');
                 }, $content);
@@ -1003,6 +1003,7 @@ class Doctor extends VaahModel
                     $response['errors'][] = "Invalid format for time fields in record with email: " . $cleaned_content['email'] . ". Error: " . $e->getMessage();
                     continue; // Skip processing this record
                 }
+
 
 
                 self::updateOrCreate(
