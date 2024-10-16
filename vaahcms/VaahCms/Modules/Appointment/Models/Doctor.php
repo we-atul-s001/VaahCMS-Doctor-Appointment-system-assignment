@@ -981,77 +981,120 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-        $response = ['messages' => [], 'errors' => [], 'success' => true];
-        $duplicate_found = false;
         $records_processed = 0;
 
-        try {
-            $file_contents = $request->json()->all();
+        $fileContents = $request->json()->all();
 
-            if (!$file_contents) {
-                $response['messages'][] = trans("vaahcms-general.no_data_found");
-                return $response;
+        if (!$fileContents) {
+            return response()->json(['success' => false, 'message' => 'No data provided.'], 400);
+        }
+
+        $allowedFields = ['name', 'email', 'price', 'phone', 'specialization', 'shift_start_time', 'shift_end_time'];
+
+        $errors = [
+            'email_errors' => [],
+            'phone_errors' => [],
+        ];
+        $successMessages = [];
+
+        foreach ($fileContents as $content) {
+
+            foreach ($content as $key => $value) {
+                $content[$key] = trim($value, '"');
+
+                if ($key === 'price' && $value === 'NA') {
+                    $content[$key] = null;
+                }
             }
 
-            foreach ($file_contents as $content) {
 
-                $cleaned_content = array_map(function($value) {
-                    return trim($value, '"');
-                }, $content);
+            $content = array_intersect_key($content, array_flip($allowedFields));
 
-                $existing_item = self::where('email', $cleaned_content['email'])->first();
 
-                if ($existing_item) {
-                    $duplicate_found = true;
+            if (empty($content['email'])) {
+                $errors['email_errors'][] = "Email is required for doctor: " . ($content['name'] ?? 'unknown');
+                continue;
+            }
+
+            if (empty($content['phone'])) {
+                $errors['phone_errors'][] = "Phone number is required for doctor: {$content['name']}.";
+                continue;
+            }
+
+
+            $content['price'] = $content['price'] ?? 0.00;
+            $content['specialization'] = $content['specialization'] ?? 'General';
+
+            // Shift time validation
+            if (isset($content['shift_start_time'], $content['shift_end_time'])) {
+                $start_time = strtotime($content['shift_start_time']);
+                $end_time = strtotime($content['shift_end_time']);
+
+                if ($start_time === false || $end_time === false) {
+                    $errors['phone_errors'][] = "Invalid shift start or end time for doctor: {$content['name']}.";
                     continue;
                 }
 
-
-                try {
-                    $shift_start_time = Carbon::parse($cleaned_content['shift_start_time'])->format('Y-m-d H:i:s');
-                    $shift_end_time = Carbon::parse($cleaned_content['shift_end_time'])->format('Y-m-d H:i:s');
-                } catch (\Exception $e) {
-                    $response['errors'][] = "Invalid format for time fields in record with email: " . $cleaned_content['email'] . ". Error: " . $e->getMessage();
-                    continue; // Skip processing this record
+                if ($start_time >= $end_time) {
+                    $errors['phone_errors'][] = "Shift start time must be earlier than shift end time for doctor: {$content['name']}.";
+                    continue;
                 }
+            } else {
+                $errors['phone_errors'][] = "Shift start time and end time are required for doctor: {$content['name']}.";
+                continue;
+            }
+
+            $existingDoctorByEmail = self::where('email', $content['email'])->withTrashed()->first();
+            if ($existingDoctorByEmail) {
+                $error_message = "The email {$content['email']} is already stored for another doctor" .
+                    ($existingDoctorByEmail->deleted_at ? ' in trash.' : '.');
+                $errors['email_errors'][] = $error_message;
+            }
+
+            $existingDoctorByPhone = self::where('phone', $content['phone'])->withTrashed()->first();
+            if ($existingDoctorByPhone) {
+                $error_message = "The phone number {$content['phone']} is already stored for another doctor" .
+                    ($existingDoctorByPhone->deleted_at ? ' in trash.' : '.');
+                $errors['phone_errors'][] = $error_message;
+            }
 
 
-
+            if (empty($errors['email_errors']) && empty($errors['phone_errors'])) {
                 self::updateOrCreate(
-                    ['email' => $cleaned_content['email']],
                     [
-                        'name' => $cleaned_content['name'],
-                        'slug' => Str::slug($cleaned_content['name']),
-                        'email' => $cleaned_content['email'],
-                        'price_per_session' => $cleaned_content['price'],
-                        'phone' => $cleaned_content['phone'],
-                        'specialization' => $cleaned_content['specialization'],
-                        'shift_start_time' => $shift_start_time,
-                        'shift_end_time' => $shift_end_time,
-                        'is_active' => 1
+                        'email' => $content['email'],
+                        'phone' => $content['phone'],
+                    ],
+                    [
+                        'name' => $content['name'],
+                        'slug' => Str::slug($content['name']),
+                        'price_per_session' => $content['price'],
+                        'specialization' => $content['specialization'],
+                        'shift_start_time' => date('Y-m-d H:i:s', strtotime($content['shift_start_time'])),
+                        'shift_end_time' => date('Y-m-d H:i:s', strtotime($content['shift_end_time'])),
+                        'is_active' => 1,
                     ]
                 );
-
-
                 $records_processed++;
+
             }
+        }
 
 
-            if ($duplicate_found) {
-                $response['errors'][] = "Duplicate records were found in the import data.";
-            }
+        $response = [];
 
 
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             } else {
-                $response['errors'][] = "No records were imported.";
+                if (!empty($errors['email_errors']) || !empty($errors['phone_errors'])) {
+                    $response['success'] = true;
+                    $response['errors'] = $errors;
+                   // $response['errors'][] = "No records were imported.";
+                }
+
             }
 
-        } catch (Exception $e) {
-            $response['success'] = false;
-            $response['errors'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
-        }
 
         return $response;
     }
