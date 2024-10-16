@@ -998,8 +998,21 @@ class Doctor extends VaahModel
                 'phone_errors' => [],
             ];
 
-            foreach ($file_contents as $content) {
+            // Collect emails and phones from input data
+            $emails = array_column($file_contents, 'email');
+            $phones = array_column($file_contents, 'phone');
 
+            // Check existing records in the database by email or phone
+            $existing_doctors = self::whereIn('email', $emails)
+                ->orWhereIn('phone', $phones)
+                ->withTrashed()
+                ->get(['email', 'phone']);
+
+            // Array to store processed existing emails and phones
+            $existing_emails = $existing_doctors->pluck('email')->toArray();
+            $existing_phones = $existing_doctors->pluck('phone')->toArray();
+
+            foreach ($file_contents as $content) {
                 foreach ($content as $key => $value) {
                     $content[$key] = trim($value, '"');
 
@@ -1008,8 +1021,10 @@ class Doctor extends VaahModel
                     }
                 }
 
+                // Filter content to allowed fields only
                 $content = array_intersect_key($content, array_flip($allowed_fields));
 
+                // Skip records with missing email or phone
                 if (empty($content['email'])) {
                     $errors['email_errors'][] = "Email is required for doctor: " . ($content['name'] ?? 'unknown');
                     $records_skipped++;
@@ -1022,6 +1037,14 @@ class Doctor extends VaahModel
                     continue;
                 }
 
+                // Skip if the email or phone already exists in the database
+                if (in_array($content['email'], $existing_emails)) {
+                    $errors['email_errors'][] = "The email {$content['email']} is already stored for another doctor.";
+                    $records_skipped++;
+                    continue;
+                }
+
+
                 $content['price'] = $content['price'] ?? 0.00;
                 $content['specialization'] = $content['specialization'] ?? 'General';
 
@@ -1029,32 +1052,14 @@ class Doctor extends VaahModel
                     $start_time = strtotime($content['shift_start_time']);
                     $end_time = strtotime($content['shift_end_time']);
 
-                    if ($start_time === false || $end_time === false) {
-                        $errors['phone_errors'][] = "Invalid shift start or end time for doctor: {$content['name']}.";
+                    if ($start_time === false || $end_time === false || $start_time >= $end_time) {
+                        $errors['phone_errors'][] = "Invalid or incorrect shift times for doctor: {$content['name']}.";
                         $records_skipped++;
                         continue;
                     }
-
-                    if ($start_time >= $end_time) {
-                        $errors['phone_errors'][] = "Shift start time must be earlier than shift end time for doctor: {$content['name']}.";
-                        $records_skipped++;
-                        continue;
-                    }
-                } else {
-                    $errors['phone_errors'][] = "Shift start time and end time are required for doctor: {$content['name']}.";
-                    $records_skipped++;
-                    continue;
                 }
 
-                $existing_doctor_by_email = self::where('email', $content['email'])->withTrashed()->first();
-                if ($existing_doctor_by_email) {
-                    $error_message = "The email {$content['email']} is already stored for another doctor" .
-                        ($existing_doctor_by_email->deleted_at ? ' in trash.' : '.');
-                    $errors['email_errors'][] = $error_message;
-                    $records_skipped++;
-                    continue;
-                }
-
+                // Insert or update new record
                 self::updateOrCreate(
                     [
                         'email' => $content['email'],
@@ -1074,18 +1079,21 @@ class Doctor extends VaahModel
                 $records_processed++;
             }
 
+            // Prepare response
             $response = [];
 
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors'])) {
+            if (!empty($errors['email_errors']) || !empty($errors['phone_errors'])) {
                 $response['error'] = $errors;
             }
 
             if ($records_processed == 0 && $records_skipped > 0) {
-                $response['message'] = "No records were imported due to errors.";
+                $response['message'] = "No new records were imported due to errors. All provided data already exists.";
+            } elseif ($records_processed > 0 && $records_skipped > 0) {
+                $response['message'] = "{$records_processed} records were successfully imported. {$records_skipped} records were skipped due to errors.";
             }
 
             return response()->json($response);
@@ -1093,6 +1101,7 @@ class Doctor extends VaahModel
             return response()->json(['success' => false, 'message' => 'An error occurred during import: ' . $e->getMessage()], 500);
         }
     }
+
 
 
 

@@ -77,7 +77,6 @@ export const useDoctorStore = defineStore({
         timings: [],
         is_visible_errors: false,
         email_errors_display: null,
-        phone_errors_display: null,
     }),
     getters: {
 
