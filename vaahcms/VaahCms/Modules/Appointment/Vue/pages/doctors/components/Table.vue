@@ -334,5 +334,54 @@ function formatTimeWithAmPm(time) {
             </TabView>
         </Sidebar>
         <!--/Sidebar-->
+
+        <Dialog
+            v-model:visible="store.is_visible_errors"
+            maximizable
+            modal
+            header="Error Messages"
+            :style="{ width: '50rem' }"
+            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        >
+            <div class="error-container">
+                <!-- Phone Errors Section -->
+                <div
+                    class="error-column"
+                    v-if="store.phone_error && store.phone_error.length > 0"
+                    :class="{ 'full-width': !store.email_error || store.email_error.length === 0 }">
+                    <table class="styled-table">
+                        <thead>
+                        <tr>
+                            <th>Phone Error Messages</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(phoneError, index) in store.phone_error" :key="'phone-'+index">
+                            <td>{{ phoneError }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Email Errors Section -->
+                <div
+                    class="error-column"
+                    v-if="store.email_error && store.email_error.length > 0"
+                    :class="{ 'full-width': !store.phone_error || store.phone_error.length === 0 }">
+                    <table class="styled-table">
+                        <thead>
+                        <tr>
+                            <th>Email Error Messages</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(emailError, index) in store.email_error" :key="'email-'+index">
+                            <td>{{ emailError }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </Dialog>
     </div>
 </template>

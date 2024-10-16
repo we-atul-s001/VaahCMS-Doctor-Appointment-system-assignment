@@ -1088,8 +1088,8 @@ class Doctor extends VaahModel
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             } else {
                 if (!empty($errors['email_errors']) || !empty($errors['phone_errors'])) {
-                    $response['success'] = true;
-                    $response['errors'] = $errors;
+                    $response['success'] = false;
+                    $response['error'] = $errors;
                    // $response['errors'][] = "No records were imported.";
                 }
 
