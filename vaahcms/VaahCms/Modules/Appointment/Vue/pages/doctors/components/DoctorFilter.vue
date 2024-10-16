@@ -68,7 +68,7 @@ onBeforeMount(() => {
                 </template>
 
                 <div v-for="(specialization,index) in store.specializations" :key="index" class="field-radiobutton">
-                    <RadioButton name="active-all"
+                    <Checkbox name="active-all"
                                  :inputId="specialization"
                                  :value="specialization"
                                  v-model="store.query.field_filter.specialization" />
@@ -85,7 +85,7 @@ onBeforeMount(() => {
                 </template>
 
                 <div v-for="(price,index) in price_range_with_currency" :key="index" class="field-radiobutton">
-                    <RadioButton name="active-all"
+                    <Checkbox name="active-all"
                                  :inputId="price"
                                  :value="price"
                                  data-testid="doctors-filters-active-all"
@@ -102,7 +102,7 @@ onBeforeMount(() => {
                 </template>
 
                 <div v-for="(timing,index) in store.timings" :key="index" class="field-radiobutton">
-                    <RadioButton name="active-all"
+                    <Checkbox name="active-all"
                                  :inputId="timing"
                                  :value="timing"
                                  data-testid="doctors-filters-active-all"

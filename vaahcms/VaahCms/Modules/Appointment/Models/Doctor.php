@@ -351,6 +351,7 @@ class Doctor extends VaahModel
 
     }
 
+    //-------------------------------------------------
     public function scopeIsFieldFilter($query, $field_filter)
     {
         $filter_type = array_keys($field_filter);
@@ -358,16 +359,29 @@ class Doctor extends VaahModel
             return $query;
         }
         foreach ($filter_type as $filter) {
+
             $filter_value = $field_filter[$filter];
             switch ($filter) {
+
                 case 'specialization' :
-                    $query->where('specialization', $filter_value);
+                    $query->whereIn('specialization', $filter_value);
                     break;
-                case 'price' :
-                    $parts = explode('-', $filter_value);
-                    $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
-                    $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
-                    $query->whereBetween('price_per_session', [$minPrice, $maxPrice]);
+                case 'price':
+                    if (is_string($filter_value)) {
+                        dd($filter_value);
+                        $parts = explode('-', $filter_value);
+
+                        if (count($parts) === 2) {
+                            $min_price = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
+                            $max_price = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
+
+                            $query->whereBetween('price_per_session', [$min_price, $max_price]);
+                        } else {
+                            \Log::error('Invalid price filter format: ' . $filter_value);
+                        }
+                    } else {
+                        \Log::error('Expected string for price filter, received: ' . gettype($filter_value));
+                    }
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
@@ -1024,7 +1038,7 @@ class Doctor extends VaahModel
 
         } catch (Exception $e) {
             $response['success'] = false;
-            $response['messages'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
+            $response['errors'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
         }
 
         return $response;
