@@ -884,12 +884,23 @@ class Doctor extends VaahModel
 
         $faker = Factory::create();
 
+        $random_specialization = [
+            'Cardiologist',
+            'Dermatologist',
+            'Endocrinologist',
+            'Gastroenterologist',
+            'Hematologist',
+            'Nephrologist',
+            'Neurologist',
+            'Oncologist',
+            'Ophthalmologist',
+        ];
 
         $inputs['name'] = $faker->name;
         $inputs['slug'] = Str::slug($inputs['name']);
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
-        $inputs['specialization'] = $faker->word;
+        $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
         $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
 
         while (strpos($inputs['shift_start_time'], 'PM') !== false) {
