@@ -15,7 +15,7 @@ class AppointmentExport implements FromCollection, WithHeadings
 
         return Appointment::with(['doctor', 'patient'])->get()->map(function ($item) {
             return [
-                'id' => $item->id,
+
                 'patient_name' => $item->patient ? $item->patient->name : 'N/A',
                 'doctor_name' => $item->doctor ? $item->doctor->name : 'N/A',
                 //'specialization' => $item->doctor ? $item->doctor->specialization : 'N/A',
@@ -31,7 +31,7 @@ class AppointmentExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'id',
+
             'patient',
             'doctor',
             //'specialization',

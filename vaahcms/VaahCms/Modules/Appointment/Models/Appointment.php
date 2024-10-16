@@ -877,33 +877,31 @@ class Appointment extends VaahModel
             }
 
             foreach ($file_contents as $content) {
-
                 $content = array_map(function($item) {
                     return str_replace('"', '', $item);
                 }, $content);
 
-                $doctor = Doctor::where('name', $content['doctor'])
-                    ->first();
-
+                $doctor = Doctor::where('name', $content['doctor'])->first();
                 $patient = Patient::where('name', $content['patient'])->first();
 
-                if (!$doctor) {
-                    return response()->json(['error' => "Doctor {$content['doctor']} not found"], 404);
-                }
-
-                if (!$patient) {
-                    return response()->json(['error' => "Patient {$content['patient']} not found"], 404);
-                }
-
-                $doctorEmail = $doctor->email;
+                // Check if doctor exists
+//                if (!$doctor) {
+//                    return response()->json(['error' => "Doctor {$content['doctor']} not found"], 404);
+//                }
+//
+//                // Check if patient exists
+//                if (!$patient) {
+//                    return response()->json(['error' => "Patient {$content['patient']} not found"], 404);
+//                }
 
                 self::updateOrCreate(
                     [
-                        'doctor_id' => $doctor->id,
-                        'patient_id' => $patient->id,
-                       //'specialization' => $content['specialization'],
-                        // 'shift_start_time' => $content['shift_start_time'],
-                        // 'shift_end_time' => $content['shift_end_time'],
+//                        'doctor_id' => $doctor->id,
+//                        'patient_id' => $patient->id,
+                    'date' => $content['date'],
+                        'slot_start_time' => $content['slot_time'],
+                        'reason' => $content['reason'],
+                        'is_active' => 1,
                     ]
                 );
             }
@@ -914,6 +912,7 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
     //-------------------------------------------------
 
