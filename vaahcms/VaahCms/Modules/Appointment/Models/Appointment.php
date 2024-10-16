@@ -873,25 +873,26 @@ class Appointment extends VaahModel
             $file_contents = $request->json()->all();
 
             if (!$file_contents) {
-                return ;
+                return response()->json(['error' => 'No data found'], 400);
             }
 
             foreach ($file_contents as $content) {
 
-                $doctor = Doctor::where('name', $content['doctor_name'])
-                    ->where('specialization', $content['specialization'])
+                $content = array_map(function($item) {
+                    return str_replace('"', '', $item);
+                }, $content);
+
+                $doctor = Doctor::where('name', $content['doctor'])
                     ->first();
 
-
-                $patient = Patient::where('name', $content['patient_name'])->first();
-
+                $patient = Patient::where('name', $content['patient'])->first();
 
                 if (!$doctor) {
-                    return response()->json(['error' => "Doctor {$content['doctor_name']} with specialization {$content['specialization']} not found"], 404);
+                    return response()->json(['error' => "Doctor {$content['doctor']} not found"], 404);
                 }
 
                 if (!$patient) {
-                    return response()->json(['error' => "Patient {$content['patient_name']} not found"], 404);
+                    return response()->json(['error' => "Patient {$content['patient']} not found"], 404);
                 }
 
                 $doctorEmail = $doctor->email;
@@ -900,9 +901,9 @@ class Appointment extends VaahModel
                     [
                         'doctor_id' => $doctor->id,
                         'patient_id' => $patient->id,
-                        'specialization' => $content['specialization'],
-//                        'shift_start_time' => $content['shift_start_time'],
-//                        'shift_end_time' => $content['shift_end_time'],
+                       //'specialization' => $content['specialization'],
+                        // 'shift_start_time' => $content['shift_start_time'],
+                        // 'shift_end_time' => $content['shift_end_time'],
                     ]
                 );
             }
@@ -913,7 +914,8 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-        //-------------------------------------------------
+
+    //-------------------------------------------------
 
     public static function bulkExport()
     {

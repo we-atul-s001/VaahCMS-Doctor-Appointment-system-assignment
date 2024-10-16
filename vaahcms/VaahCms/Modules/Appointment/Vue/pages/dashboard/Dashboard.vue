@@ -54,7 +54,7 @@ const setChartData = () => {
                 ],
                 fill: true,
                 backgroundColor: [
-                    '#B0BEC5', 
+                    '#B0BEC5',
                     '#90A4AE',
                     '#78909C',
                     '#607D8B',
