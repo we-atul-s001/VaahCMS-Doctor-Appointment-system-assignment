@@ -351,6 +351,7 @@ class Doctor extends VaahModel
 
     }
 
+    //-------------------------------------------------
     public function scopeIsFieldFilter($query, $field_filter)
     {
         $filter_type = array_keys($field_filter);
@@ -358,16 +359,29 @@ class Doctor extends VaahModel
             return $query;
         }
         foreach ($filter_type as $filter) {
+
             $filter_value = $field_filter[$filter];
             switch ($filter) {
+
                 case 'specialization' :
-                    $query->where('specialization', $filter_value);
+                    $query->whereIn('specialization', $filter_value);
                     break;
-                case 'price' :
-                    $parts = explode('-', $filter_value);
-                    $minPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
-                    $maxPrice = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
-                    $query->whereBetween('price_per_session', [$minPrice, $maxPrice]);
+                case 'price':
+                    if (is_string($filter_value)) {
+                        dd($filter_value);
+                        $parts = explode('-', $filter_value);
+
+                        if (count($parts) === 2) {
+                            $min_price = floatval(preg_replace('/[^0-9.]/', '', $parts[0]));
+                            $max_price = floatval(preg_replace('/[^0-9.]/', '', $parts[1]));
+
+                            $query->whereBetween('price_per_session', [$min_price, $max_price]);
+                        } else {
+                            \Log::error('Invalid price filter format: ' . $filter_value);
+                        }
+                    } else {
+                        \Log::error('Expected string for price filter, received: ' . gettype($filter_value));
+                    }
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
@@ -870,12 +884,23 @@ class Doctor extends VaahModel
 
         $faker = Factory::create();
 
+        $random_specialization = [
+            'Cardiologist',
+            'Dermatologist',
+            'Endocrinologist',
+            'Gastroenterologist',
+            'Hematologist',
+            'Nephrologist',
+            'Neurologist',
+            'Oncologist',
+            'Ophthalmologist',
+        ];
 
         $inputs['name'] = $faker->name;
         $inputs['slug'] = Str::slug($inputs['name']);
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
-        $inputs['specialization'] = $faker->word;
+        $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
         $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
 
         while (strpos($inputs['shift_start_time'], 'PM') !== false) {
@@ -956,7 +981,9 @@ class Doctor extends VaahModel
      */
     public static function bulkImport(Request $request)
     {
-        $response = ['messages' => [], 'success' => true];
+        $response = ['messages' => [], 'errors' => [], 'success' => true];
+        $duplicate_found = false;
+        $records_processed = 0;
 
         try {
             $file_contents = $request->json()->all();
@@ -975,7 +1002,7 @@ class Doctor extends VaahModel
                 $existing_item = self::where('email', $cleaned_content['email'])->first();
 
                 if ($existing_item) {
-                    $response['errors'][] = "Record with email " . $cleaned_content['email'] . " already exists.";
+                    $duplicate_found = true;
                     continue;
                 }
 
@@ -984,9 +1011,11 @@ class Doctor extends VaahModel
                     $shift_start_time = Carbon::parse($cleaned_content['shift_start_time'])->format('Y-m-d H:i:s');
                     $shift_end_time = Carbon::parse($cleaned_content['shift_end_time'])->format('Y-m-d H:i:s');
                 } catch (\Exception $e) {
-                    $response['errors'][] = "Invalid format for email " . $cleaned_content['email'] . ": " . $e->getMessage();
-                    continue;
+                    $response['errors'][] = "Invalid format for time fields in record with email: " . $cleaned_content['email'] . ". Error: " . $e->getMessage();
+                    continue; // Skip processing this record
                 }
+
+
 
                 self::updateOrCreate(
                     ['email' => $cleaned_content['email']],
@@ -1002,19 +1031,31 @@ class Doctor extends VaahModel
                         'is_active' => 1
                     ]
                 );
+
+
+                $records_processed++;
             }
 
-            if ($response['success']) {
+
+            if ($duplicate_found) {
+                $response['errors'][] = "Duplicate records were found in the import data.";
+            }
+
+
+            if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            } else {
+                $response['errors'][] = "No records were imported.";
             }
 
         } catch (Exception $e) {
             $response['success'] = false;
-            $response['messages'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
+            $response['errors'][] = trans("vaahcms-general.import_failed") . ": " . $e->getMessage();
         }
 
         return $response;
     }
+
 
 
     //-------------------------------------------------
