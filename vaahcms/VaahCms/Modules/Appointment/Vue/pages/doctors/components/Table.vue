@@ -344,44 +344,43 @@ function formatTimeWithAmPm(time) {
             :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
         >
             <div class="error-container">
-                <!-- Phone Errors Section -->
-                <div
-                    class="error-column"
-                    v-if="store.phone_error && store.phone_error.length > 0"
-                    :class="{ 'full-width': !store.email_error || store.email_error.length === 0 }">
-                    <table class="styled-table">
-                        <thead>
-                        <tr>
-                            <th>Phone Error Messages</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="(phoneError, index) in store.phone_error" :key="'phone-'+index">
+                <table class="styled-table">
+                    <thead>
+                    <tr>
+                        <th>Error Type</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Phone Errors -->
+                    <template v-if="store.phone_errors_display && store.phone_errors_display.length > 0">
+                        <tr v-for="(phoneError, index) in store.phone_errors_display" :key="'phone-'+index">
+                            <td>Phone Error</td>
                             <td>{{ phoneError }}</td>
                         </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    </template>
 
-                <!-- Email Errors Section -->
-                <div
-                    class="error-column"
-                    v-if="store.email_error && store.email_error.length > 0"
-                    :class="{ 'full-width': !store.phone_error || store.phone_error.length === 0 }">
-                    <table class="styled-table">
-                        <thead>
-                        <tr>
-                            <th>Email Error Messages</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="(emailError, index) in store.email_error" :key="'email-'+index">
+                    <!-- Email Errors -->
+                    <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
+                        <tr v-for="(emailError, index) in store.email_errors_display" :key="'email-'+index">
+                            <td>Email Error</td>
                             <td>{{ emailError }}</td>
                         </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    </template>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td><strong>Total Phone Duplicate:</strong></td>
+                        <td>{{ store.phone_errors_display ? store.phone_errors_display.length : 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Email Duplicate:</strong></td>
+                        <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
+                    </tr>
+                    </tfoot>
+                </table>
             </div>
         </Dialog>
+
     </div>
 </template>
