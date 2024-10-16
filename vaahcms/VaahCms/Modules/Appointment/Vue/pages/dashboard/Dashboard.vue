@@ -54,19 +54,20 @@ const setChartData = () => {
                 ],
                 fill: true,
                 backgroundColor: [
-                    '#42A5F5',
-                    '#66BB6A',
-                    '#FFA726',
-                    '#EF5350',
-                    '#AB47BC'
+                    '#B0BEC5', 
+                    '#90A4AE',
+                    '#78909C',
+                    '#607D8B',
+                    '#455A64'
                 ],
                 borderColor: [
-                    '#1E88E5',
-                    '#43A047',
-                    '#FB8C00',
-                    '#E53935',
-                    '#8E24AA'
+                    '#78909C',
+                    '#546E7A',
+                    '#37474F',
+                    '#263238',
+                    '#1C1C1C'
                 ],
+
                 borderWidth: 1,
             }
         ]
@@ -130,7 +131,7 @@ const setChartOptions = () => {
 
         <!-- Card Section with Equal Spacing -->
 
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between;">
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin-top: 25px">
             <!-- Card 1: Total Doctors -->
             <div className="stat-card">
                 <div className="card-header">
