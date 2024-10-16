@@ -339,7 +339,7 @@ function formatTimeWithAmPm(time) {
             v-model:visible="store.is_visible_errors"
             maximizable
             modal
-            header="Error Messages"
+            header="Duplicate Issues"
             :style="{ width: '50rem' }"
             :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
         >
@@ -352,13 +352,6 @@ function formatTimeWithAmPm(time) {
                     </tr>
                     </thead>
                     <tbody>
-                    <!-- Phone Errors -->
-                    <template v-if="store.phone_errors_display && store.phone_errors_display.length > 0">
-                        <tr v-for="(phoneError, index) in store.phone_errors_display" :key="'phone-'+index">
-                            <td>Phone Error</td>
-                            <td>{{ phoneError }}</td>
-                        </tr>
-                    </template>
 
                     <!-- Email Errors -->
                     <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
@@ -369,11 +362,7 @@ function formatTimeWithAmPm(time) {
                     </template>
                     </tbody>
                     <tfoot>
-                    <tr>
-                        <td><strong>Total Phone Duplicate:</strong></td>
-                        <td>{{ store.phone_errors_display ? store.phone_errors_display.length : 0 }}</td>
-                    </tr>
-                    <tr>
+<tr>
                         <td><strong>Total Email Duplicate:</strong></td>
                         <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
                     </tr>

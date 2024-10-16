@@ -1030,7 +1030,6 @@ export const useDoctorStore = defineStore({
                 (data, res) => {
                     console.log(res.data);
                     this.email_errors_display = res.data.error.email_errors;
-                    this.phone_errors_display = res.data.error.phone_errors;
                     this.is_visible_errors = true;
                    this.getList();
                 },
