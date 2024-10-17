@@ -192,44 +192,44 @@ const importDoctors = (json_data) => {
 
 <style scoped>
 .custom-dialog .p-dialog {
-    background-color: #f5f5f5; /* Light grey background */
-    border-radius: 8px; /* Rounded corners */
+    background-color: #f5f5f5;
+    border-radius: 8px;
 }
 
 .custom-dialog .p-dialog-header {
-    background-color: #e0e0e0; /* Slightly darker grey for header */
-    border-radius: 8px 8px 0 0; /* Rounded top corners */
+    background-color: #e0e0e0;
+    border-radius: 8px 8px 0 0;
     font-weight: bold;
-    color: #333; /* Darker color for the header text */
+    color: #333;
 }
 
 .custom-dialog .p-button {
-    background-color: transparent; /* Transparent button */
-    color: #3f51b5; /* Primary color for text */
+    background-color: transparent;
+    color: #3f51b5;
 }
 
 .custom-dialog .p-button-text {
-    color: #3f51b5; /* Text color for text buttons */
+    color: #3f51b5;
 }
 
 .custom-file-input {
-    display: inline-block; /* Inline for better layout */
-    padding: 10px 15px; /* Padding for better appearance */
-    border: 2px solid #ccc; /* Border with grey color */
-    border-radius: 5px; /* Rounded corners */
-    background-color: #f9f9f9; /* Light grey background */
-    color: #666; /* Dark grey text color */
-    cursor: pointer; /* Cursor changes to pointer on hover */
-    transition: all 0.3s ease; /* Smooth transition for hover effect */
+    display: inline-block;
+    padding: 10px 15px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .custom-file-input:hover {
-    background-color: #e0e0e0; /* Darker grey on hover */
-    border-color: #3f51b5; /* Change border color on hover */
+    background-color: #e0e0e0;
+    border-color: #3f51b5;
 }
 
 .custom-file-input:focus {
-    outline: none; /* Remove default outline */
-    border-color: #3f51b5; /* Change border color on focus */
+    outline: none;
+    border-color: #3f51b5;
 }
 </style>
