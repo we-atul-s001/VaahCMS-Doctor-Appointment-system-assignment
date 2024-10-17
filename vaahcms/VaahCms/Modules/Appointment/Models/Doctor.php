@@ -1013,6 +1013,7 @@ class Doctor extends VaahModel
             $existing_phones = $existing_doctors->pluck('phone')->toArray();
 
             foreach ($file_contents as $content) {
+               
                 foreach ($content as $key => $value) {
                     $content[$key] = trim($value, '"');
 
@@ -1021,7 +1022,7 @@ class Doctor extends VaahModel
                     }
                 }
 
-                // Filter content to allowed fields only
+
                 $content = array_intersect_key($content, array_flip($allowed_fields));
 
                 // Skip records with missing email or phone
@@ -1059,7 +1060,8 @@ class Doctor extends VaahModel
                     }
                 }
 
-                // Insert or update new record
+
+
                 self::updateOrCreate(
                     [
                         'email' => $content['email'],
