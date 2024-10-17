@@ -77,6 +77,7 @@ export const useDoctorStore = defineStore({
         timings: [],
         is_visible_errors: false,
         email_errors_display: null,
+        missing_fields_header: null,
     }),
     getters: {
 
@@ -1029,6 +1030,7 @@ export const useDoctorStore = defineStore({
                 (data, res) => {
                     console.log(res.data);
                     this.email_errors_display = res.data.error.email_errors;
+                    this.missing_fields_header = res.data.error.missing_field_errors;
                     this.is_visible_errors = true;
                    this.getList();
                 },
