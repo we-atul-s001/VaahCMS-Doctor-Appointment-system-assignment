@@ -370,16 +370,16 @@ function formatTimeWithAmPm(time) {
                 </table>
             </div>
         </Dialog>
-
+        <Paginator v-if="store.query.rows"
+                   v-model:rows="store.query.rows"
+                   :totalRecords="store.list.total"
+                   :first="((store.query.page??1)-1)*store.query.rows"
+                   @page="store.paginate($event)"
+                   :rowsPerPageOptions="store.rows_per_page"
+                   class="bg-white-alpha-0 pt-2">
+        </Paginator>
     </div>
-    <Paginator v-if="store.query.rows"
-               v-model:rows="store.query.rows"
-               :totalRecords="store.list.total"
-               :first="((store.query.page??1)-1)*store.query.rows"
-               @page="store.paginate($event)"
-               :rowsPerPageOptions="store.rows_per_page"
-               class="bg-white-alpha-0 pt-2">
-    </Paginator>
+
 </template>
 
 <style scoped>
