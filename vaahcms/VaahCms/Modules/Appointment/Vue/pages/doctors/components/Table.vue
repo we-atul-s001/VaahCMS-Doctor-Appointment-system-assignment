@@ -355,9 +355,16 @@ function formatTimeWithAmPm(time) {
 
                     <!-- Email Errors -->
                     <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
-                        <tr v-for="(emailError, index) in store.email_errors_display" :key="'email-'+index">
+                        <tr v-for="(email_error, index) in store.email_errors_display" :key="'email-'+index">
                             <td>Email Error</td>
-                            <td>{{ emailError }}</td>
+                            <td>{{ email_error }}</td>
+                        </tr>
+                    </template>
+
+                    <template v-if="store.missing_fields_header && store.missing_fields_header.length > 0">
+                        <tr v-for="(header_error, index) in store.missing_fields_header" :key="'email-'+index">
+                            <td>Header Error</td>
+                            <td>{{ header_error }}</td>
                         </tr>
                     </template>
                     </tbody>
@@ -365,6 +372,10 @@ function formatTimeWithAmPm(time) {
 <tr>
                         <td><strong>Total Email Duplicate:</strong></td>
                         <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Header Missing:</strong></td>
+                        <td>{{ store.missing_fields_header ? store.missing_fields_header.length : 0 }}</td>
                     </tr>
                     </tfoot>
                 </table>

@@ -1005,6 +1005,7 @@ class Doctor extends VaahModel
                 'email_errors' => [],
                 'phone_errors' => [],
                 'time_errors' => [],
+                'missing_field_errors' => [],
             ];
 
             $first_row = $file_contents[0] ?? [];
@@ -1050,10 +1051,12 @@ class Doctor extends VaahModel
                     $mapped_content[$db_field] = $content[$csv_header] ?? null;
                 }
 
-                if (empty($mapped_content['email'])) {
-                    $errors['email_errors'][] = "Email is required for doctor: " . ($mapped_content['name'] ?? 'unknown');
-                    $records_skipped++;
-                    continue;
+                foreach ($required_fields as $required_field) {
+                    if (empty($mapped_content[$required_field])) {
+                        $errors['missing_field_errors'][] = "The field '$required_field' is required for doctor: " . ($mapped_content['name'] ?? 'unknown');
+                        $records_skipped++;
+                        continue 2;
+                    }
                 }
 
                 if (!filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
@@ -1086,10 +1089,6 @@ class Doctor extends VaahModel
                         $records_skipped++;
                         continue;
                     }
-                } else {
-                    $errors['time_errors'][] = "Missing shift times for doctor: {$mapped_content['name']}.";
-                    $records_skipped++;
-                    continue;
                 }
 
                 self::updateOrCreate(
@@ -1117,7 +1116,7 @@ class Doctor extends VaahModel
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors']) || !empty($errors['phone_errors']) || !empty($errors['time_errors'])) {
+            if (!empty($errors['email_errors']) || !empty($errors['phone_errors']) || !empty($errors['time_errors']) || !empty($errors['missing_field_errors'])) {
                 $response['error'] = $errors;
             }
 
@@ -1132,6 +1131,7 @@ class Doctor extends VaahModel
             return response()->json(['success' => false, 'message' => 'An error occurred during import: ' . $e->getMessage()], 500);
         }
     }
+
 
 
 
