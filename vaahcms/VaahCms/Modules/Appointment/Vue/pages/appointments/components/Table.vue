@@ -227,7 +227,7 @@ function formatTimeWithAmPm(time) {
                     </tbody>
                     <tfoot>
                     <tr>
-                        <td><strong>Total Email Duplicate:</strong></td>
+                        <td><strong>Total Email Error:</strong></td>
                         <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
                     </tr>
                     <tr>
@@ -258,3 +258,53 @@ function formatTimeWithAmPm(time) {
     </div>
 
 </template>
+
+<style scoped>
+.error-container {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+}
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+    font-size: 0.9em;
+    color: #333;
+}
+
+.styled-table thead tr {
+    background-color: #6c757d;
+    color: #fff;
+    text-align: left;
+}
+
+.styled-table th, .styled-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tfoot tr {
+    font-weight: bold;
+}
+
+.styled-table td {
+    color: #495057;
+}
+
+.styled-table tfoot td {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+</style>
