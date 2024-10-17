@@ -75,6 +75,8 @@ export const useDoctorStore = defineStore({
         form_menu_list: [],
         specializations: [],
         timings: [],
+        is_visible_errors: false,
+        email_errors_display: null,
     }),
     getters: {
 
@@ -1025,6 +1027,9 @@ export const useDoctorStore = defineStore({
                 this.ajax_url.concat('/bulkImport/doctor'),
 
                 (data, res) => {
+                    console.log(res.data);
+                    this.email_errors_display = res.data.error.email_errors;
+                    this.is_visible_errors = true;
                    this.getList();
                 },
                 {
