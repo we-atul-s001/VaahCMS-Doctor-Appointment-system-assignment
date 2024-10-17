@@ -1023,23 +1023,27 @@ export const useDoctorStore = defineStore({
             }
         },
 
-        async importDoctors(file_data){
-            await vaah().ajax(
-                this.ajax_url.concat('/bulkImport/doctor'),
 
-                (data, res) => {
-                    console.log(res.data);
-                    this.email_errors_display = res.data.error.email_errors;
-                    this.missing_fields_header = res.data.error.missing_field_errors;
-                    this.is_visible_errors = true;
-                   this.getList();
-                },
-                {
-                    params: file_data,
-                    method: 'POST',
-                    headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+        async importDoctors(file_data){
+            let options =   {
+                params: file_data,
+                method: 'POST',
+                headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+
+            let ajax_url = this.ajax_url + "/bulkImport/doctor";
+            await vaah().ajax(
+                ajax_url,
+                this.importDoctorsAfter,
+                options
+
             );
+        },
+        async importDoctorsAfter(data, res){
+            this.email_errors_display = res.data.error.email_errors;
+            this.missing_fields_header = res.data.error.missing_field_errors;
+            this.is_visible_errors = true;
+            await this.getList();
         }
     }
 });

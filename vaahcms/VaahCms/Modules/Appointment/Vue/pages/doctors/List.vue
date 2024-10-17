@@ -108,7 +108,6 @@ const importDoctors = (json_data) => {
     <div class="grid" v-if="store.assets">
         <div :class="dynamicClass">
             <Panel class="is-small">
-
                 <template class="p-1" #header>
                     <div class="flex flex-row">
                         <div>
@@ -127,9 +126,9 @@ const importDoctors = (json_data) => {
                             Create
                         </Button>
 
-
-                        <Button @click="openFileDialog" class="import-btn">Upload Doctors CSV</Button>
-
+                        <Button @click="openFileDialog" class="import-btn">
+                            Upload Doctors CSV
+                        </Button>
 
                         <Button label="Export Doctors"
                                 @click="exportDoctors"
@@ -175,15 +174,62 @@ const importDoctors = (json_data) => {
                 :close-on-escape="true"
                 class="custom-dialog"
         >
-            <div class="p-fluid">
-                <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" />
+            <div class="p-fluid" style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
+                <div class="flex align-items-center">
+                    <i class="pi pi-upload" style="font-size: 2em; color: #3f51b5;"></i>
+                    <span style="font-size: 1.2em; color: #333;">Please select a CSV file to upload:</span>
+                </div>
+                <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" class="custom-file-input" />
             </div>
             <template #footer>
-                <Button label="Close" @click="isDialogVisible = false" class="p-button-text" />
+                <Button label="Close" @click="isDialogVisible = false" class="p-button-text">
+                    Close
+                </Button>
             </template>
         </Dialog>
     </div>
 </template>
 
+<style scoped>
+.custom-dialog .p-dialog {
+    background-color: #f5f5f5; /* Light grey background */
+    border-radius: 8px; /* Rounded corners */
+}
 
+.custom-dialog .p-dialog-header {
+    background-color: #e0e0e0; /* Slightly darker grey for header */
+    border-radius: 8px 8px 0 0; /* Rounded top corners */
+    font-weight: bold;
+    color: #333; /* Darker color for the header text */
+}
 
+.custom-dialog .p-button {
+    background-color: transparent; /* Transparent button */
+    color: #3f51b5; /* Primary color for text */
+}
+
+.custom-dialog .p-button-text {
+    color: #3f51b5; /* Text color for text buttons */
+}
+
+.custom-file-input {
+    display: inline-block; /* Inline for better layout */
+    padding: 10px 15px; /* Padding for better appearance */
+    border: 2px solid #ccc; /* Border with grey color */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #f9f9f9; /* Light grey background */
+    color: #666; /* Dark grey text color */
+    cursor: pointer; /* Cursor changes to pointer on hover */
+    transition: all 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.custom-file-input:hover {
+    background-color: #e0e0e0; /* Darker grey on hover */
+    border-color: #3f51b5; /* Change border color on hover */
+}
+
+.custom-file-input:focus {
+    outline: none; /* Remove default outline */
+    border-color: #3f51b5; /* Change border color on focus */
+}
+</style>
