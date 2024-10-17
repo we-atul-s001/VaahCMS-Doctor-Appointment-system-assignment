@@ -968,23 +968,35 @@ export const useAppointmentStore = defineStore({
         },
 
         async importAppointment(file_data){
-            await vaah().ajax(
-                this.ajax_url.concat('/bulkImport/appointment'),
 
-                (data, res) => {
-                    console.log(res.data);
-                    this.email_errors_display = res.data.error.email_errors;
-                    this.missing_fields_header = res.data.error.missing_fields_header;
-                    this.appointment_errors_display = res.data.error.availability_errors;
-                    this.is_visible_errors = true;
-                    this.getList();
-                },
-                {
-                    params: file_data,
-                    method: 'POST',
-                    headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+            let ajax_url = this.ajax_url + '/bulkImport/appointment';
+
+            let options = {
+                params: file_data,
+                method: 'POST',
+                headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+            await vaah().ajax(
+                ajax_url,
+
+                this.importAppointmentAfter,
+                options
             );
+        },
+
+        async importAppointmentAfter(data, res){
+
+            if (data)
+            {
+                this.is_visible_errors = false;
+            }
+            else {
+                this.email_errors_display = res.data.error.email_errors;
+                this.missing_fields_header = res.data.error.missing_fields_header;
+                this.appointment_errors_display = res.data.error.availability_errors;
+                this.is_visible_errors = true;
+            }
+
         }
     }
 });
