@@ -876,7 +876,6 @@ class Appointment extends VaahModel
                 return response()->json(['error' => 'No data provided.'], 400);
             }
 
-            // Define the header mappings
             $header_mapping = [
                 'doctor' => ['doctor', 'Doctor'],
                 'patient' => ['patient', 'Patient'],
@@ -884,7 +883,6 @@ class Appointment extends VaahModel
                 'specialization' => ['specialization', 'Specialization'],
                 'date' => ['date', 'Date'],
                 'slot_start_time' => ['slot_start_time', 'Slot_Start_Time'],
-                'status' => ['status', 'Status'],
                 'reason' => ['reason', 'Reason'],
             ];
 
@@ -895,9 +893,8 @@ class Appointment extends VaahModel
                 'nameErrors' => [],
             ];
 
-            // Get the first row (header) and map the fields
             $first_row = $file_contents[0] ?? [];
-            $columns = array_map('trim', array_map('strtolower', array_keys($first_row))); // Normalize column headers
+            $columns = array_map('trim', array_map('strtolower', array_keys($first_row)));
 
             $field_map = [];
             foreach ($header_mapping as $db_field => $aliases) {
@@ -909,22 +906,19 @@ class Appointment extends VaahModel
                 }
             }
 
-            // Check for missing required fields in the headers
-            $required_fields = ['doctor', 'patient', 'email', 'specialization', 'date', 'slot_start_time', 'status', 'reason'];
+            $required_fields = ['doctor', 'patient', 'email', 'specialization', 'date', 'slot_start_time', 'reason'];
             foreach ($required_fields as $required_field) {
                 if (!isset($field_map[$required_field])) {
                     $errors['missing_fields_header'][] = "Missing required field: {$required_field}.";
                 }
             }
 
-            // If there are missing fields, return an error
             if (!empty($errors['missing_fields_header'])) {
-                return response()->json(['error' => 'Missing required fields.', 'details' => $errors['missing_fields_header']], 400);
+              $errors['missing_fields_header'] = array_unique($errors['missing_fields_header']);
             }
 
             $records_processed = 0;
 
-            // Iterate over each row of data
             foreach ($file_contents as $index => $content) {
                 $mapped_content = [];
                 foreach ($field_map as $db_field => $csv_header) {
@@ -932,13 +926,13 @@ class Appointment extends VaahModel
                 }
 
 
-                // Validate email format
+
                 if (empty($mapped_content['email']) || !filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
                     $errors['email_errors'][] = "Error in row {$index}: Invalid or missing email format.";
                     continue;
                 }
 
-                // Check if the doctor exists
+
                 $doctor = Doctor::where('email', $mapped_content['email'])->first();
                 if (!$doctor) {
                     $errors['email_errors'][] = "Doctor with email '{$mapped_content['email']}' not found.";
@@ -952,7 +946,6 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Check if the appointment already exists
                 $existing_appointment = self::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
                     ->where('date', date('Y-m-d', strtotime($mapped_content['date'])))
@@ -964,7 +957,6 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Check if the specialization matches the doctor
                 if ($doctor->specialization !== $mapped_content['specialization']) {
                     $errors['availability_errors'][] = "Error in row {$index}: Specialization '{$mapped_content['specialization']}' does not match doctor specialization.";
                     continue;
@@ -976,7 +968,7 @@ class Appointment extends VaahModel
                     'patient_id' => $patient->id,
                     'slot_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])),
                     'date' => date('Y-m-d', strtotime($mapped_content['date'])),
-                    'status' => $mapped_content['status'],
+                    'status' => 1,
                     'reason' => $mapped_content['reason'],
                     'is_active' => 1,
                 ]);
@@ -984,7 +976,6 @@ class Appointment extends VaahModel
                 $records_processed++;
             }
 
-            // Build the response
             $response = [];
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
