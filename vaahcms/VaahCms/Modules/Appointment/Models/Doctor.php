@@ -991,89 +991,107 @@ class Doctor extends VaahModel
                 return response()->json(['success' => false, 'message' => 'No data provided.'], 400);
             }
 
-            $allowed_fields = ['name', 'email', 'price', 'phone', 'specialization', 'shift_start_time', 'shift_end_time'];
+            $header_mapping = [
+                'name' => ['name', 'Name'],
+                'email' => ['email', 'Email'],
+                'price' => ['price', 'Price'],
+                'phone' => ['phone', 'Phone'],
+                'specialization' => ['specialization', 'Specialization'],
+                'shift_start_time' => ['shift_start_time', 'start_time'],
+                'shift_end_time' => ['shift_end_time', 'end_time'],
+            ];
 
             $errors = [
                 'email_errors' => [],
                 'phone_errors' => [],
             ];
 
-            // Collect emails and phones from input data
-            $emails = array_column($file_contents, 'email');
-            $phones = array_column($file_contents, 'phone');
+            $first_row = $file_contents[0] ?? [];
+            $columns = array_keys($first_row);
 
-            // Check existing records in the database by email or phone
+            $field_map = [];
+            foreach ($header_mapping as $db_field => $aliases) {
+                foreach ($columns as $column) {
+                    if (in_array(strtolower($column), array_map('strtolower', $aliases))) {
+                        $field_map[$db_field] = $column;
+                        break;
+                    }
+                }
+            }
+
+            $required_fields = ['name', 'email', 'phone', 'price', 'specialization', 'shift_start_time', 'shift_end_time'];
+            foreach ($required_fields as $required_field) {
+                if (!isset($field_map[$required_field])) {
+                    return response()->json(['success' => false, 'message' => "Missing required field: $required_field in the file."], 400);
+                }
+            }
+
+            $emails = array_column($file_contents, $field_map['email']);
+            $phones = array_column($file_contents, $field_map['phone']);
+
             $existing_doctors = self::whereIn('email', $emails)
                 ->orWhereIn('phone', $phones)
                 ->withTrashed()
                 ->get(['email', 'phone']);
 
-            // Array to store processed existing emails and phones
             $existing_emails = $existing_doctors->pluck('email')->toArray();
-            $existing_phones = $existing_doctors->pluck('phone')->toArray();
 
             foreach ($file_contents as $content) {
-               
                 foreach ($content as $key => $value) {
                     $content[$key] = trim($value, '"');
-
                     if ($key === 'price' && $value === 'NA') {
                         $content[$key] = null;
                     }
                 }
 
+                $mapped_content = [];
+                foreach ($field_map as $db_field => $csv_header) {
+                    $mapped_content[$db_field] = $content[$csv_header] ?? null;
+                }
 
-                $content = array_intersect_key($content, array_flip($allowed_fields));
-
-                // Skip records with missing email or phone
-                if (empty($content['email'])) {
-                    $errors['email_errors'][] = "Email is required for doctor: " . ($content['name'] ?? 'unknown');
+                if (empty($mapped_content['email'])) {
+                    $errors['email_errors'][] = "Email is required for doctor: " . ($mapped_content['name'] ?? 'unknown');
                     $records_skipped++;
                     continue;
                 }
 
-                if (empty($content['phone'])) {
-                    $errors['phone_errors'][] = "Phone number is required for doctor: {$content['name']}.";
+                if (empty($mapped_content['phone'])) {
+                    $errors['phone_errors'][] = "Phone number is required for doctor: {$mapped_content['name']}.";
                     $records_skipped++;
                     continue;
                 }
 
-                // Skip if the email or phone already exists in the database
-                if (in_array($content['email'], $existing_emails)) {
-                    $errors['email_errors'][] = "The email {$content['email']} is already stored for another doctor.";
+                if (in_array($mapped_content['email'], $existing_emails)) {
+                    $errors['email_errors'][] = "The email {$mapped_content['email']} is already stored for another doctor.";
                     $records_skipped++;
                     continue;
                 }
 
+                $mapped_content['price'] = $mapped_content['price'] ?? 0.00;
+                $mapped_content['specialization'] = $mapped_content['specialization'] ?? 'General';
 
-                $content['price'] = $content['price'] ?? 0.00;
-                $content['specialization'] = $content['specialization'] ?? 'General';
-
-                if (isset($content['shift_start_time'], $content['shift_end_time'])) {
-                    $start_time = strtotime($content['shift_start_time']);
-                    $end_time = strtotime($content['shift_end_time']);
-
+                if (isset($mapped_content['shift_start_time'], $mapped_content['shift_end_time'])) {
+                    $start_time = strtotime($mapped_content['shift_start_time']);
+                    $end_time = strtotime($mapped_content['shift_end_time']);
                     if ($start_time === false || $end_time === false || $start_time >= $end_time) {
-                        $errors['phone_errors'][] = "Invalid or incorrect shift times for doctor: {$content['name']}.";
+                        $errors['phone_errors'][] = "Invalid or incorrect shift times for doctor: {$mapped_content['name']}.";
                         $records_skipped++;
                         continue;
                     }
                 }
 
-
-
                 self::updateOrCreate(
                     [
-                        'email' => $content['email'],
-                        'phone' => $content['phone'],
+                        'email' => $mapped_content['email'],
+                        'phone' => $mapped_content['phone'],
                     ],
                     [
-                        'name' => $content['name'],
-                        'slug' => Str::slug($content['name']),
-                        'price_per_session' => $content['price'],
-                        'specialization' => $content['specialization'],
-                        'shift_start_time' => date('Y-m-d H:i:s', strtotime($content['shift_start_time'])),
-                        'shift_end_time' => date('Y-m-d H:i:s', strtotime($content['shift_end_time'])),
+                        'name' => $mapped_content['name'],
+                        'slug' => Str::slug($mapped_content['name']),
+                        'price_per_session' => $mapped_content['price'],
+                        'specialization' => $mapped_content['specialization'],
+                        'shift_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_start_time'])),
+                        'shift_end_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_end_time'])),
                         'is_active' => 1,
                     ]
                 );
@@ -1081,7 +1099,6 @@ class Doctor extends VaahModel
                 $records_processed++;
             }
 
-            // Prepare response
             $response = [];
 
             if ($records_processed > 0) {
