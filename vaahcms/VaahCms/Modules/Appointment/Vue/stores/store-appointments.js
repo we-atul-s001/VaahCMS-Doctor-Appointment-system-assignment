@@ -65,7 +65,11 @@ export const useAppointmentStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
-        form_menu_list: []
+        form_menu_list: [],
+        email_errors_display: null,
+        missing_fields_header: null,
+        appointment_errors_display: null,
+        is_visible_errors: false,
     }),
     getters: {
 
@@ -968,6 +972,11 @@ export const useAppointmentStore = defineStore({
                 this.ajax_url.concat('/bulkImport/appointment'),
 
                 (data, res) => {
+                    console.log(res.data);
+                    this.email_errors_display = res.data.error.email_errors;
+                    this.missing_fields_header = res.data.error.missing_fields_header;
+                    this.appointment_errors_display = res.data.error.availability_errors;
+                    this.is_visible_errors = true;
                     this.getList();
                 },
                 {
