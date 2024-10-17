@@ -1004,6 +1004,7 @@ class Doctor extends VaahModel
             $errors = [
                 'email_errors' => [],
                 'phone_errors' => [],
+                'time_errors' => [],
             ];
 
             $first_row = $file_contents[0] ?? [];
@@ -1055,6 +1056,12 @@ class Doctor extends VaahModel
                     continue;
                 }
 
+                if (!filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
+                    $errors['email_errors'][] = "Invalid email format for doctor: {$mapped_content['name']}.";
+                    $records_skipped++;
+                    continue;
+                }
+
                 if (empty($mapped_content['phone'])) {
                     $errors['phone_errors'][] = "Phone number is required for doctor: {$mapped_content['name']}.";
                     $records_skipped++;
@@ -1073,11 +1080,16 @@ class Doctor extends VaahModel
                 if (isset($mapped_content['shift_start_time'], $mapped_content['shift_end_time'])) {
                     $start_time = strtotime($mapped_content['shift_start_time']);
                     $end_time = strtotime($mapped_content['shift_end_time']);
+
                     if ($start_time === false || $end_time === false || $start_time >= $end_time) {
-                        $errors['phone_errors'][] = "Invalid or incorrect shift times for doctor: {$mapped_content['name']}.";
+                        $errors['time_errors'][] = "Invalid or incorrect shift times for doctor: {$mapped_content['name']}.";
                         $records_skipped++;
                         continue;
                     }
+                } else {
+                    $errors['time_errors'][] = "Missing shift times for doctor: {$mapped_content['name']}.";
+                    $records_skipped++;
+                    continue;
                 }
 
                 self::updateOrCreate(
@@ -1105,7 +1117,7 @@ class Doctor extends VaahModel
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors']) || !empty($errors['phone_errors'])) {
+            if (!empty($errors['email_errors']) || !empty($errors['phone_errors']) || !empty($errors['time_errors'])) {
                 $response['error'] = $errors;
             }
 
@@ -1120,6 +1132,7 @@ class Doctor extends VaahModel
             return response()->json(['success' => false, 'message' => 'An error occurred during import: ' . $e->getMessage()], 500);
         }
     }
+
 
 
 
