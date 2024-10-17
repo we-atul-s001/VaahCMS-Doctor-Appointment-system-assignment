@@ -65,7 +65,11 @@ export const useAppointmentStore = defineStore({
         list_create_menu: [],
         item_menu_list: [],
         item_menu_state: null,
-        form_menu_list: []
+        form_menu_list: [],
+        email_errors_display: null,
+        missing_fields_header: null,
+        appointment_errors_display: null,
+        is_visible_errors: false,
     }),
     getters: {
 
@@ -938,6 +942,50 @@ export const useAppointmentStore = defineStore({
 
         },
         //---------------------------------------------------------------------
+
+        async exportAppointment(){
+            let file_data = null;
+            try {
+                await vaah().ajax(
+                    this.ajax_url.concat('/bulkExport/appointment'),
+
+                    (data, res) => {
+                        file_data = res.data;
+                    }
+                );
+                const blob = new Blob([file_data]);
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'appointmentList.csv');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error downloading file:', error);
+            }
+        },
+
+        async importAppointment(file_data){
+            await vaah().ajax(
+                this.ajax_url.concat('/bulkImport/appointment'),
+
+                (data, res) => {
+                    console.log(res.data);
+                    this.email_errors_display = res.data.error.email_errors;
+                    this.missing_fields_header = res.data.error.missing_fields_header;
+                    this.appointment_errors_display = res.data.error.availability_errors;
+                    this.is_visible_errors = true;
+                    this.getList();
+                },
+                {
+                    params: file_data,
+                    method: 'POST',
+                    headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            );
+        }
     }
 });
 

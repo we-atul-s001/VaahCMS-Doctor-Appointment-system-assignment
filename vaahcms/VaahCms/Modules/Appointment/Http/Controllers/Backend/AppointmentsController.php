@@ -241,5 +241,36 @@ class AppointmentsController extends Controller
     }
     //----------------------------------------------------------
 
+    public function bulkImport(Request $request)
+    {
+        try {
+            return Appointment::bulkImport($request);
+        } catch (\Exception $e) {
+            $response = [];
+            $response['success'] = false;
+            if (env('APP_DEBUG')) {
+                $response['errors'][] = $e->getMessage();
+                $response['hint'] = $e->getTrace();
+            } else {
+                $response['errors'][] = trans("vaahcms-general.something_went_wrong");
+            }
+        }
+    }
 
+    //----------------------------------------------------------
+    public function bulkExport(Request $request)
+    {
+        try {
+            return Appointment::bulkExport($request);
+        } catch (\Exception $e) {
+            $response = [];
+            $response['success'] = false;
+            if (env('APP_DEBUG')) {
+                $response['errors'][] = $e->getMessage();
+                $response['hint'] = $e->getTrace();
+            } else {
+                $response['errors'][] = rans("vaahcms-general.something_went_wrong");
+            }
+        }
+    }
 }
