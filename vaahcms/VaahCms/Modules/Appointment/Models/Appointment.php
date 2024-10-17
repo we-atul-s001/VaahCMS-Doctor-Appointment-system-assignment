@@ -110,7 +110,7 @@ class Appointment extends VaahModel
 
 
 
-            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_session');
+            ->select('id','name','shift_start_time','shift_end_time','specialization', 'price_per_session','email');
 
     }
 
@@ -873,47 +873,135 @@ class Appointment extends VaahModel
             $file_contents = $request->json()->all();
 
             if (!$file_contents) {
-                return ;
+                return response()->json(['error' => 'No data provided.'], 400);
             }
 
-            foreach ($file_contents as $content) {
+            $header_mapping = [
+                'doctor' => ['doctor', 'Doctor'],
+                'patient' => ['patient', 'Patient'],
+                'specialization' => ['specialization', 'Specialization'],
+                'slot_start_time' => ['slot_start_time', 'Slot_Start_Time'],
+                'date' => ['date', 'Date'],
+                'email' => ['email', 'Email'],
+            ];
 
-                $doctor = Doctor::where('name', $content['doctor_name'])
-                    ->where('specialization', $content['specialization'])
-                    ->first();
+            $errors = [
+                'email_errors' => [],
+                'missing_field_errors' => [],
+                'availability_errors' => [],
+            ];
 
+            $first_row = $file_contents[0] ?? [];
+            $columns = array_keys($first_row);
 
-                $patient = Patient::where('name', $content['patient_name'])->first();
+            $field_map = [];
+            foreach ($header_mapping as $db_field => $aliases) {
+                foreach ($columns as $column) {
+                    if (in_array(strtolower($column), array_map('strtolower', $aliases))) {
+                        $field_map[$db_field] = $column;
+                        break;
+                    }
+                }
+            }
 
+            $required_fields = ['doctor', 'patient', 'specialization', 'slot_start_time', 'date', 'email'];
+            foreach ($required_fields as $required_field) {
+                if (!isset($field_map[$required_field])) {
+                    $errors['missing_field_errors'][] = "Missing required field: {$required_field}.";
+                }
+            }
 
+            if (!empty($errors['missing_field_errors'])) {
+               $errors['error'] = 'Missing required fields.';
+            }
+
+            $records_processed = 0;
+
+            foreach ($file_contents as $index => $content) {
+                foreach ($content as $key => $value) {
+                    $content[$key] = trim($value, '"');
+                    if ($key === 'price' && $value === 'NA') {
+                        $content[$key] = null;
+                    }
+                }
+
+                $mapped_content = [];
+                foreach ($field_map as $db_field => $csv_header) {
+                    $mapped_content[$db_field] = $content[$csv_header] ?? null;
+                }
+
+                if (empty($mapped_content['email']) || !filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
+                    $errors['email_errors'][] = "Error in row {$index}: Invalid or missing email.";
+                    continue;
+                }
+
+                $doctor = Doctor::where('name', $mapped_content['doctor'])->first();
                 if (!$doctor) {
-                    return response()->json(['error' => "Doctor {$content['doctor_name']} with specialization {$content['specialization']} not found"], 404);
+                    $errors['availability_errors'][] = "Error in row {$index}: Doctor '{$mapped_content['doctor']}' not found.";
+                    continue;
                 }
 
+                $patient = Patient::where('name', $mapped_content['patient'])->first();
                 if (!$patient) {
-                    return response()->json(['error' => "Patient {$content['patient_name']} not found"], 404);
+                    $errors['availability_errors'][] = "Error in row {$index}: Patient '{$mapped_content['patient']}' not found.";
+                    continue;
                 }
 
-                $doctorEmail = $doctor->email;
+                if ($doctor->specialization !== $mapped_content['specialization']) {
+                    $errors['availability_errors'][] = "Error in row {$index}: Specialization '{$mapped_content['specialization']}' does not match doctor specialization.";
+                    continue;
+                }
+
+                $slotStartTime = date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time']));
+                $shiftStartTime = $doctor->shift_start_time;
+                $shiftEndTime = $doctor->shift_end_time;
+
+                if ($slotStartTime < $shiftStartTime || $slotStartTime > $shiftEndTime) {
+                    $errors['availability_errors'][] = "Error in row {$index}: The slot '{$mapped_content['slot_start_time']}' is not available for doctor '{$mapped_content['doctor']}'.";
+                    continue;
+                }
 
                 self::updateOrCreate(
                     [
+                        'email' => $mapped_content['email'],
+                    ],
+                    [
                         'doctor_id' => $doctor->id,
                         'patient_id' => $patient->id,
-                        'specialization' => $content['specialization'],
-//                        'shift_start_time' => $content['shift_start_time'],
-//                        'shift_end_time' => $content['shift_end_time'],
+                        'specialization' => $mapped_content['specialization'],
+                        'slot_start_time' => $slotStartTime,
+                        'date' => date('Y-m-d', strtotime($mapped_content['date'])),
+                        'is_active' => 1,
                     ]
                 );
+
+                $records_processed++;
             }
 
-            $response['messages'][] = trans("vaahcms-general.imported_successfully");
-            return $response;
+            $response = [];
+            if ($records_processed > 0) {
+                $response['messages'][] = trans("vaahcms-general.imported_successfully");
+            }
+
+            if (!empty($errors['email_errors']) || !empty($errors['availability_errors']) ) {
+                $response['error'] = $errors;
+            }
+
+            if ($records_processed == 0) {
+                $response['message'] = "No new records were imported due to errors. All provided data already exists.";
+            } elseif ($records_processed > 0) {
+                $response['message'] = "{$records_processed} records were successfully imported. {$records_skipped} records were skipped due to errors.";
+            }
+
+            return response()->json($response);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-        //-------------------------------------------------
+
+
+
+    //-------------------------------------------------
 
     public static function bulkExport()
     {

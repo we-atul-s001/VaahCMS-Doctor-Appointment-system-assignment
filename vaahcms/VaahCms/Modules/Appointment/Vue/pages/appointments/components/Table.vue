@@ -186,6 +186,63 @@ function formatTimeWithAmPm(time) {
 
         </DataTable>
         <!--/table-->
+        <Dialog
+            v-model:visible="store.is_visible_errors"
+            maximizable
+            modal
+            header="Duplicate Issues"
+            :style="{ width: '50rem' }"
+            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        >
+            <div class="error-container">
+                <table class="styled-table">
+                    <thead>
+                    <tr>
+                        <th>Error Type</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    <!-- Email Errors -->
+                    <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
+                        <tr v-for="(email_error, index) in store.email_errors_display" :key="'email-'+index">
+                            <td>Email Error</td>
+                            <td>{{ email_error }}</td>
+                        </tr>
+                    </template>
+
+                    <template v-if="store.appointment_errors_display && store.appointment_errors_display.length > 0">
+                        <tr v-for="(appointment_error, index) in store.appointment_errors_display" :key="'email-'+index">
+                            <td>Appointment Error</td>
+                            <td>{{ appointment_error }}</td>
+                        </tr>
+                    </template>
+                    <template v-if="store.missing_fields_header && store.missing_fields_header.length > 0">
+                        <tr v-for="(header_error, index) in store.missing_fields_header" :key="'email-'+index">
+                            <td>Header Error</td>
+                            <td>{{ header_error }}</td>
+                        </tr>
+                    </template>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td><strong>Total Email Duplicate:</strong></td>
+                        <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Header Missing:</strong></td>
+                        <td>{{ store.missing_fields_header ? store.missing_fields_header.length : 0 }}</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>Total Appointment Errors:</strong></td>
+                        <td>{{ store.appointment_errors_display ? store.appointment_errors_display.length : 0 }}</td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </Dialog>
 
         <!--paginator-->
         <Paginator v-if="store.query.rows"

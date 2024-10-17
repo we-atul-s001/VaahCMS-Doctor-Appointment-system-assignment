@@ -17,10 +17,12 @@ class AppointmentExport implements FromCollection, WithHeadings, WithCustomCsvSe
         return Appointment::with(['doctor', 'patient'])->get()->map(function ($item) {
             return [
                 'id' => $item->id,
-                'patient_name' => $item->patient ? $item->patient->name : 'N/A',
-                'doctor_name' => $item->doctor ? $item->doctor->name : 'N/A',
+                'Patient' => $item->patient ? $item->patient->name : 'N/A',
+                'Doctor' => $item->doctor ? $item->doctor->name : 'N/A',
+                'Email' => $item->doctor ? $item->doctor->email : 'N/A',
+                'Specialization' => $item->doctor ? $item->doctor->specialization : 'N/A',
+                'Date' => $item->date,
                 'slot_start_time' => $item->slot_start_time,
-                'slot_end_time' => $item->slot_end_time,
                 'status' => $item->status == 1 ? 'Booked' : 'Canceled',
                 'reason'=> $item->reason,
 
@@ -32,20 +34,25 @@ class AppointmentExport implements FromCollection, WithHeadings, WithCustomCsvSe
     {
         return [
             'ID',
-            'Patient Name',
-            'Doctor Name',
-            'Start Time',
-            'End Time',
+            'Patient',
+            'Doctor',
+            'Email',
+            'Specialization',
+            'Date',
+            'slot_start_time',
             'Status',
             'Reason'
         ];
     }
 
+    /**
+     * Custom CSV settings to remove double quotes.
+     */
     public function getCsvSettings(): array
     {
         return [
             'delimiter' => ',',
-            'enclosure' => '"',
+            'enclosure' => '',
         ];
     }
 }
