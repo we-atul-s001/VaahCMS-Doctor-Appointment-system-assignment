@@ -3,11 +3,12 @@
 namespace App\ExportData;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use VaahCms\Modules\Appointment\Models\Appointment;
 use VaahCms\Modules\Appointment\Models\Doctor;
 
-class AppointmentExport implements FromCollection, WithHeadings
+class AppointmentExport implements FromCollection, WithHeadings, WithCustomCsvSettings
 {
 
     public function collection()
@@ -37,6 +38,14 @@ class AppointmentExport implements FromCollection, WithHeadings
             'End Time',
             'Status',
             'Reason'
+        ];
+    }
+
+    public function getCsvSettings(): array
+    {
+        return [
+            'delimiter' => ',',
+            'enclosure' => '"',
         ];
     }
 }
