@@ -24,6 +24,7 @@ const steps = ref([
     { label: 'Result', value: 4 }
 ]);
 const selectedFile = ref(null);
+const uploadedFileName = ref("");
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -46,23 +47,54 @@ const openImportDialog = () => {
     isImportDialogVisible.value = true;
     currentStep.value = 1;
     selectedFile.value = null;
+    uploadedFileName.value = "";
 };
 
 const fileInput = ref(null);
 
 const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+    const file = event.files[0]; // Use event.files for PrimeVue FileUpload
     if (file) {
+        uploadedFileName.value = file.name;
+
         const reader = new FileReader();
         reader.onload = (e) => {
-            const contents = e.target.result;
-            const json_data = csvToJson(contents);
-            console.log('Parsed JSON data:', json_data);
-            importAppointment(json_data);
-            isDialogVisible.value = false;
+            try {
+                const contents = e.target.result;
+                const json_data = csvToJson(contents);
+                console.log('Parsed JSON data:', json_data);
+                // Here, instead of directly inserting into the database,
+                // we might want to prepare for mapping
+                // Assume we store this data for later use
+                store.importAppointment(json_data); // Use store for any preparatory data storage
+            } catch (error) {
+                console.error('Error processing the file:', error);
+            }
         };
+
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+        };
+
         reader.readAsText(file);
+    } else {
+        console.error('No file selected or file is invalid.');
     }
+};
+
+const csvToJson = (csv) => {
+    const lines = csv.split("\n");
+    const headers = lines[0].split(",");
+
+    const jsonData = lines.slice(1).map(line => {
+        const values = line.split(",");
+        return headers.reduce((acc, header, index) => {
+            acc[header.trim()] = values[index] ? values[index].trim() : null;
+            return acc;
+        }, {});
+    });
+
+    return jsonData;
 };
 
 const downloadSampleCSV = () => {
@@ -76,8 +108,14 @@ const goBack = () => {
 };
 
 const goNext = () => {
-    if (currentStep.value < 4) {
-        currentStep.value++;
+    if (currentStep.value < steps.value.length) {
+        currentStep.value++; // Increment the current step
+    } else if (currentStep.value === 1) {
+        currentStep.value++; // Move to the mapping step
+    } else if (currentStep.value === 2) {
+        currentStep.value++; // Move to the preview step after mapping
+    } else if (currentStep.value === 3) {
+        currentStep.value++; // Finalize or show result
     }
 };
 
@@ -89,6 +127,7 @@ const exportAppointment = () => {
     store.exportAppointment();
 };
 </script>
+
 
 <template>
     <div class="grid" v-if="store.assets">
@@ -161,6 +200,9 @@ const exportAppointment = () => {
                                     @select="handleFileUpload"
                                     chooseLabel="Select File"
                                 />
+                                <p v-if="uploadedFileName" class="uploaded-file-name">
+                                    Uploaded File: {{ uploadedFileName }}
+                                </p>
                             </div>
                         </div>
                         <div class="mt-2">
@@ -170,17 +212,15 @@ const exportAppointment = () => {
 
                     <div v-else-if="currentStep === 2">
                         <h2>Map Fields</h2>
-
                     </div>
 
                     <div v-else-if="currentStep === 3">
                         <h2>Preview Data</h2>
-
+                        <p>File Name: {{ uploadedFileName }}</p>
                     </div>
 
                     <div v-else>
                         <h2>Import Result</h2>
-
                     </div>
                 </div>
 
@@ -189,9 +229,6 @@ const exportAppointment = () => {
                     <Button label="Next" icon="pi pi-chevron-right" iconPos="right" @click="goNext" :disabled="currentStep === 4" />
                 </div>
             </div>
-            <template #footer>
-                <Button label="Close" icon="pi pi-times" @click="closeImportDialog" class="p-button-text" />
-            </template>
         </Dialog>
     </div>
 </template>
