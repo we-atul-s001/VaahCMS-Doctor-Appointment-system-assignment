@@ -25,6 +25,7 @@ const steps = ref([
 ]);
 const selectedFile = ref(null);
 const uploadedFileName = ref("");
+const headers = ref([]);
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -48,12 +49,13 @@ const openImportDialog = () => {
     currentStep.value = 1;
     selectedFile.value = null;
     uploadedFileName.value = "";
+    headers.value = [];
 };
 
 const fileInput = ref(null);
 
 const handleFileUpload = (event) => {
-    const file = event.files[0]; // Use event.files for PrimeVue FileUpload
+    const file = event.files[0];
     if (file) {
         uploadedFileName.value = file.name;
 
@@ -63,10 +65,9 @@ const handleFileUpload = (event) => {
                 const contents = e.target.result;
                 const json_data = csvToJson(contents);
                 console.log('Parsed JSON data:', json_data);
-                // Here, instead of directly inserting into the database,
-                // we might want to prepare for mapping
-                // Assume we store this data for later use
-                store.importAppointment(json_data); // Use store for any preparatory data storage
+                headers.value = extractHeaders(contents);
+                console.log('Extracted Headers:', headers.value);
+                goNext();
             } catch (error) {
                 console.error('Error processing the file:', error);
             }
@@ -100,7 +101,11 @@ const csvToJson = (csv) => {
 const downloadSampleCSV = () => {
     console.log('Downloading sample CSV...');
 };
-
+const extractHeaders = (csv) => {
+    const lines = csv.split("\n");
+    const headers = lines[0].split(",").map(header => header.trim());
+    return headers;
+};
 const goBack = () => {
     if (currentStep.value > 1) {
         currentStep.value--;
