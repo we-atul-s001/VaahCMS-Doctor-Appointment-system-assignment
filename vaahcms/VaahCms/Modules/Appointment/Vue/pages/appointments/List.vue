@@ -26,6 +26,7 @@ const steps = ref([
 const selectedFile = ref(null);
 const uploadedFileName = ref("");
 const headers = ref([]);
+const selectedHeaders = ref([]);
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -44,12 +45,15 @@ const toggleCreateMenu = (event) => {
     create_menu.value.toggle(event);
 };
 
-const openImportDialog = () => {
+const openImportDialog = async () => {
     isImportDialogVisible.value = true;
     currentStep.value = 1;
     selectedFile.value = null;
     uploadedFileName.value = "";
     headers.value = [];
+    selectedHeaders.value = [];
+
+    store.importAppointment(json_data);
 };
 
 const fileInput = ref(null);
@@ -67,6 +71,8 @@ const handleFileUpload = (event) => {
                 console.log('Parsed JSON data:', json_data);
                 headers.value = extractHeaders(contents);
                 console.log('Extracted Headers:', headers.value);
+                selectedHeaders.value = Array(headers.value.length).fill(null);
+
                 goNext();
             } catch (error) {
                 console.error('Error processing the file:', error);
@@ -101,11 +107,13 @@ const csvToJson = (csv) => {
 const downloadSampleCSV = () => {
     console.log('Downloading sample CSV...');
 };
+
 const extractHeaders = (csv) => {
     const lines = csv.split("\n");
     const headers = lines[0].split(",").map(header => header.trim());
     return headers;
 };
+
 const goBack = () => {
     if (currentStep.value > 1) {
         currentStep.value--;
@@ -113,14 +121,17 @@ const goBack = () => {
 };
 
 const goNext = () => {
+    if (currentStep.value === 1 && !uploadedFileName.value) {
+        console.error('No file uploaded. Please upload a file to proceed.');
+        return;
+    }
+
     if (currentStep.value < steps.value.length) {
-        currentStep.value++; // Increment the current step
-    } else if (currentStep.value === 1) {
-        currentStep.value++; // Move to the mapping step
-    } else if (currentStep.value === 2) {
-        currentStep.value++; // Move to the preview step after mapping
+        currentStep.value++;
+    } else if (currentStep.value === 2 && headers.length > 0) {
+        currentStep.value++;
     } else if (currentStep.value === 3) {
-        currentStep.value++; // Finalize or show result
+        currentStep.value++;
     }
 };
 
@@ -132,7 +143,6 @@ const exportAppointment = () => {
     store.exportAppointment();
 };
 </script>
-
 
 <template>
     <div class="grid" v-if="store.assets">
@@ -193,6 +203,7 @@ const exportAppointment = () => {
                 <Steps :model="steps" :readonly="false" :activeIndex="currentStep - 1" />
 
                 <div class="mt-4">
+                    <!-- In the upload step -->
                     <div v-if="currentStep === 1" class="upload-step">
                         <h2>Select a CSV file to Import</h2>
                         <div class="p-fluid">
@@ -215,43 +226,63 @@ const exportAppointment = () => {
                         </div>
                     </div>
 
+                    <!-- In the mapping step -->
                     <div v-else-if="currentStep === 2">
                         <h2>Map Fields</h2>
-                        <div v-if="headers.length > 0">
-                            <p>Extracted Headers:</p>
-                            <ul>
-                                <li v-for="(header, index) in headers" :key="index">{{ header }}</li>
-                            </ul>
-                        </div>
-                        <div v-else>
-                            <p>No headers extracted. Please upload a valid CSV file.</p>
-                        </div>
+                        <div class="header-mapping">
+                            <div class="columns">
+                                <div class="column">
+                                    <h3>Database Headers</h3>
+                                    <p v-if="headers.length > 0">
+                                        The following headers were extracted from the uploaded CSV file. Please map them to the appropriate fields in the database.
+                                    </p>
+                                </div>
+                                <div class="column">
+                                    <h3>Extracted Headers</h3>
+                                    <div v-if="headers.length > 0">
+                                        <div v-for="(header, index) in headers" :key="index">
 
+                                            <Dropdown
+                                                v-model="selectedHeaders[index]"
+                                                :options="headers.map(header => ({ value: header }))"
+                                                optionLabel="value"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <p>No headers extracted. Please upload a valid CSV file.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+
 
 
                     <div v-else-if="currentStep === 3">
-                        <h2>Preview Data</h2>
-                        <p>File Name: {{ uploadedFileName }}</p>
-                    </div>
+                                <h2>Preview Data</h2>
+                                <p>File Name: {{ uploadedFileName }}</p>
+                            </div>
 
-                    <div v-else>
-                        <h2>Import Result</h2>
-                    </div>
-                </div>
+                            <div v-else>
+                                <h2>Import Result</h2>
+                            </div>
+                        </div>
 
-                <div class="mt-4 flex justify-content-between">
-                    <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
-                    <div class="mt-4">
-                        <Button
-                            label="Next"
-                            icon="pi pi-chevron-right"
-                            iconPos="right"
-                            @click="goNext"
-                            :disabled="!uploadedFileName"
-                        />
-                    </div>                </div>
-            </div>
+                        <div class="mt-4 flex justify-content-between">
+                            <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
+                            <div class="mt-4">
+                                <Button
+                                    label="Next"
+                                    icon="pi pi-chevron-right"
+                                    iconPos="right"
+                                    @click="goNext"
+                                    :disabled="currentStep !== 2"
+                                />
+                            </div>
+                        </div>
+                    </div>
         </Dialog>
     </div>
 </template>
@@ -275,6 +306,22 @@ const exportAppointment = () => {
 
 h2 {
     font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+.columns {
+    display: flex;
+    justify-content: space-between;
+}
+
+.column {
+    width: 48%;
+    padding: 10px;
+}
+
+.header-mapping {
+    margin-bottom: 1rem;
+}
+.header-mapping {
     margin-bottom: 1rem;
 }
 </style>

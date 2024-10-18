@@ -986,6 +986,7 @@ export const useAppointmentStore = defineStore({
 
         async importAppointmentAfter(data, res){
 
+            console.log(data);
             if (data)
             {
                 this.is_visible_errors = false;
@@ -997,7 +998,24 @@ export const useAppointmentStore = defineStore({
                 this.is_visible_errors = true;
             }
 
-        }
+        },
+
+        async FetchDatabaseHeaders(file_data){
+            let ajax_url = this.ajax_url + '/bulkImport/appointment';
+
+           let  options = {
+                method: 'POST',
+               params: file_data,
+                headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+
+            await vaah().ajax(
+                ajax_url,
+                options
+            );
+        },
+
+
     }
 });
 
