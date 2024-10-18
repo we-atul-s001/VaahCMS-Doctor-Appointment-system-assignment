@@ -1,6 +1,7 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRoute } from 'vue-router';
+import { useConfirm } from "primevue/useconfirm";
 
 import { useAppointmentStore } from '../../stores/store-appointments';
 import { useRootStore } from '../../stores/root';
@@ -12,9 +13,17 @@ import Filters from './components/Filters.vue';
 const store = useAppointmentStore();
 const root = useRootStore();
 const route = useRoute();
-
-import { useConfirm } from "primevue/useconfirm";
 const confirm = useConfirm();
+
+const isImportDialogVisible = ref(false);
+const currentStep = ref(1);
+const steps = ref([
+    { label: 'Upload', value: 1 },
+    { label: 'Map', value: 2 },
+    { label: 'Preview', value: 3 },
+    { label: 'Result', value: 4 }
+]);
+const selectedFile = ref(null);
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -33,10 +42,10 @@ const toggleCreateMenu = (event) => {
     create_menu.value.toggle(event);
 };
 
-const isDialogVisible = ref(false);
-
-const openFileDialog = () => {
-    isDialogVisible.value = true;
+const openImportDialog = () => {
+    isImportDialogVisible.value = true;
+    currentStep.value = 1;
+    selectedFile.value = null;
 };
 
 const fileInput = ref(null);
@@ -56,28 +65,28 @@ const handleFileUpload = (event) => {
     }
 };
 
-const csvToJson = (csv) => {
-    const lines = csv.split('\n');
-    const result = [];
-    const headers = lines[0].split(',');
+const downloadSampleCSV = () => {
+    console.log('Downloading sample CSV...');
+};
 
-    for (let i = 1; i < lines.length; i++) {
-        const obj = {};
-        const currentLine = lines[i].split(',');
-        for (let j = 0; j < headers.length; j++) {
-            obj[headers[j].trim()] = currentLine[j] ? currentLine[j].trim() : '';
-        }
-        result.push(obj);
+const goBack = () => {
+    if (currentStep.value > 1) {
+        currentStep.value--;
     }
-    return result;
+};
+
+const goNext = () => {
+    if (currentStep.value < 4) {
+        currentStep.value++;
+    }
+};
+
+const closeImportDialog = () => {
+    isImportDialogVisible.value = false;
 };
 
 const exportAppointment = () => {
     store.exportAppointment();
-};
-
-const importAppointment = (json_data) => {
-    store.importAppointment(json_data);
 };
 </script>
 
@@ -104,9 +113,12 @@ const importAppointment = (json_data) => {
                             Create
                         </Button>
 
-                        <Button @click="openFileDialog" class="import-btn">Upload CSV</Button>
+                        <Button @click="openImportDialog" class="p-button-sm">
+                            <i class="pi pi-upload mr-1"></i>
+                            Import
+                        </Button>
 
-                        <Button label="Export CSV" @click="exportAppointment" class="export-btn" style="margin-left: 5px;" />
+                        <Button label="Export CSV" @click="exportAppointment" class="p-button-sm" style="margin-left: 5px;" />
 
                         <Button data-testid="appointments-list-reload" class="p-button-sm" @click="store.getList()">
                             <i class="pi pi-refresh mr-1"></i>
@@ -132,59 +144,77 @@ const importAppointment = (json_data) => {
         <Filters />
         <RouterView />
 
-        <Dialog header="Upload CSV"
-                :visible.sync="isDialogVisible"
-                modal
-                :closable="true"
-                :dismissable-mask="true"
-                :close-on-escape="true"
-                class="custom-dialog">
-            <div class="p-fluid" style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
-                <div class="flex align-items-center">
-                    <i class="pi pi-upload" style="font-size: 2em; color: #3f51b5;"></i>
-                    <span style="font-size: 1.2em; color: #333;">Please select a CSV file to upload:</span>
+        <Dialog header="Bulk Import" v-model:visible="isImportDialogVisible" :style="{width: '50vw'}" :modal="true">
+            <div class="card">
+                <Steps :model="steps" :readonly="false" :activeIndex="currentStep - 1" />
+
+                <div class="mt-4">
+                    <div v-if="currentStep === 1" class="upload-step">
+                        <h2>Select a CSV file to Import</h2>
+                        <div class="p-fluid">
+                            <div class="p-field">
+                                <FileUpload
+                                    mode="basic"
+                                    :auto="true"
+                                    accept=".csv"
+                                    :maxFileSize="1000000"
+                                    @select="handleFileUpload"
+                                    chooseLabel="Select File"
+                                />
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <Button label="Download Sample CSV" icon="pi pi-download" @click="downloadSampleCSV" class="p-button-secondary" />
+                        </div>
+                    </div>
+
+                    <div v-else-if="currentStep === 2">
+                        <h2>Map Fields</h2>
+
+                    </div>
+
+                    <div v-else-if="currentStep === 3">
+                        <h2>Preview Data</h2>
+
+                    </div>
+
+                    <div v-else>
+                        <h2>Import Result</h2>
+
+                    </div>
                 </div>
-                <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" class="custom-file-input" />
+
+                <div class="mt-4 flex justify-content-between">
+                    <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
+                    <Button label="Next" icon="pi pi-chevron-right" iconPos="right" @click="goNext" :disabled="currentStep === 4" />
+                </div>
             </div>
             <template #footer>
-                <Button label="Close" @click="isDialogVisible = false" class="p-button-text" />
+                <Button label="Close" icon="pi pi-times" @click="closeImportDialog" class="p-button-text" />
             </template>
         </Dialog>
     </div>
 </template>
 
 <style scoped>
-.custom-dialog .p-dialog {
-    background-color: #f5f5f5;
-    border-radius: 8px;
+.card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
 }
 
-.custom-dialog .p-dialog-header {
-    background-color: #e0e0e0;
-    border-radius: 8px 8px 0 0;
-    font-weight: bold;
-    color: #333;
+.upload-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    border: 2px dashed #ced4da;
+    border-radius: 6px;
 }
 
-.custom-file-input {
-    display: inline-block;
-    padding: 10px 15px;
-    border: 2px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    width: 100%;
-}
-
-.custom-file-input:hover {
-    background-color: #e0e0e0;
-    border-color: #3f51b5;
-}
-
-.custom-file-input:focus {
-    outline: none;
-    border-color: #3f51b5;
+h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
 }
 </style>
