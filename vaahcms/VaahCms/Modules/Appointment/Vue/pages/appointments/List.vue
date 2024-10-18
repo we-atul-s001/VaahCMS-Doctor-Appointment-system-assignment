@@ -217,7 +217,18 @@ const exportAppointment = () => {
 
                     <div v-else-if="currentStep === 2">
                         <h2>Map Fields</h2>
+                        <div v-if="headers.length > 0">
+                            <p>Extracted Headers:</p>
+                            <ul>
+                                <li v-for="(header, index) in headers" :key="index">{{ header }}</li>
+                            </ul>
+                        </div>
+                        <div v-else>
+                            <p>No headers extracted. Please upload a valid CSV file.</p>
+                        </div>
+
                     </div>
+
 
                     <div v-else-if="currentStep === 3">
                         <h2>Preview Data</h2>
@@ -231,8 +242,15 @@ const exportAppointment = () => {
 
                 <div class="mt-4 flex justify-content-between">
                     <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
-                    <Button label="Next" icon="pi pi-chevron-right" iconPos="right" @click="goNext" :disabled="currentStep === 4" />
-                </div>
+                    <div class="mt-4">
+                        <Button
+                            label="Next"
+                            icon="pi pi-chevron-right"
+                            iconPos="right"
+                            @click="goNext"
+                            :disabled="!uploadedFileName"
+                        />
+                    </div>                </div>
             </div>
         </Dialog>
     </div>
