@@ -38,6 +38,7 @@ class AppointmentsController extends Controller
 
             $data = [];
 
+            $data['fields'] = Appointment::getFillableColumns();
             $data['permission'] = \Auth::user()->permissions(true);
             $data['rows'] = config('vaahcms.per_page');
 

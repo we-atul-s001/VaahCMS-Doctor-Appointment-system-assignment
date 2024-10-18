@@ -38,6 +38,7 @@ onMounted(async () => {
     await store.getAssets();
     await store.getList();
     await store.getListCreateMenu();
+
 });
 
 const create_menu = ref();
@@ -233,10 +234,13 @@ const exportAppointment = () => {
                             <div class="columns">
                                 <div class="column">
                                     <h3>Database Headers</h3>
-                                    <p v-if="headers.length > 0">
-                                        The following headers were extracted from the uploaded CSV file. Please map them to the appropriate fields in the database.
-                                    </p>
+                                    <ul>
+                                        <li v-for="(field, index) in store.assets.fields" :key="index">
+                                            {{ field }}
+                                        </li>
+                                    </ul>
                                 </div>
+
                                 <div class="column">
                                     <h3>Extracted Headers</h3>
                                     <div v-if="headers.length > 0">

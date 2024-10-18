@@ -980,6 +980,7 @@ export const useAppointmentStore = defineStore({
                 ajax_url,
 
                 this.importAppointmentAfter,
+                this.getAssets(),
                 options
             );
         },
