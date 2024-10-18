@@ -23,6 +23,9 @@ import Card from 'primevue/card';
 import Dialog from 'primevue/dialog';
 import Chart from 'primevue/chart';
 import Checkbox from 'primevue/checkbox';
+import FileUpload from 'primevue/fileupload';
+import Steps from "primevue/steps";
+
 
 
 
@@ -91,6 +94,8 @@ app.component('Card', Card);
 app.component('Chart', Chart);
 app.component('Dialog', Dialog);
 app.component('Checkbox', Checkbox);
+app.component('FileUpload', FileUpload);
+app.component('Steps', Steps);
 
 //-------------/PrimeVue Use
 

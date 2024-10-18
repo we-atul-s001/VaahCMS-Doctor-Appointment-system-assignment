@@ -1015,6 +1015,7 @@ export const useDoctorStore = defineStore({
                 link.href = url;
                 link.setAttribute('download', 'doctorsList.csv');
                 document.body.appendChild(link);
+                document.body.appendChild(link);
                 link.click();
                 link.remove();
                 window.URL.revokeObjectURL(url);
