@@ -924,7 +924,7 @@ class Appointment extends VaahModel
                 'header_mapping_errors' => [],
             ];
 
-            // Validate required headers (without email)
+
             foreach ($required_headers as $db_field => $expected_csv_header) {
                 if (!isset($header_mapping[$expected_csv_header]) || empty($header_mapping[$expected_csv_header])) {
                     $errors['header_mapping_errors'][] = "Error: Required header '{$expected_csv_header}' is missing or not mapped correctly.";
