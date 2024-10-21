@@ -16,6 +16,7 @@ use WebReinvent\VaahCms\Models\VaahModel;
 use WebReinvent\VaahCms\Traits\CrudWithUuidObservantTrait;
 use WebReinvent\VaahCms\Models\User;
 use WebReinvent\VaahCms\Libraries\VaahSeeder;
+use function Laravel\Prompts\error;
 
 class Appointment extends VaahModel
 {
@@ -904,15 +905,35 @@ class Appointment extends VaahModel
             $file_contents = $request->json('csvData', []);
             $header_mapping = $request->json('headerMapping', []);
 
+            // Define the required headers (without Email, since it's auto-checked)
+            $required_headers = [
+                'Patient' => 'Patient',
+                'Doctor' => 'Doctor',
+                'Date' => 'Date',
+                'slot_start_time' => 'slot_start_time',
+            ];
+
             if (empty($file_contents)) {
-                return response()->json(['error' => 'No data provided.'], 400);
+                return response()->json(['error' => 'No records found in the uploaded file.'], 400);
             }
 
             $errors = [
                 'missing_fields_header' => [],
                 'availability_errors' => [],
                 'nameErrors' => [],
+                'header_mapping_errors' => [],
             ];
+
+            // Validate required headers (without email)
+            foreach ($required_headers as $db_field => $expected_csv_header) {
+                if (!isset($header_mapping[$expected_csv_header]) || empty($header_mapping[$expected_csv_header])) {
+                    $errors['header_mapping_errors'][] = "Error: Required header '{$expected_csv_header}' is missing or not mapped correctly.";
+                }
+            }
+
+            if (!empty($errors['header_mapping_errors'])) {
+                return response()->json(['error' => 'Header mapping errors found.', 'details' => $errors['header_mapping_errors']], 400);
+            }
 
             $records_processed = 0;
 
@@ -923,31 +944,41 @@ class Appointment extends VaahModel
                         $mapped_content[$db_field] = trim($content[$csv_header], '"');
                     }
                 }
-                
+
+                // Check if Doctor field is missing
                 if (empty($mapped_content['Doctor'])) {
                     $errors['nameErrors'][] = "Error in row {$index}: Doctor name is missing.";
                     continue;
                 }
 
-                // Check if the 'Patient' key exists and is not null
+                // Check if Patient field is missing
                 if (empty($mapped_content['Patient'])) {
                     $errors['nameErrors'][] = "Error in row {$index}: Patient name is missing.";
                     continue;
                 }
 
+                // Get the doctor from the Doctor model by name
                 $doctor = Doctor::where('name', $mapped_content['Doctor'])->first();
+
                 if (!$doctor) {
                     $errors['availability_errors'][] = "Error in row {$index}: Doctor '{$mapped_content['Doctor']}' not found.";
                     continue;
                 }
 
+                // Check if the doctor has an email in the database
+                if (empty($doctor->email)) {
+                    $errors['availability_errors'][] = "Error in row {$index}: Doctor '{$mapped_content['Doctor']}' does not have an email.";
+                    continue;
+                }
+
+                // Get the patient from the Patient model by name
                 $patient = Patient::where('name', $mapped_content['Patient'])->first();
                 if (!$patient) {
                     $errors['availability_errors'][] = "Error in row {$index}: Patient '{$mapped_content['Patient']}' not found.";
                     continue;
                 }
 
-                // Ensure 'Date' and 'slot_start_time' are present and valid
+                // Check if Date or Slot Start Time is missing
                 if (empty($mapped_content['Date']) || empty($mapped_content['slot_start_time'])) {
                     $errors['availability_errors'][] = "Error in row {$index}: Date or slot start time is missing.";
                     continue;
@@ -965,13 +996,14 @@ class Appointment extends VaahModel
                     continue;
                 }
 
+                // Create or update the appointment
                 self::updateOrCreate([
                     'doctor_id' => $doctor->id,
                     'patient_id' => $patient->id,
                     'slot_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])),
                     'date' => date('Y-m-d', strtotime($mapped_content['Date'])),
                     'status' => 1,
-                    'reason' => $mapped_content['reason'] ?? null,
+                    'reason' => $mapped_content['reason'] ?? 'No reason provided.',
                     'is_active' => 1,
                 ]);
 
@@ -998,6 +1030,9 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+
 
 
 

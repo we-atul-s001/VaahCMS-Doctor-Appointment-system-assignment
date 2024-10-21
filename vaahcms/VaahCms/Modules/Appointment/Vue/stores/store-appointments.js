@@ -70,6 +70,7 @@ export const useAppointmentStore = defineStore({
         missing_fields_header: null,
         appointment_errors_display: null,
         is_visible_errors: false,
+        header_mapping_errors_display: null,
     }),
     getters: {
 
@@ -995,6 +996,7 @@ export const useAppointmentStore = defineStore({
                 this.email_errors_display = res.data.error.email_errors;
                 this.missing_fields_header = res.data.error.missing_fields_header;
                 this.appointment_errors_display = res.data.error.availability_errors;
+                this.header_mapping_errors_display = res.data.error.header_mapping_errors;
                 this.is_visible_errors = true;
             }
 

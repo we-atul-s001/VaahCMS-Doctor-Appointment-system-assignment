@@ -70,9 +70,9 @@ const handleFileUpload = (event) => {
                 const contents = e.target.result;
                 json_data_pass.value = csvToJson(contents);
                 headers.value = extractHeaders(contents);
-                selectedHeaders.value = {}; // Reset selected headers to an empty object
+                selectedHeaders.value = {};
                 previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
-                goNext();  // Automatically go to the mapping step
+               goBack();
             } catch (error) {
                 console.error('Error processing the file:', error);
             }
@@ -297,16 +297,7 @@ const generatePreviewData = (data, selectedHeaders) => {
                                 </div>
                             </div>
                         </div>
-
-                        <div class="mapping-summary">
-                            <h4>Current Mappings:</h4>
-                            <ul>
-                                <li v-for="(dbHeader, index) in store.assets.fields" :key="index">
-                                    {{ dbHeader }}:
-                                    <strong>{{ selectedHeaders[dbHeader] ? selectedHeaders[dbHeader] : 'Not Mapped' }}</strong>
-                                </li>
-                            </ul>
-                        </div>
+                        
                     </div>
 
                     <div v-else-if="currentStep === 3">
