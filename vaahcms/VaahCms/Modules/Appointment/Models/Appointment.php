@@ -94,6 +94,7 @@ class Appointment extends VaahModel
             'doctor_id' => 'Doctor Name',
             'patient_id' => 'Patient Name',
             'slot_start_time' => 'Slot Start Time',
+            'date' => 'Date',
         ];
 
         $replace_columns_frontend  = array_map(function ($column) use ($columns_mapping) {
@@ -900,21 +901,12 @@ class Appointment extends VaahModel
     public static function bulkImport(Request $request)
     {
         try {
-            $file_contents = $request->json()->all();
+            $file_contents = $request->json('csvData', []);
+            $header_mapping = $request->json('headerMapping', []);
 
             if (!$file_contents) {
                 return response()->json(['error' => 'No data provided.'], 400);
             }
-
-            $header_mapping = [
-                'doctor' => ['doctor', 'Doctor'],
-                'patient' => ['patient', 'Patient'],
-                'email' => ['email', 'Email'],
-                'specialization' => ['specialization', 'Specialization'],
-                'date' => ['date', 'Date'],
-                'slot_start_time' => ['slot_start_time', 'Slot_Start_Time'],
-                'reason' => ['reason', 'Reason'],
-            ];
 
             $errors = [
                 'email_errors' => [],
@@ -923,45 +915,18 @@ class Appointment extends VaahModel
                 'nameErrors' => [],
             ];
 
-            $first_row = $file_contents[0] ?? [];
-            $columns = array_map('trim', array_map('strtolower', array_keys($first_row)));
-
-            $field_map = [];
-            foreach ($header_mapping as $db_field => $aliases) {
-                foreach ($columns as $column) {
-                    if (in_array(strtolower($column), array_map('strtolower', $aliases))) {
-                        $field_map[$db_field] = $column;
-                        break;
-                    }
-                }
-            }
-
-            $required_fields = ['doctor', 'patient', 'email', 'specialization', 'date', 'slot_start_time', 'reason'];
-            foreach ($required_fields as $required_field) {
-                if (!isset($field_map[$required_field])) {
-                    $errors['missing_fields_header'][] = "Missing required field: {$required_field}.";
-                }
-            }
-
-            if (!empty($errors['missing_fields_header'])) {
-              $errors['missing_fields_header'] = array_unique($errors['missing_fields_header']);
-            }
-
             $records_processed = 0;
 
             foreach ($file_contents as $index => $content) {
                 $mapped_content = [];
-                foreach ($field_map as $db_field => $csv_header) {
+                foreach ($header_mapping as $db_field => $csv_header) {
                     $mapped_content[$db_field] = isset($content[$csv_header]) ? trim($content[$csv_header], '"') : null;
                 }
-
-
 
                 if (empty($mapped_content['email']) || !filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
                     $errors['email_errors'][] = "Error in row {$index}: Invalid or missing email format.";
                     continue;
                 }
-
 
                 $doctor = Doctor::where('email', $mapped_content['email'])->first();
                 if (!$doctor) {
@@ -969,7 +934,6 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Check if the patient exists
                 $patient = Patient::where('name', $mapped_content['patient'])->first();
                 if (!$patient) {
                     $errors['nameErrors'][] = "Error in row {$index}: Patient '{$mapped_content['patient']}' not found.";
@@ -991,7 +955,6 @@ class Appointment extends VaahModel
                     $errors['availability_errors'][] = "Error in row {$index}: Specialization '{$mapped_content['specialization']}' does not match doctor specialization.";
                     continue;
                 }
-
 
                 self::updateOrCreate([
                     'doctor_id' => $doctor->id,
