@@ -272,11 +272,11 @@ const generatePreviewData = (data, selectedHeaders) => {
                             <div class="columns">
                                 <div class="column">
                                     <h3>Database Headers</h3>
-                                    <ul>
-                                        <li v-for="(field, index) in store.assets.fields" :key="index">
-                                            {{ field }}
-                                        </li>
-                                    </ul>
+                                    <div class="database-header-container">
+                                        <div v-for="(field, index) in store.assets.fields" :key="index" class="header-row">
+                                            <span class="database-header">{{ field }}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="column">
@@ -288,16 +288,16 @@ const generatePreviewData = (data, selectedHeaders) => {
                                                 :options="headers.map(h => h)"
                                                 @change="(e) => setSelectedHeader(dbHeader, e.value)"
                                                 placeholder="Select Header"
+                                                class="custom-dropdown"
                                             />
                                         </div>
                                     </div>
                                     <div v-else>
-                                        <p>No headers extracted. Please upload a valid CSV file.</p>
+                                        <p class="error-message">No headers extracted. Please upload a valid CSV file.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
                     </div>
 
                     <div v-else-if="currentStep === 3">
@@ -362,31 +362,111 @@ h2 {
     font-size: 1.2rem;
     margin-bottom: 1rem;
 }
+.database-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between each row */
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #f1f1f1;
+    border-radius: 5px;
+}
+
+.database-header {
+    flex: 1;
+    font-weight: bold;
+}
+
+
+.header-mapping {
+    display: flex;
+    justify-content: space-between;
+}
+
 .columns {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin: 20px 0;
+    flex: 1;
+    gap: 50px;
+    align-items: center;
 }
 
 .column {
-    width: 48%;
+    flex: 1;
+    margin: 0 10px;
 }
 
-.header-mapping {
-    margin-bottom: 1rem;
+.database-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between each row */
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #f1f1f1; /* Background for the row */
+    border-radius: 5px;
+}
+
+.database-header {
+    flex: 1; /* Take up available space */
+    font-weight: bold;
+}
+
+.custom-dropdown {
+    margin-top: 5px; /* Space between the dropdown and the header */
+}
+
+.error-message {
+    color: red; /* Style for error messages */
+    margin-top: 10px; /* Space above error message */
 }
 
 .p-datatable {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* Ensure borders are collapsed */
+    margin-top: 20px; /* Space above the table */
 }
 
 .p-datatable th,
 .p-datatable td {
+    padding: 10px; /* Padding for table cells */
+    text-align: left; /* Align text to the left */
+    border: 1px solid #ddd; /* Light border for cells */
+}
+
+.p-datatable th {
+    background-color: #f2f2f2; /* Light gray background for headers */
+    font-weight: bold; /* Bold text for headers */
+}
+
+.p-datatable tr:nth-child(even) {
+    background-color: #f9f9f9; /* Zebra striping for even rows */
+}
+
+.p-datatable tr:hover {
+    background-color: #f1f1f1; /* Highlight row on hover */
+}
+.header-mapping {
+    padding: 1rem;
     border: 1px solid #ccc;
-    padding: 0.5rem;
-    text-align: left;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.custom-dropdown {
+    margin-top: 0.5rem;
+}
+
+.error-message {
+    color: #d9534f;
+    font-weight: bold;
+    margin-top: 1rem;
 }
 
 .mapping-summary {
