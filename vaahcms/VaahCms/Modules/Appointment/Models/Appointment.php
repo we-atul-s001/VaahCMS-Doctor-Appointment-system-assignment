@@ -91,9 +91,9 @@ class Appointment extends VaahModel
 
         $columns_mapping = [
 
-            'doctor_id' => 'Doctor Name',
-            'patient_id' => 'Patient Name',
-            'slot_start_time' => 'Slot Start Time',
+            'doctor_id' => 'Doctor',
+            'patient_id' => 'Patient',
+            'slot_start_time' => 'slot_start_time',
             'date' => 'Date',
         ];
 
@@ -923,32 +923,31 @@ class Appointment extends VaahModel
                         $mapped_content[$db_field] = trim($content[$csv_header], '"');
                     }
                 }
-
-                // Check if the 'Doctor' key exists before accessing it
-                if (!isset($mapped_content['Doctor'])) {
+                
+                if (empty($mapped_content['Doctor'])) {
                     $errors['nameErrors'][] = "Error in row {$index}: Doctor name is missing.";
+                    continue;
+                }
+
+                // Check if the 'Patient' key exists and is not null
+                if (empty($mapped_content['Patient'])) {
+                    $errors['nameErrors'][] = "Error in row {$index}: Patient name is missing.";
                     continue;
                 }
 
                 $doctor = Doctor::where('name', $mapped_content['Doctor'])->first();
                 if (!$doctor) {
-                    $errors['availability_errors'][] = "Doctor '{$mapped_content['Doctor']}' not found.";
-                    continue;
-                }
-
-                // Check if 'patient_name' is present
-                if (empty($mapped_content['Patient'])) { // Change 'patient_name' to 'Patient'
-                    $errors['nameErrors'][] = "Error in row {$index}: Patient name is missing.";
+                    $errors['availability_errors'][] = "Error in row {$index}: Doctor '{$mapped_content['Doctor']}' not found.";
                     continue;
                 }
 
                 $patient = Patient::where('name', $mapped_content['Patient'])->first();
                 if (!$patient) {
-                    $errors['nameErrors'][] = "Error in row {$index}: Patient '{$mapped_content['Patient']}' not found.";
+                    $errors['availability_errors'][] = "Error in row {$index}: Patient '{$mapped_content['Patient']}' not found.";
                     continue;
                 }
 
-                // Ensure 'date' and 'slot_start_time' are present
+                // Ensure 'Date' and 'slot_start_time' are present and valid
                 if (empty($mapped_content['Date']) || empty($mapped_content['slot_start_time'])) {
                     $errors['availability_errors'][] = "Error in row {$index}: Date or slot start time is missing.";
                     continue;
@@ -957,7 +956,7 @@ class Appointment extends VaahModel
                 // Check for existing appointment
                 $existing_appointment = self::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
-                    ->where('date', date('Y-m-d', strtotime($mapped_content['Date']))) // Change 'date' to 'Date'
+                    ->where('date', date('Y-m-d', strtotime($mapped_content['Date'])))
                     ->where('slot_start_time', date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])))
                     ->first();
 
@@ -970,7 +969,7 @@ class Appointment extends VaahModel
                     'doctor_id' => $doctor->id,
                     'patient_id' => $patient->id,
                     'slot_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])),
-                    'date' => date('Y-m-d', strtotime($mapped_content['Date'])), // Change 'date' to 'Date'
+                    'date' => date('Y-m-d', strtotime($mapped_content['Date'])),
                     'status' => 1,
                     'reason' => $mapped_content['reason'] ?? null,
                     'is_active' => 1,
@@ -999,9 +998,6 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-
-
 
 
 
