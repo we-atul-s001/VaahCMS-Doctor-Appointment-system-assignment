@@ -20,8 +20,7 @@ const currentStep = ref(1);
 const steps = ref([
     { label: 'Upload', value: 1 },
     { label: 'Map', value: 2 },
-    { label: 'Preview', value: 3 },
-    { label: 'Result', value: 4 }
+    { label: 'Result', value: 3 }
 ]);
 const selectedFile = ref(null);
 const uploadedFileName = ref("");
@@ -265,13 +264,11 @@ const exportAppointment = () => {
 
 
                     <div v-else-if="currentStep === 3">
-                                <h2>Preview Data</h2>
-                                <p>File Name: {{ uploadedFileName }}</p>
+                        <h2>Import Result</h2>
+
                             </div>
 
-                            <div v-else>
-                                <h2>Import Result</h2>
-                            </div>
+
                         </div>
 
                         <div class="mt-4 flex justify-content-between">
@@ -314,12 +311,13 @@ h2 {
 }
 .columns {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
+    margin: 20px 0;
 }
 
 .column {
     width: 48%;
-    padding: 10px;
 }
 
 .header-mapping {

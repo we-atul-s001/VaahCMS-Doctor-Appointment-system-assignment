@@ -49,6 +49,13 @@ class Appointment extends VaahModel
     //-------------------------------------------------
     protected $fill_except = [
 
+        'created_by',
+        'updated_by',
+        'deleted_by',
+        'is_active',
+        'slot_end_time',
+        'uuid'
+
     ];
 
     //-------------------------------------------------
@@ -71,6 +78,29 @@ class Appointment extends VaahModel
             'updated_by',
             'deleted_by',
         ];
+    }
+
+    //-------------------------------------------------
+    public static function getCustomColumnFields()
+    {
+        $model = new self();
+
+        $fillable_columns = $model->fillable;
+
+        $fillable_columns = array_diff($fillable_columns, $model->fill_except);
+
+        $columns_mapping = [
+
+            'doctor_id' => 'Doctor Name',
+            'patient_id' => 'Patient Name',
+            'slot_start_time' => 'Slot Start Time',
+        ];
+
+        $replace_columns_frontend  = array_map(function ($column) use ($columns_mapping) {
+            return $columns_mapping[$column] ?? $column;
+        }, $fillable_columns);
+
+        return $replace_columns_frontend;
     }
     //-------------------------------------------------
     protected function slotStartTime(): Attribute
@@ -871,6 +901,7 @@ class Appointment extends VaahModel
     {
         try {
             $file_contents = $request->json()->all();
+            dd($file_contents);
 
             if (!$file_contents) {
                 return response()->json(['error' => 'No data provided.'], 400);
@@ -996,16 +1027,6 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
-
-
-
-
-
-
-
-
-    //-------------------------------------------------
 
 
 
