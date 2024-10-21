@@ -26,7 +26,8 @@ const steps = ref([
 const selectedFile = ref(null);
 const uploadedFileName = ref("");
 const headers = ref([]);
-const selectedHeaders = ref([]);
+const selectedHeaders = ref({}); // Use an object for mapping
+const previewData = ref([]);
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -38,7 +39,6 @@ onMounted(async () => {
     await store.getAssets();
     await store.getList();
     await store.getListCreateMenu();
-
 });
 
 const create_menu = ref();
@@ -52,12 +52,12 @@ const openImportDialog = async () => {
     selectedFile.value = null;
     uploadedFileName.value = "";
     headers.value = [];
-    selectedHeaders.value = [];
-
-    store.importAppointment(json_data);
+    selectedHeaders.value = {}; // Reset selected headers
+    previewData.value = [];  // Clear preview data
 };
 
 const fileInput = ref(null);
+const json_data_pass = ref(null);
 
 const handleFileUpload = (event) => {
     const file = event.files[0];
@@ -68,13 +68,11 @@ const handleFileUpload = (event) => {
         reader.onload = (e) => {
             try {
                 const contents = e.target.result;
-                const json_data = csvToJson(contents);
-                console.log('Parsed JSON data:', json_data);
+                json_data_pass.value = csvToJson(contents);
                 headers.value = extractHeaders(contents);
-                console.log('Extracted Headers:', headers.value);
-                selectedHeaders.value = Array(headers.value.length).fill(null);
-
-                goNext();
+                selectedHeaders.value = {};
+                previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
+               goBack();
             } catch (error) {
                 console.error('Error processing the file:', error);
             }
@@ -88,6 +86,31 @@ const handleFileUpload = (event) => {
     } else {
         console.error('No file selected or file is invalid.');
     }
+};
+
+const triggerImportAppointment = () => {
+    if (!json_data_pass.value) {
+        console.error('No data available to import. Please upload a file.');
+        return;
+    }
+
+    const filteredData = json_data_pass.value.map(content => {
+        const mapped_content = {};
+        for (const db_field in selectedHeaders.value) {
+            const csv_header = selectedHeaders.value[db_field];
+            if (csv_header) {
+                mapped_content[db_field] = content[csv_header] ? content[csv_header].trim() : null;
+            }
+        }
+        return mapped_content;
+    });
+
+    const importData = {
+        csvData: filteredData,
+        headerMapping: selectedHeaders.value // Pass as an object
+    };
+
+    store.importAppointment(importData);
 };
 
 const csvToJson = (csv) => {
@@ -129,7 +152,7 @@ const goNext = () => {
 
     if (currentStep.value < steps.value.length) {
         currentStep.value++;
-    } else if (currentStep.value === 2 && headers.length > 0) {
+    } else if (currentStep.value === 2 && Object.keys(headers.value).length > 0) {
         currentStep.value++;
     } else if (currentStep.value === 3) {
         currentStep.value++;
@@ -143,6 +166,23 @@ const closeImportDialog = () => {
 const exportAppointment = () => {
     store.exportAppointment();
 };
+
+const setSelectedHeader = (dbHeader, selectedValue) => {
+    selectedHeaders.value[dbHeader] = selectedValue;
+    previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
+};
+
+const generatePreviewData = (data, selectedHeaders) => {
+    return data.map(item => {
+        const previewItem = {};
+        for (const dbHeader in selectedHeaders) {
+            const csvHeader = selectedHeaders[dbHeader];
+            previewItem[dbHeader] = csvHeader ? item[csvHeader] : null;
+        }
+        return previewItem;
+    });
+};
+
 </script>
 
 <template>
@@ -204,7 +244,6 @@ const exportAppointment = () => {
                 <Steps :model="steps" :readonly="false" :activeIndex="currentStep - 1" />
 
                 <div class="mt-4">
-                    <!-- In the upload step -->
                     <div v-if="currentStep === 1" class="upload-step">
                         <h2>Select a CSV file to Import</h2>
                         <div class="p-fluid">
@@ -227,7 +266,6 @@ const exportAppointment = () => {
                         </div>
                     </div>
 
-                    <!-- In the mapping step -->
                     <div v-else-if="currentStep === 2">
                         <h2>Map Fields</h2>
                         <div class="header-mapping">
@@ -244,12 +282,12 @@ const exportAppointment = () => {
                                 <div class="column">
                                     <h3>Extracted Headers</h3>
                                     <div v-if="headers.length > 0">
-                                        <div v-for="(header, index) in headers" :key="index">
-
+                                        <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
                                             <Dropdown
-                                                v-model="selectedHeaders[index]"
-                                                :options="headers.map(header => ({ value: header }))"
-                                                optionLabel="value"
+                                                v-model="selectedHeaders[dbHeader]"
+                                                :options="headers.map(h => h)"
+                                                @change="(e) => setSelectedHeader(dbHeader, e.value)"
+                                                placeholder="Select Header"
                                             />
                                         </div>
                                     </div>
@@ -259,34 +297,46 @@ const exportAppointment = () => {
                                 </div>
                             </div>
                         </div>
+                        
                     </div>
-
-
-
 
                     <div v-else-if="currentStep === 3">
-                                <h2>Preview Data</h2>
-                                <p>File Name: {{ uploadedFileName }}</p>
-                            </div>
-
-                            <div v-else>
-                                <h2>Import Result</h2>
-                            </div>
+                        <h2>Preview Mapped Data</h2>
+                        <div v-if="previewData.length > 0">
+                            <table class="p-datatable">
+                                <thead>
+                                <tr>
+                                    <th v-for="(dbHeader, index) in store.assets.fields" :key="index">
+                                        {{ dbHeader }}
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="(item, index) in previewData" :key="index">
+                                    <td v-for="(dbHeader, idx) in store.assets.fields" :key="idx">
+                                        {{ item[dbHeader] }}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
-
-                        <div class="mt-4 flex justify-content-between">
-                            <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
-                            <div class="mt-4">
-                                <Button
-                                    label="Next"
-                                    icon="pi pi-chevron-right"
-                                    iconPos="right"
-                                    @click="goNext"
-                                    :disabled="currentStep !== 2"
-                                />
-                            </div>
+                        <div v-else>
+                            <p>No data to preview. Please ensure your CSV file has valid mappings.</p>
                         </div>
                     </div>
+
+                    <div v-else-if="currentStep === 4">
+                        <h2>Review and Confirm</h2>
+                        <p>Please review your mappings before proceeding with the import.</p>
+                    </div>
+
+                    <div class="mt-4 flex justify-content-between">
+                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" class="p-button-secondary"  :disabled="currentStep === 1" />
+                        <Button label="Next" icon="pi pi-chevron-right" @click="goNext" class="p-button-primary" :disabled="currentStep === 4" />
+                        <Button label="Finish" icon="pi pi-check" @click="triggerImportAppointment" v-if="currentStep === 4" />
+                    </div>
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>
@@ -314,18 +364,32 @@ h2 {
 }
 .columns {
     display: flex;
+    flex-direction: row;
     justify-content: space-between;
+    margin: 20px 0;
 }
 
 .column {
     width: 48%;
-    padding: 10px;
 }
 
 .header-mapping {
     margin-bottom: 1rem;
 }
-.header-mapping {
-    margin-bottom: 1rem;
+
+.p-datatable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.p-datatable th,
+.p-datatable td {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.mapping-summary {
+    margin: 20px 0;
 }
 </style>

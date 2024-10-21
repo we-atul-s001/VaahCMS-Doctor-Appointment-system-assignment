@@ -204,7 +204,13 @@ function formatTimeWithAmPm(time) {
                     </thead>
                     <tbody>
 
-                    <!-- Email Errors -->
+                    <template v-if="store.header_mapping_errors_display && store.header_mapping_errors_display.length > 0">
+                        <tr v-for="(header_mapping, index) in store.header_mapping_errors_display" :key="'email-'+index">
+                            <td>Mapping Error</td>
+                            <td>{{ header_mapping }}</td>
+                        </tr>
+                    </template>
+
                     <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
                         <tr v-for="(email_error, index) in store.email_errors_display" :key="'email-'+index">
                             <td>Email Error</td>
