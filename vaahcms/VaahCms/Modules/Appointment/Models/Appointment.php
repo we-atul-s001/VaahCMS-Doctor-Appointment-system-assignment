@@ -904,12 +904,11 @@ class Appointment extends VaahModel
             $file_contents = $request->json('csvData', []);
             $header_mapping = $request->json('headerMapping', []);
 
-            if (!$file_contents) {
+            if (empty($file_contents)) {
                 return response()->json(['error' => 'No data provided.'], 400);
             }
 
             $errors = [
-                'email_errors' => [],
                 'missing_fields_header' => [],
                 'availability_errors' => [],
                 'nameErrors' => [],
@@ -920,39 +919,50 @@ class Appointment extends VaahModel
             foreach ($file_contents as $index => $content) {
                 $mapped_content = [];
                 foreach ($header_mapping as $db_field => $csv_header) {
-                    $mapped_content[$db_field] = isset($content[$csv_header]) ? trim($content[$csv_header], '"') : null;
+                    if (isset($content[$csv_header])) {
+                        $mapped_content[$db_field] = trim($content[$csv_header], '"');
+                    }
                 }
 
-                if (empty($mapped_content['email']) || !filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
-                    $errors['email_errors'][] = "Error in row {$index}: Invalid or missing email format.";
+                // Check if the 'Doctor' key exists before accessing it
+                if (!isset($mapped_content['Doctor'])) {
+                    $errors['nameErrors'][] = "Error in row {$index}: Doctor name is missing.";
                     continue;
                 }
 
-                $doctor = Doctor::where('email', $mapped_content['email'])->first();
+                $doctor = Doctor::where('name', $mapped_content['Doctor'])->first();
                 if (!$doctor) {
-                    $errors['email_errors'][] = "Doctor with email '{$mapped_content['email']}' not found.";
+                    $errors['availability_errors'][] = "Doctor '{$mapped_content['Doctor']}' not found.";
                     continue;
                 }
 
-                $patient = Patient::where('name', $mapped_content['patient'])->first();
+                // Check if 'patient_name' is present
+                if (empty($mapped_content['Patient'])) { // Change 'patient_name' to 'Patient'
+                    $errors['nameErrors'][] = "Error in row {$index}: Patient name is missing.";
+                    continue;
+                }
+
+                $patient = Patient::where('name', $mapped_content['Patient'])->first();
                 if (!$patient) {
-                    $errors['nameErrors'][] = "Error in row {$index}: Patient '{$mapped_content['patient']}' not found.";
+                    $errors['nameErrors'][] = "Error in row {$index}: Patient '{$mapped_content['Patient']}' not found.";
                     continue;
                 }
 
+                // Ensure 'date' and 'slot_start_time' are present
+                if (empty($mapped_content['Date']) || empty($mapped_content['slot_start_time'])) {
+                    $errors['availability_errors'][] = "Error in row {$index}: Date or slot start time is missing.";
+                    continue;
+                }
+
+                // Check for existing appointment
                 $existing_appointment = self::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
-                    ->where('date', date('Y-m-d', strtotime($mapped_content['date'])))
+                    ->where('date', date('Y-m-d', strtotime($mapped_content['Date']))) // Change 'date' to 'Date'
                     ->where('slot_start_time', date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])))
                     ->first();
 
                 if ($existing_appointment) {
-                    $errors['availability_errors'][] = "Error in row {$index}: Appointment already exists for Doctor '{$mapped_content['doctor']}' and Patient '{$mapped_content['patient']}' on '{$mapped_content['date']}' at '{$mapped_content['slot_start_time']}'.";
-                    continue;
-                }
-
-                if ($doctor->specialization !== $mapped_content['specialization']) {
-                    $errors['availability_errors'][] = "Error in row {$index}: Specialization '{$mapped_content['specialization']}' does not match doctor specialization.";
+                    $errors['availability_errors'][] = "Error in row {$index}: Appointment already exists for Doctor '{$mapped_content['Doctor']}' and Patient '{$mapped_content['Patient']}' on '{$mapped_content['Date']}' at '{$mapped_content['slot_start_time']}'.";
                     continue;
                 }
 
@@ -960,9 +970,9 @@ class Appointment extends VaahModel
                     'doctor_id' => $doctor->id,
                     'patient_id' => $patient->id,
                     'slot_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])),
-                    'date' => date('Y-m-d', strtotime($mapped_content['date'])),
+                    'date' => date('Y-m-d', strtotime($mapped_content['Date'])), // Change 'date' to 'Date'
                     'status' => 1,
-                    'reason' => $mapped_content['reason'],
+                    'reason' => $mapped_content['reason'] ?? null,
                     'is_active' => 1,
                 ]);
 
@@ -974,7 +984,7 @@ class Appointment extends VaahModel
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors']) || !empty($errors['availability_errors']) || !empty($errors['nameErrors'])) {
+            if (!empty($errors['availability_errors']) || !empty($errors['nameErrors'])) {
                 $response['error'] = $errors;
             }
 
@@ -989,6 +999,9 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+
+
 
 
 

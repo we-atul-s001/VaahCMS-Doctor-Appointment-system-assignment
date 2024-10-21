@@ -26,7 +26,7 @@ const steps = ref([
 const selectedFile = ref(null);
 const uploadedFileName = ref("");
 const headers = ref([]);
-const selectedHeaders = ref([]);
+const selectedHeaders = ref({}); // Use an object for mapping
 const previewData = ref([]);
 
 onMounted(async () => {
@@ -52,7 +52,7 @@ const openImportDialog = async () => {
     selectedFile.value = null;
     uploadedFileName.value = "";
     headers.value = [];
-    selectedHeaders.value = [];
+    selectedHeaders.value = {}; // Reset selected headers
     previewData.value = [];  // Clear preview data
 };
 
@@ -70,7 +70,7 @@ const handleFileUpload = (event) => {
                 const contents = e.target.result;
                 json_data_pass.value = csvToJson(contents);
                 headers.value = extractHeaders(contents);
-                selectedHeaders.value = Array(store.assets.fields.length).fill(null);
+                selectedHeaders.value = {}; // Reset selected headers to an empty object
                 previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
                 goNext();  // Automatically go to the mapping step
             } catch (error) {
@@ -94,9 +94,20 @@ const triggerImportAppointment = () => {
         return;
     }
 
+    const filteredData = json_data_pass.value.map(content => {
+        const mapped_content = {};
+        for (const db_field in selectedHeaders.value) {
+            const csv_header = selectedHeaders.value[db_field];
+            if (csv_header) {
+                mapped_content[db_field] = content[csv_header] ? content[csv_header].trim() : null;
+            }
+        }
+        return mapped_content;
+    });
+
     const importData = {
-        csvData: json_data_pass.value,
-        headerMapping: selectedHeaders.value
+        csvData: filteredData,
+        headerMapping: selectedHeaders.value // Pass as an object
     };
 
     store.importAppointment(importData);
@@ -141,7 +152,7 @@ const goNext = () => {
 
     if (currentStep.value < steps.value.length) {
         currentStep.value++;
-    } else if (currentStep.value === 2 && headers.length > 0) {
+    } else if (currentStep.value === 2 && Object.keys(headers.value).length > 0) {
         currentStep.value++;
     } else if (currentStep.value === 3) {
         currentStep.value++;
@@ -158,7 +169,7 @@ const exportAppointment = () => {
 
 const setSelectedHeader = (dbHeader, selectedValue) => {
     selectedHeaders.value[dbHeader] = selectedValue;
-    previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value); // Update preview on header change
+    previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
 };
 
 const generatePreviewData = (data, selectedHeaders) => {
@@ -166,7 +177,7 @@ const generatePreviewData = (data, selectedHeaders) => {
         const previewItem = {};
         for (const dbHeader in selectedHeaders) {
             const csvHeader = selectedHeaders[dbHeader];
-            previewItem[dbHeader] = csvHeader ? item[csvHeader] : null;  // Map CSV value to DB header
+            previewItem[dbHeader] = csvHeader ? item[csvHeader] : null;
         }
         return previewItem;
     });
