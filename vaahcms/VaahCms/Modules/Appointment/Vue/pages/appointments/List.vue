@@ -37,7 +37,6 @@ onMounted(async () => {
     await store.getAssets();
     await store.getList();
     await store.getListCreateMenu();
-
 });
 
 const create_menu = ref();
@@ -70,7 +69,7 @@ const handleFileUpload = (event) => {
                 json_data_pass.value = csvToJson(contents);
                 console.log('Parsed JSON data:', json_data_pass.value);
                 headers.value = extractHeaders(contents);
-                selectedHeaders.value = Array(headers.value.length).fill(null);
+                selectedHeaders.value = Array(store.assets.fields.length).fill(null);
 
                 goNext();
             } catch (error) {
@@ -149,6 +148,11 @@ const closeImportDialog = () => {
 const exportAppointment = () => {
     store.exportAppointment();
 };
+
+const setSelectedHeader = (dbHeader, selectedValue) => {
+    selectedHeaders.value[dbHeader] = selectedValue;
+};
+
 </script>
 
 <template>
@@ -250,12 +254,12 @@ const exportAppointment = () => {
                                 <div class="column">
                                     <h3>Extracted Headers</h3>
                                     <div v-if="headers.length > 0">
-                                        <div v-for="(header, index) in headers" :key="index">
-
+                                        <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
                                             <Dropdown
-                                                v-model="selectedHeaders[index]"
-                                                :options="headers.map(header => ({ value: header }))"
-                                                optionLabel="value"
+                                                v-model="selectedHeaders[dbHeader]"
+                                                :options="headers.map(h => h)"
+                                            @change="(e) => setSelectedHeader(dbHeader, e.value)"
+                                            placeholder="Select Header"
                                             />
                                         </div>
                                     </div>
@@ -265,40 +269,31 @@ const exportAppointment = () => {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Display the mapping summary -->
+                        <div class="mapping-summary">
+                            <h4>Current Mappings:</h4>
+                            <ul>
+                                <li v-for="(dbHeader, index) in store.assets.fields" :key="index">
+                                    {{ dbHeader }}:
+                                    <strong>{{ selectedHeaders[dbHeader] ? selectedHeaders[dbHeader] : 'Not Mapped' }}</strong>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
 
-
-
-
                     <div v-else-if="currentStep === 3">
-                        <h2>Import Result</h2>
+                        <h2>Review and Confirm</h2>
+                        <p>Please review your mappings before proceeding with the import.</p>
                     </div>
 
                     <div class="mt-4 flex justify-content-between">
-                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
-
-                        <div class="mt-4">
-                            <!-- Conditionally render the button based on the currentStep -->
-                            <Button
-                                v-if="currentStep === 3"
-                                label="Import Now"
-                                icon="pi pi-upload"
-                                iconPos="right"
-                                @click="triggerImportAppointment"
-                            />
-                            <Button
-                                v-else
-                                label="Next"
-                                icon="pi pi-chevron-right"
-                                iconPos="right"
-                                @click="goNext"
-                                :disabled="currentStep !== 2"
-                            />
-                        </div>
+                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" class="p-button-secondary"  :disabled="currentStep === 1" />
+                        <Button label="Next" icon="pi pi-chevron-right" @click="goNext" class="p-button-primary" />
+                        <Button label="Finish" icon="pi pi-check" @click="triggerImportAppointment" v-if="currentStep === 3" />
                     </div>
                 </div>
             </div>
-
         </Dialog>
     </div>
 </template>
