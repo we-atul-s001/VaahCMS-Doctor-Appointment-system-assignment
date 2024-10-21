@@ -52,11 +52,11 @@ const openImportDialog = async () => {
     uploadedFileName.value = "";
     headers.value = [];
     selectedHeaders.value = [];
-
-    store.importAppointment(json_data);
 };
 
 const fileInput = ref(null);
+
+const json_data_pass = ref(null);
 
 const handleFileUpload = (event) => {
     const file = event.files[0];
@@ -67,10 +67,9 @@ const handleFileUpload = (event) => {
         reader.onload = (e) => {
             try {
                 const contents = e.target.result;
-                const json_data = csvToJson(contents);
-                console.log('Parsed JSON data:', json_data);
+                json_data_pass.value = csvToJson(contents);
+                console.log('Parsed JSON data:', json_data_pass.value);
                 headers.value = extractHeaders(contents);
-                console.log('Extracted Headers:', headers.value);
                 selectedHeaders.value = Array(headers.value.length).fill(null);
 
                 goNext();
@@ -87,6 +86,14 @@ const handleFileUpload = (event) => {
     } else {
         console.error('No file selected or file is invalid.');
     }
+};
+
+const triggerImportAppointment = () => {
+    if (!json_data_pass.value) {
+        console.error('No data available to import. Please upload a file.');
+        return;
+    }
+    store.importAppointment(json_data_pass.value);
 };
 
 const csvToJson = (csv) => {
@@ -265,25 +272,33 @@ const exportAppointment = () => {
 
                     <div v-else-if="currentStep === 3">
                         <h2>Import Result</h2>
+                    </div>
 
-                            </div>
+                    <div class="mt-4 flex justify-content-between">
+                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
 
-
-                        </div>
-
-                        <div class="mt-4 flex justify-content-between">
-                            <Button label="Back" icon="pi pi-chevron-left" @click="goBack" :disabled="currentStep === 1" />
-                            <div class="mt-4">
-                                <Button
-                                    label="Next"
-                                    icon="pi pi-chevron-right"
-                                    iconPos="right"
-                                    @click="goNext"
-                                    :disabled="currentStep !== 2"
-                                />
-                            </div>
+                        <div class="mt-4">
+                            <!-- Conditionally render the button based on the currentStep -->
+                            <Button
+                                v-if="currentStep === 3"
+                                label="Import Now"
+                                icon="pi pi-upload"
+                                iconPos="right"
+                                @click="triggerImportAppointment"
+                            />
+                            <Button
+                                v-else
+                                label="Next"
+                                icon="pi pi-chevron-right"
+                                iconPos="right"
+                                @click="goNext"
+                                :disabled="currentStep !== 2"
+                            />
                         </div>
                     </div>
+                </div>
+            </div>
+
         </Dialog>
     </div>
 </template>

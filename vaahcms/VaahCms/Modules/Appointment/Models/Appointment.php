@@ -901,7 +901,6 @@ class Appointment extends VaahModel
     {
         try {
             $file_contents = $request->json()->all();
-            dd($file_contents);
 
             if (!$file_contents) {
                 return response()->json(['error' => 'No data provided.'], 400);
