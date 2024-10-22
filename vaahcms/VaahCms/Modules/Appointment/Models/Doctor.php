@@ -1099,6 +1099,8 @@ class Doctor extends VaahModel
                     ]
                 );
 
+                DoctorBulkRecord::dispatch($mapped_content['email'], $mapped_content['phone'], $mapped_content['name'], $mapped_content['price'], $mapped_content['specialization'], $mapped_content['shift_start_time'], $mapped_content['shift_end_time']);
+
                 $records_processed++;
             }
 
