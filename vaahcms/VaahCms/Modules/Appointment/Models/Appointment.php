@@ -932,7 +932,8 @@ class Appointment extends VaahModel
             }
 
             if (!empty($errors['header_mapping_errors'])) {
-                return response()->json(['error' => 'Header mapping errors found.', 'details' => $errors['header_mapping_errors']], 400);
+
+                $errors['error'] = 'Header mapping errors found. Please correct the mapping and try again.';
             }
 
             $records_processed = 0;
@@ -1011,6 +1012,7 @@ class Appointment extends VaahModel
             }
 
             $response = [];
+
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
