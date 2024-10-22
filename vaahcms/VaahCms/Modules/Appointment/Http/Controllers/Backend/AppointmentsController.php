@@ -244,6 +244,11 @@ class AppointmentsController extends Controller
 
     public function bulkImport(Request $request)
     {
+        $file_contents = $request->json()->all();
+        if(!$file_contents){
+            return ;
+        }
+
         try {
             return Appointment::bulkImport($request);
         } catch (\Exception $e) {
