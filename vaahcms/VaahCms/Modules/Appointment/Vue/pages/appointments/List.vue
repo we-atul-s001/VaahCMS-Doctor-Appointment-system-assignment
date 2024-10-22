@@ -107,7 +107,7 @@ const triggerImportAppointment = () => {
 
     const importData = {
         csvData: filteredData,
-        headerMapping: selectedHeaders.value // Pass as an object
+        headerMapping: selectedHeaders.value
     };
 
     store.importAppointment(importData);

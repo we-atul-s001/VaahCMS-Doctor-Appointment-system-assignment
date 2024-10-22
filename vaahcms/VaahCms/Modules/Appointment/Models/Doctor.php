@@ -1,6 +1,7 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
 use App\ExportData\DoctorExport;
+use App\Jobs\DoctorBulkRecord;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -853,18 +854,8 @@ class Doctor extends VaahModel
     public static function seedSampleItems($records = 100)
     {
 
-        $i = 0;
+      DoctorBulkRecord::dispatch($records);
 
-        while ($i < $records) {
-            $inputs = self::fillItem(false);
-
-            $item = new self();
-            $item->fill($inputs);
-            $item->save();
-
-            $i++;
-
-        }
 
     }
 
@@ -898,6 +889,7 @@ class Doctor extends VaahModel
 
         $inputs['name'] = $faker->name;
         $inputs['slug'] = Str::slug($inputs['name']);
+        $inputs['email'] = $faker->unique()->safeEmail;
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
         $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
