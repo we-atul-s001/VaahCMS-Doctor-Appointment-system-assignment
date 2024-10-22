@@ -851,7 +851,7 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     //-------------------------------------------------
-    public static function seedSampleItems($records = 100)
+    public static function seedSampleItems($records = 500)
     {
 
       DoctorBulkRecord::dispatch($records);
