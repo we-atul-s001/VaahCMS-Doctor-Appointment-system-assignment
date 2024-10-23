@@ -199,7 +199,7 @@ const generatepreview_data = (data, selected_headers) => {
                 </template>
 
                 <template #icons>
-                    <div class="p-inputgroup">
+                    <div class="p-inputgroup" v-if="!$isMobile()">
                         <Button v-if="(store.assets.permission.includes('appointment-has-access-of-patient') && !store.assets.permission.includes('appointment-has-access-of-doctor')) || (store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor'))"
                                 data-testid="appointments-list-create"
                                 class="p-button-sm"

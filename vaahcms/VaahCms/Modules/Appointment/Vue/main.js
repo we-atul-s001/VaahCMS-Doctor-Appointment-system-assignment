@@ -25,6 +25,7 @@ import Chart from 'primevue/chart';
 import Checkbox from 'primevue/checkbox';
 import FileUpload from 'primevue/fileupload';
 import Steps from "primevue/steps";
+import VueMobileDetection from 'vue-mobile-detection';
 
 
 
@@ -96,6 +97,7 @@ app.component('Dialog', Dialog);
 app.component('Checkbox', Checkbox);
 app.component('FileUpload', FileUpload);
 app.component('Steps', Steps);
+app.use(VueMobileDetection);
 
 //-------------/PrimeVue Use
 

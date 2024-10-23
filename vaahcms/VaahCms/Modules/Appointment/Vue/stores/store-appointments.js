@@ -1017,6 +1017,10 @@ export const useAppointmentStore = defineStore({
             );
         },
 
+        MobileView(){
+
+            this.$router.push({name: 'appointmentmobile.index'})
+        }
 
     }
 });

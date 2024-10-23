@@ -28,7 +28,7 @@ const toggleBulkMenuState = (event) => {
 </script>
 
 <template>
-    <div>
+    <div v-if="!$isMobile()">
 
         <!--actions-->
         <div :class="{'flex justify-content-between': store.isViewLarge()}" class="mt-2 mb-2">
@@ -86,6 +86,7 @@ const toggleBulkMenuState = (event) => {
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
                             </Button>
 
+
                             <Button
                                 type="button"
                                 icon="pi pi-filter-slash"
@@ -105,6 +106,7 @@ const toggleBulkMenuState = (event) => {
                                     class="ml-1 p-button-sm">
                                     <i class="pi pi-ellipsis-v"></i>
                                 </Button>
+
                                 <Menu ref="bulk_menu_state"
                                       :model="store.list_bulk_menu"
                                       :popup="true" />
