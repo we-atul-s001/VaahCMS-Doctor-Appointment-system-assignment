@@ -53,14 +53,13 @@ function formatTimeWithAmPm(time) {
                         </div>
                         <div class="mobile-cell">
                             <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text"  @click="store.confirmToCancelAppointment(item)"></Button>
-                        </div>
-                        <div class="mobile-cell">
                             <Button class="p-button-tiny p-button-danger p-button-text" data-testid="doctors-table-action-trash"
-                            v-if="store.isViewLarge() && !item.deleted_at && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
-                            @click="store.itemAction('trash', item)" v-tooltip.top="'Trash'" icon="pi pi-trash"></Button>
+                                    v-if="store.isViewLarge() && !item.deleted_at && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
+                                    @click="store.itemAction('trash', item)" v-tooltip.top="'Trash'" icon="pi pi-trash"></Button>
                         </div>
 
-                        
+
+
                     </div>
                 </div>
             </div>
