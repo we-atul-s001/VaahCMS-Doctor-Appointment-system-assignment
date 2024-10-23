@@ -4,6 +4,7 @@ import { useAppointmentStore } from '../../../stores/store-appointments'
 
 const store = useAppointmentStore();
 const useVaah = vaah();
+
 function formatTimeWithAmPm(time) {
     if (!time) return '';
 
@@ -25,47 +26,49 @@ function formatTimeWithAmPm(time) {
         <!-- Mobile View -->
         <div v-if="$isMobile()">
             <div class="mobile-design">
-                <h3>Mobile View</h3>
-                <!-- Mobile-specific DataTable (simplified for mobile) -->
-                <DataTable :value="store.list.data"
-                           dataKey="id"
-                           responsiveLayout="scroll"
-                           class="p-datatable-sm p-datatable-hoverable-rows">
-
-                    <Column field="patient" header="Patient"
-                            class="overflow-wrap-anywhere">
-                        <template #body="prop">
-                            {{ prop.data.patient?.name || 'N/A' }}
-                        </template>
-                    </Column>
-
-                    <Column field="doctor" header="Doctor">
-                        <template #body="prop">
-                            {{ prop.data.doctor?.name || 'N/A' }}
-                        </template>
-                    </Column>
-
-                    <Column field="date" header="Date">
-                        <template #body="prop">
-                            {{ prop.data?.date }}
-                            {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
-                        </template>
-                    </Column>
-
-                    <Column field="status" header="Status">
-                        <template #body="prop">
-                            <Badge :severity="prop.data.status === 1 ? 'success' : 'danger'">
-                                {{ prop.data.status === 1 ? 'Booked' : 'Cancelled'}}
+                <!-- Mobile-specific table structure -->
+                <div class="mobile-table">
+                    <div class="mobile-row" v-for="(item, index) in store.list.data" :key="index">
+                        <div class="mobile-cell">
+                            <span class="mobile-label">Patient:</span>
+                            <span>{{ item.patient?.name || 'N/A' }}</span>
+                        </div>
+                        <div class="mobile-cell">
+                            <span class="mobile-label">Doctor:</span>
+                            <span>{{ item.doctor?.name || 'N/A' }}</span>
+                        </div>
+                        <div class="mobile-cell">
+                            <span class="mobile-label">Date:</span>
+                            <span>{{ item.date }} at {{ formatTimeWithAmPm(item.slot_start_time) }}</span>
+                        </div>
+                        <div class="mobile-cell">
+                            <span class="mobile-label">Status:</span>
+                            <Badge :severity="item.status === 1 ? 'success' : 'danger'" class="status-badge-mobile">
+                                {{ item.status === 1 ? 'Booked' : 'Cancelled' }}
                             </Badge>
-                        </template>
-                    </Column>
+                        </div>
+                        <div class="mobile-cell">
+                            <span class="mobile-label">Reason:</span>
+                            <span>{{ item.reason || 'N/A' }}</span>
+                        </div>
+                        <div class="mobile-cell">
+                            <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text"  @click="store.confirmToCancelAppointment(item)"></Button>
+                        </div>
+                        <div class="mobile-cell">
+                            <Button class="p-button-tiny p-button-danger p-button-text" data-testid="doctors-table-action-trash"
+                            v-if="store.isViewLarge() && !item.deleted_at && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
+                            @click="store.itemAction('trash', item)" v-tooltip.top="'Trash'" icon="pi pi-trash"></Button>
+                        </div>
 
-                </DataTable>
+                        
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Desktop View -->
         <div v-else>
+            <!-- The original desktop table code remains unchanged -->
             <DataTable :value="store.list.data"
                        dataKey="id"
                        :rowClass="store.setRowClass"
@@ -75,15 +78,14 @@ function formatTimeWithAmPm(time) {
                        stripedRows
                        responsiveLayout="scroll">
 
+                <!-- Columns in desktop view remain unchanged -->
                 <Column selectionMode="multiple" v-if="store.isViewLarge()" headerStyle="width: 3em"></Column>
                 <Column field="id" header="ID" :style="{width: '80px'}" :sortable="true"></Column>
-
                 <Column field="patient" header="Patient Name" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
                         {{ prop.data.patient?.name || 'N/A' }}
                     </template>
                 </Column>
-
                 <Column field="doctor" header="Doctor Name" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
                         {{ prop.data.doctor?.name || 'N/A' }}
@@ -95,7 +97,6 @@ function formatTimeWithAmPm(time) {
                         {{ prop.data?.date }} at {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
                     </template>
                 </Column>
-
                 <Column field="status" header="Status" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
                         <div>
@@ -105,19 +106,16 @@ function formatTimeWithAmPm(time) {
                         </div>
                     </template>
                 </Column>
-
                 <Column field="reason" header="Reason" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
                         {{ prop.data?.reason }}
                     </template>
                 </Column>
-
                 <Column field="updated_at" header="Updated" v-if="store.isViewLarge()" style="width:150px;" :sortable="true">
                     <template #body="prop">
                         {{ useVaah.strToSlug(prop.data.updated_at) }}
                     </template>
                 </Column>
-
                 <Column field="is_active" v-if="store.isViewLarge()" :sortable="true" style="width:100px;" header="Is Active">
                     <template #body="prop">
                         <InputSwitch v-model.bool="prop.data.is_active" data-testid="appointments-table-is-active"
@@ -228,65 +226,57 @@ function formatTimeWithAmPm(time) {
 }
 
 .styled-table thead tr {
-    background-color: #6c757d;
     color: #fff;
     text-align: left;
 }
 
-.styled-table th, .styled-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #ddd;
+.mobile-design {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
 }
 
-.styled-table tbody tr {
-    border-bottom: 1px solid #ddd;
+.mobile-table {
+    display: flex;
+    flex-direction: column;
 }
 
-.styled-table tbody tr:nth-of-type(even) {
-    background-color: #f3f3f3;
+.mobile-row {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background-color: #f9f9f9;
 }
 
-.styled-table tfoot tr {
+.mobile-cell {
+    flex-basis: 48%;
+    margin-bottom: 0.5rem;
+}
+
+.mobile-label {
     font-weight: bold;
 }
 
-.styled-table td {
-    color: #495057;
+.status-badge-mobile {
+    padding: 5px;
+    font-size: 0.8rem;
+    width: 80px;
+    text-align: center;
 }
 
-.styled-table tfoot td {
-    background-color: #e9ecef;
-    color: #495057;
-}
-.mobile-design {
-    padding: 20px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-}
-.p-inputgroup .p-button {
-    margin-left: 0.25rem;
-}
-.overflow-wrap-anywhere {
-    overflow-wrap: anywhere;
-}
-.error-container {
-    padding: 10px;
-    background: #fdfdfd;
-}
-.styled-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-.styled-table thead tr {
-    background-color: #009879;
-    color: white;
-    text-align: left;
-}
-.styled-table th, .styled-table td {
-    padding: 12px 15px;
-}
-.styled-table tbody tr {
-    border-bottom: 1px solid #dddddd;
+/* Adjust button sizes for mobile */
+.p-button-tiny {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
 }
 
+@media (max-width: 768px) {
+    .p-button-sm {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
 </style>

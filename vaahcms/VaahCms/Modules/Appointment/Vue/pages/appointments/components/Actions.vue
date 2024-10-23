@@ -28,7 +28,7 @@ const toggleBulkMenuState = (event) => {
 </script>
 
 <template>
-    <div>
+    <div v-if="!$isMobile()">
 
         <!--actions-->
         <div :class="{'flex justify-content-between': store.isViewLarge()}" class="mt-2 mb-2">
@@ -86,15 +86,6 @@ const toggleBulkMenuState = (event) => {
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
                             </Button>
 
-                            <Button
-                                type="button"
-                                class="p-button-sm"
-                                :disabled="Object.keys(route.params).length"
-                                data-testid="appointments-actions-show-filters"
-                                @click="store.MobileView">
-                                Mobile View
-                                <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
-                            </Button>
 
                             <Button
                                 type="button"
