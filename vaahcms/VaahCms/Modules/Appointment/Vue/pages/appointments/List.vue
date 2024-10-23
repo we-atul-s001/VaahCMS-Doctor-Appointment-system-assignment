@@ -15,19 +15,19 @@ const root = useRootStore();
 const route = useRoute();
 const confirm = useConfirm();
 
-const isImportDialogVisible = ref(false);
-const currentStep = ref(1);
+const is_import_dialog_visible = ref(false);
+const current_step = ref(1);
 const steps = ref([
     { label: 'Upload', value: 1 },
     { label: 'Map', value: 2 },
     { label: 'Preview', value: 3 },
     { label: 'Result', value: 4 }
 ]);
-const selectedFile = ref(null);
-const uploadedFileName = ref("");
+const selected_file = ref(null);
+const uploaded_file_name = ref("");
 const headers = ref([]);
-const selectedHeaders = ref({}); // Use an object for mapping
-const previewData = ref([]);
+const selected_headers = ref({}); // Use an object for mapping
+const preview_data = ref([]);
 
 onMounted(async () => {
     document.title = 'Book Appointments - Appointment';
@@ -47,22 +47,22 @@ const toggleCreateMenu = (event) => {
 };
 
 const openImportDialog = async () => {
-    isImportDialogVisible.value = true;
-    currentStep.value = 1;
-    selectedFile.value = null;
-    uploadedFileName.value = "";
+    is_import_dialog_visible.value = true;
+    current_step.value = 1;
+    selected_file.value = null;
+    uploaded_file_name.value = "";
     headers.value = [];
-    selectedHeaders.value = {}; // Reset selected headers
-    previewData.value = [];  // Clear preview data
+    selected_headers.value = {};
+    preview_data.value = [];
 };
 
-const fileInput = ref(null);
+const file_input = ref(null);
 const json_data_pass = ref(null);
 
 const handleFileUpload = (event) => {
     const file = event.files[0];
     if (file) {
-        uploadedFileName.value = file.name;
+        uploaded_file_name.value = file.name;
 
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -70,8 +70,8 @@ const handleFileUpload = (event) => {
                 const contents = e.target.result;
                 json_data_pass.value = csvToJson(contents);
                 headers.value = extractHeaders(contents);
-                selectedHeaders.value = {};
-                previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
+                selected_headers.value = {};
+                preview_data.value = generatepreview_data(json_data_pass.value, selected_headers.value);
                goBack();
             } catch (error) {
                 console.error('Error processing the file:', error);
@@ -96,8 +96,8 @@ const triggerImportAppointment = () => {
 
     const filteredData = json_data_pass.value.map(content => {
         const mapped_content = {};
-        for (const db_field in selectedHeaders.value) {
-            const csv_header = selectedHeaders.value[db_field];
+        for (const db_field in selected_headers.value) {
+            const csv_header = selected_headers.value[db_field];
             if (csv_header) {
                 mapped_content[db_field] = content[csv_header] ? content[csv_header].trim() : null;
             }
@@ -107,7 +107,7 @@ const triggerImportAppointment = () => {
 
     const importData = {
         csvData: filteredData,
-        headerMapping: selectedHeaders.value
+        headerMapping: selected_headers.value
     };
 
     store.importAppointment(importData);
@@ -139,28 +139,28 @@ const extractHeaders = (csv) => {
 };
 
 const goBack = () => {
-    if (currentStep.value > 1) {
-        currentStep.value--;
+    if (current_step.value > 1) {
+        current_step.value--;
     }
 };
 
 const goNext = () => {
-    if (currentStep.value === 1 && !uploadedFileName.value) {
+    if (current_step.value === 1 && !uploaded_file_name.value) {
         console.error('No file uploaded. Please upload a file to proceed.');
         return;
     }
 
-    if (currentStep.value < steps.value.length) {
-        currentStep.value++;
-    } else if (currentStep.value === 2 && Object.keys(headers.value).length > 0) {
-        currentStep.value++;
-    } else if (currentStep.value === 3) {
-        currentStep.value++;
+    if (current_step.value < steps.value.length) {
+        current_step.value++;
+    } else if (current_step.value === 2 && Object.keys(headers.value).length > 0) {
+        current_step.value++;
+    } else if (current_step.value === 3) {
+        current_step.value++;
     }
 };
 
 const closeImportDialog = () => {
-    isImportDialogVisible.value = false;
+    is_import_dialog_visible.value = false;
 };
 
 const exportAppointment = () => {
@@ -168,15 +168,15 @@ const exportAppointment = () => {
 };
 
 const setSelectedHeader = (dbHeader, selectedValue) => {
-    selectedHeaders.value[dbHeader] = selectedValue;
-    previewData.value = generatePreviewData(json_data_pass.value, selectedHeaders.value);
+    selected_headers.value[dbHeader] = selectedValue;
+    preview_data.value = generatepreview_data(json_data_pass.value, selected_headers.value);
 };
 
-const generatePreviewData = (data, selectedHeaders) => {
+const generatepreview_data = (data, selected_headers) => {
     return data.map(item => {
         const previewItem = {};
-        for (const dbHeader in selectedHeaders) {
-            const csvHeader = selectedHeaders[dbHeader];
+        for (const dbHeader in selected_headers) {
+            const csvHeader = selected_headers[dbHeader];
             previewItem[dbHeader] = csvHeader ? item[csvHeader] : null;
         }
         return previewItem;
@@ -239,12 +239,12 @@ const generatePreviewData = (data, selectedHeaders) => {
         <Filters />
         <RouterView />
 
-        <Dialog header="Bulk Import" v-model:visible="isImportDialogVisible" :style="{width: '50vw'}" :modal="true">
+        <Dialog header="Bulk Import" v-model:visible="is_import_dialog_visible" :style="{width: '50vw'}" :modal="true">
             <div class="card">
-                <Steps :model="steps" :readonly="false" :activeIndex="currentStep - 1" />
+                <Steps :model="steps" :readonly="false" :activeIndex="current_step - 1" />
 
                 <div class="mt-4">
-                    <div v-if="currentStep === 1" class="upload-step">
+                    <div v-if="current_step === 1" class="upload-step">
                         <h2>Select a CSV file to Import</h2>
                         <div class="p-fluid">
                             <div class="p-field">
@@ -256,8 +256,8 @@ const generatePreviewData = (data, selectedHeaders) => {
                                     @select="handleFileUpload"
                                     chooseLabel="Select File"
                                 />
-                                <p v-if="uploadedFileName" class="uploaded-file-name">
-                                    Uploaded File: {{ uploadedFileName }}
+                                <p v-if="uploaded_file_name" class="uploaded-file-name">
+                                    Uploaded File: {{ uploaded_file_name }}
                                 </p>
                             </div>
                         </div>
@@ -266,7 +266,7 @@ const generatePreviewData = (data, selectedHeaders) => {
                         </div>
                     </div>
 
-                    <div v-else-if="currentStep === 2">
+                    <div v-else-if="current_step === 2">
                         <h2>Map Fields</h2>
                         <div class="header-mapping">
                             <div class="columns">
@@ -284,7 +284,7 @@ const generatePreviewData = (data, selectedHeaders) => {
                                     <div v-if="headers.length > 0">
                                         <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
                                             <Dropdown
-                                                v-model="selectedHeaders[dbHeader]"
+                                                v-model="selected_headers[dbHeader]"
                                                 :options="headers.map(h => h)"
                                                 @change="(e) => setSelectedHeader(dbHeader, e.value)"
                                                 placeholder="Select Header"
@@ -300,9 +300,9 @@ const generatePreviewData = (data, selectedHeaders) => {
                         </div>
                     </div>
 
-                    <div v-else-if="currentStep === 3">
+                    <div v-else-if="current_step === 3">
                         <h2>Preview Mapped Data</h2>
-                        <div v-if="previewData.length > 0">
+                        <div v-if="preview_data.length > 0">
                             <table class="p-datatable">
                                 <thead>
                                 <tr>
@@ -312,7 +312,7 @@ const generatePreviewData = (data, selectedHeaders) => {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="(item, index) in previewData" :key="index">
+                                <tr v-for="(item, index) in preview_data" :key="index">
                                     <td v-for="(dbHeader, idx) in store.assets.fields" :key="idx">
                                         {{ item[dbHeader] }}
                                     </td>
@@ -325,15 +325,15 @@ const generatePreviewData = (data, selectedHeaders) => {
                         </div>
                     </div>
 
-                    <div v-else-if="currentStep === 4">
+                    <div v-else-if="current_step === 4">
                         <h2>Review and Confirm</h2>
                         <p>Please review your mappings before proceeding with the import.</p>
                     </div>
 
                     <div class="mt-4 flex justify-content-between">
-                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" class="p-button-secondary"  :disabled="currentStep === 1" />
-                        <Button label="Next" icon="pi pi-chevron-right" @click="goNext" class="p-button-primary" :disabled="currentStep === 4" />
-                        <Button label="Finish" icon="pi pi-check" @click="triggerImportAppointment" v-if="currentStep === 4" />
+                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" class="p-button-secondary"  :disabled="current_step === 1" />
+                        <Button label="Next" icon="pi pi-chevron-right" @click="goNext" class="p-button-primary" :disabled="current_step === 4" />
+                        <Button label="Finish" icon="pi pi-check" @click="triggerImportAppointment" v-if="current_step === 4" />
                     </div>
                 </div>
             </div>
