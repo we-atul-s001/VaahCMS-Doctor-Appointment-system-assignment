@@ -88,6 +88,16 @@ const toggleBulkMenuState = (event) => {
 
                             <Button
                                 type="button"
+                                class="p-button-sm"
+                                :disabled="Object.keys(route.params).length"
+                                data-testid="appointments-actions-show-filters"
+                                @click="store.MobileView">
+                                Mobile View
+                                <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
+                            </Button>
+
+                            <Button
+                                type="button"
                                 icon="pi pi-filter-slash"
                                 data-testid="appointments-actions-reset-filters"
                                 class="p-button-sm"
@@ -105,6 +115,7 @@ const toggleBulkMenuState = (event) => {
                                     class="ml-1 p-button-sm">
                                     <i class="pi pi-ellipsis-v"></i>
                                 </Button>
+
                                 <Menu ref="bulk_menu_state"
                                       :model="store.list_bulk_menu"
                                       :popup="true" />
