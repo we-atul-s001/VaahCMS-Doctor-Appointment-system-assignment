@@ -110,7 +110,7 @@ const deselectAllSpecializations = () => {
                 </template>
 
                 <div v-for="(price, index) in price_range_with_currency" :key="index" class="field-radiobutton">
-                    <Checkbox name="price"
+                    <RadioButton name="price"
                               :inputId="price"
                               :value="price"
                               data-testid="doctors-filters-price"
