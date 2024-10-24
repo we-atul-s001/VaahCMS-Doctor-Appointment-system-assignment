@@ -985,11 +985,11 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Check for existing appointment
+
                 $existing_appointment = self::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
                     ->where('date', date('Y-m-d', strtotime($mapped_content['Date'])))
-                    ->where('slot_start_time', date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])))
+                    ->where('slot_start_time', date('Y-m-d H:i:s', strtotime(self::formatTime($mapped_content['slot_start_time']))))
                     ->first();
 
                 if ($existing_appointment) {
@@ -1001,10 +1001,10 @@ class Appointment extends VaahModel
                 self::updateOrCreate([
                     'doctor_id' => $doctor->id,
                     'patient_id' => $patient->id,
-                    'slot_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['slot_start_time'])),
+                    'slot_start_time' => date('Y-m-d H:i:s', strtotime(self::formatTime($mapped_content['slot_start_time']))),
                     'date' => date('Y-m-d', strtotime($mapped_content['Date'])),
                     'status' => 1,
-                    'reason' => $mapped_content['reason'] ?? 'No reason provided.',
+                    'reason' => 'N/A',
                     'is_active' => 1,
                 ]);
 

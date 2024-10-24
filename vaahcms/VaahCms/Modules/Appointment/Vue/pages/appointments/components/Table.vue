@@ -151,8 +151,14 @@ function formatTimeWithAmPm(time) {
             </DataTable>
         </div>
 
-        <Dialog v-model:visible="store.is_visible_errors" maximizable modal header="Duplicate Issues" :style="{ width: '50rem' }"
-                :breakpoints="{ '1199px': '75vw', '575px': '90vw' }">
+        <Dialog
+            v-model:visible="store.is_visible_errors"
+            maximizable
+            modal
+            header="Duplicate Issues"
+            :style="{ width: '50rem' }"
+            :breakpoints="{ '1199px': '75vw', '575px': '90vw' }"
+        >
             <div class="error-container">
                 <table class="styled-table">
                     <thead>
@@ -162,42 +168,47 @@ function formatTimeWithAmPm(time) {
                     </tr>
                     </thead>
                     <tbody>
-                    <template v-if="store.header_mapping_errors_display.length > 0">
+
+                    <template v-if="store.header_mapping_errors_display && store.header_mapping_errors_display.length > 0">
                         <tr v-for="(header_mapping, index) in store.header_mapping_errors_display" :key="'email-'+index">
                             <td>Mapping Error</td>
                             <td>{{ header_mapping }}</td>
                         </tr>
                     </template>
 
-                    <template v-if="store.email_errors_display.length > 0">
+                    <template v-if="store.email_errors_display && store.email_errors_display.length > 0">
                         <tr v-for="(email_error, index) in store.email_errors_display" :key="'email-'+index">
                             <td>Email Error</td>
                             <td>{{ email_error }}</td>
                         </tr>
                     </template>
 
-                    <template v-if="store.appointment_errors_display.length > 0">
+                    <template v-if="store.appointment_errors_display && store.appointment_errors_display.length > 0">
                         <tr v-for="(appointment_error, index) in store.appointment_errors_display" :key="'email-'+index">
                             <td>Appointment Error</td>
                             <td>{{ appointment_error }}</td>
+                        </tr>
+                    </template>
+                    <template v-if="store.missing_fields_header && store.missing_fields_header.length > 0">
+                        <tr v-for="(header_error, index) in store.missing_fields_header" :key="'email-'+index">
+                            <td>Header Error</td>
+                            <td>{{ header_error }}</td>
                         </tr>
                     </template>
                     </tbody>
                     <tfoot>
                     <tr>
                         <td><strong>Total Email Error:</strong></td>
-                        <td>{{ store.email_errors_display.length }}</td>
+                        <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
                     </tr>
                     <tr>
                         <td><strong>Total Header Missing:</strong></td>
-
-
                         <td>{{ store.header_mapping_errors_display ? store.header_mapping_errors_display.length : 0 }}</td>
-
                     </tr>
+
                     <tr>
                         <td><strong>Total Appointment Errors:</strong></td>
-                        <td>{{ store.appointment_errors_display.length }}</td>
+                        <td>{{ store.appointment_errors_display ? store.appointment_errors_display.length : 0 }}</td>
                     </tr>
                     </tfoot>
                 </table>
@@ -228,10 +239,36 @@ function formatTimeWithAmPm(time) {
 }
 
 .styled-table thead tr {
+    background-color: #6c757d;
     color: #fff;
     text-align: left;
 }
 
+.styled-table th, .styled-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tfoot tr {
+    font-weight: bold;
+}
+
+.styled-table td {
+    color: #495057;
+}
+
+.styled-table tfoot td {
+    background-color: #e9ecef;
+    color: #495057;
+}
 .mobile-design {
     display: flex;
     flex-direction: column;
