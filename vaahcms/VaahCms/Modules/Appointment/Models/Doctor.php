@@ -1093,8 +1093,8 @@ class Doctor extends VaahModel
                         'slug' => Str::slug($mapped_content['name']),
                         'price_per_session' => $mapped_content['price'],
                         'specialization' => $mapped_content['specialization'],
-                        'shift_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_start_time'])),
-                        'shift_end_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_end_time'])),
+                        'shift_start_time' => self::formatTime($mapped_content['shift_start_time']),
+                        'shift_end_time' => self::formatTime($mapped_content['shift_end_time']),
                         'is_active' => 1,
                     ]
                 );
