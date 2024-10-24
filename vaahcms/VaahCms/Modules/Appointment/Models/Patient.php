@@ -611,7 +611,7 @@ class Patient extends VaahModel
     public static function seedSampleItems($records=100)
     {
 
-        PatientBulkRecord::dispatch($records)->onQueue('bulk');
+        PatientBulkRecord::dispatch($records);
 
     }
 
