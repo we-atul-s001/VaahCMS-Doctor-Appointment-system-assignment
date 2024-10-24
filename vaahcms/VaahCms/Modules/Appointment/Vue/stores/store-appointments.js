@@ -945,21 +945,21 @@ export const useAppointmentStore = defineStore({
         //---------------------------------------------------------------------
 
         async exportAppointment(){
-            let selected_doctor_ids = this.action.items.map(item => item.id);
+            let selected_appointment_ids = this.action.items.map(item => item.id);
             let params = {};
 
-            if (selected_doctor_ids.length > 0) {
-                params.selected_ids = selected_doctor_ids;
+            if (selected_appointment_ids.length > 0) {
+                params.selected_ids = selected_appointment_ids;
             }
 
             let file_data = null;
 
             try {
 
-                const method = selected_doctor_ids.length > 0 ? 'GET' : 'POST';
+                const method = selected_appointment_ids.length > 0 ? 'GET' : 'POST';
 
                 const url = method === 'GET'
-                    ? this.ajax_url.concat('/bulkExport/appointment', `?selected_ids=${selected_doctor_ids.join(',')}`)
+                    ? this.ajax_url.concat('/bulkExport/appointment', `?selected_ids=${selected_appointment_ids.join(',')}`)
                     : this.ajax_url.concat('/bulkExport/appointment');
 
 
