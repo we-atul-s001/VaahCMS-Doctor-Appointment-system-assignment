@@ -70,6 +70,7 @@ export const useAppointmentStore = defineStore({
         missing_fields_header: null,
         appointment_errors_display: null,
         is_visible_errors: false,
+        header_mapping_errors_display: null,
     }),
     getters: {
 
@@ -944,48 +945,96 @@ export const useAppointmentStore = defineStore({
         //---------------------------------------------------------------------
 
         async exportAppointment(){
-            let file_data = null;
-            try {
-                await vaah().ajax(
-                    this.ajax_url.concat('/bulkExport/appointment'),
+            let selected_appointment_ids = this.action.items.map(item => item.id);
+            let params = {};
 
+            if (selected_appointment_ids.length > 0) {
+                params.selected_ids = selected_appointment_ids;
+            }
+
+            let file_data = null;
+
+            try {
+
+                const method = selected_appointment_ids.length > 0 ? 'GET' : 'POST';
+
+                const url = method === 'GET'
+                    ? this.ajax_url.concat('/bulkExport/appointment', `?selected_ids=${selected_appointment_ids.join(',')}`)
+                    : this.ajax_url.concat('/bulkExport/appointment');
+
+
+                await vaah().ajax(
+                    url,
                     (data, res) => {
                         file_data = res.data;
-                    }
+                    },
+
+
                 );
                 const blob = new Blob([file_data]);
-                const url = window.URL.createObjectURL(blob);
+                const url_blob = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.href = url;
+                link.href = url_blob;
                 link.setAttribute('download', 'appointmentList.csv');
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
-                window.URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(url_blob);
             } catch (error) {
                 console.error('Error downloading file:', error);
             }
         },
 
         async importAppointment(file_data){
-            await vaah().ajax(
-                this.ajax_url.concat('/bulkImport/appointment'),
 
-                (data, res) => {
-                    console.log(res.data);
-                    this.email_errors_display = res.data.error.email_errors;
-                    this.missing_fields_header = res.data.error.missing_fields_header;
-                    this.appointment_errors_display = res.data.error.availability_errors;
-                    this.is_visible_errors = true;
-                    this.getList();
-                },
-                {
-                    params: file_data,
-                    method: 'POST',
-                    headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+            let ajax_url = this.ajax_url + '/bulkImport/appointment';
+
+            let options = {
+                params: file_data,
+                method: 'POST',
+                headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+            await vaah().ajax(
+                ajax_url,
+
+                this.importAppointmentAfter,
+                options
             );
-        }
+        },
+
+        async importAppointmentAfter(data, res){
+
+            console.log(data);
+            if (data)
+            {
+                this.is_visible_errors = false;
+            }
+            else {
+                this.email_errors_display = res.data.error.email_errors;
+                this.missing_fields_header = res.data.error.missing_fields_header;
+                this.appointment_errors_display = res.data.error.availability_errors;
+                this.header_mapping_errors_display = res.data.error.header_mapping_errors;
+                this.is_visible_errors = true;
+            }
+
+        },
+
+        async FetchDatabaseHeaders(file_data){
+            let ajax_url = this.ajax_url + '/bulkImport/appointment';
+
+           let  options = {
+                method: 'POST',
+               params: file_data,
+                headers: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+
+            await vaah().ajax(
+                ajax_url,
+                options
+            );
+        },
+
+
     }
 });
 

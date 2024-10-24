@@ -30,6 +30,9 @@ const toggleFormMenu = (event) => {
 //--------/form_menu
 const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
 
+const isPriceInvalid = computed(() => {
+    return store.item.price_per_session > 500;
+});
 </script>
 <template>
 
@@ -214,16 +217,18 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
 
                 <VhField label="Price Per Session">
                     <div class="p-inputgroup">
-
                         <InputText
                             v-model="store.item.price_per_session"
                             placeholder="Price per Session"
                             type="number"
                             class="price-input"
+                            :class="{ 'invalid-price': isPriceInvalid }"
                         />
+                        <div v-if="isPriceInvalid" class="hover-error">Price per session cannot exceed ₹ 500.</div>
                         <div class="required-field hidden"></div>
                     </div>
                 </VhField>
+
                 <VhField label="Is Active">
                     <InputSwitch v-bind:false-value="0"
                                  v-bind:true-value="1"
@@ -239,3 +244,21 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
     </div>
 
 </template>
+<style scoped>
+.invalid-price {
+    border-color: red;
+}
+
+.hover-error {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+.p-inputgroup:hover .hover-error,
+.invalid-price + .hover-error {
+    display: block;
+}
+</style>
+

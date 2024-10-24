@@ -1,6 +1,7 @@
 <?php namespace VaahCms\Modules\Appointment\Models;
 
 use App\ExportData\DoctorExport;
+use App\Jobs\DoctorBulkRecord;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -191,6 +192,13 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
+
+        if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
+            $response['success'] = false;
+            $response['errors'][] = "The price per session cannot exceed 500.";
+            return $response;
+        }
+
         if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
             if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
                 $response['success'] = false;
@@ -345,6 +353,9 @@ class Doctor extends VaahModel
             $query->where(function ($q1) use ($search_item) {
                 $q1->where('name', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('phone', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('specialization', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('id', 'LIKE', $search_item . '%');
             });
         }
@@ -368,7 +379,6 @@ class Doctor extends VaahModel
                     break;
                 case 'price':
                     if (is_string($filter_value)) {
-                        dd($filter_value);
                         $parts = explode('-', $filter_value);
 
                         if (count($parts) === 2) {
@@ -657,6 +667,13 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
+        
+        if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
+            $response['success'] = false;
+            $response['errors'][] = "The price per session cannot exceed 500.";
+            return $response;
+        }
+
         if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
             $inputs['is_active'] = 1;
         }
@@ -850,21 +867,11 @@ class Doctor extends VaahModel
 
     //-------------------------------------------------
     //-------------------------------------------------
-    public static function seedSampleItems($records = 100)
+    public static function seedSampleItems($records = 500)
     {
 
-        $i = 0;
+      DoctorBulkRecord::dispatch($records);
 
-        while ($i < $records) {
-            $inputs = self::fillItem(false);
-
-            $item = new self();
-            $item->fill($inputs);
-            $item->save();
-
-            $i++;
-
-        }
 
     }
 
@@ -898,6 +905,7 @@ class Doctor extends VaahModel
 
         $inputs['name'] = $faker->name;
         $inputs['slug'] = Str::slug($inputs['name']);
+        $inputs['email'] = $faker->unique()->safeEmail;
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
         $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
@@ -1101,11 +1109,13 @@ class Doctor extends VaahModel
                         'slug' => Str::slug($mapped_content['name']),
                         'price_per_session' => $mapped_content['price'],
                         'specialization' => $mapped_content['specialization'],
-                        'shift_start_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_start_time'])),
-                        'shift_end_time' => date('Y-m-d H:i:s', strtotime($mapped_content['shift_end_time'])),
+                        'shift_start_time' => self::formatTime($mapped_content['shift_start_time']),
+                        'shift_end_time' => self::formatTime($mapped_content['shift_end_time']),
                         'is_active' => 1,
                     ]
                 );
+
+                DoctorBulkRecord::dispatch($mapped_content['email'], $mapped_content['phone'], $mapped_content['name'], $mapped_content['price'], $mapped_content['specialization'], $mapped_content['shift_start_time'], $mapped_content['shift_end_time']);
 
                 $records_processed++;
             }
@@ -1143,9 +1153,10 @@ class Doctor extends VaahModel
        It returns the file as a download.
      *
      */
-    public static function bulkExport()
+    public static function bulkExport(Request $request)
     {
-        return Excel::download(new DoctorExport,'doctorsList.csv');
+        $selected_ids = $request->input('selected_ids', null);
+        return Excel::download(new DoctorExport($selected_ids),'doctorsList.csv');
     }
 
 
