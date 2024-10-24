@@ -130,9 +130,9 @@ const csvToJson = (csv) => {
 
 const downloadSampleCSV = () => {
     const headers = ['ID', 'Patient', 'Doctor', 'Email', 'Specialization', 'Date', 'slot_start_time', 'Status', 'Reason'];
-    const csvContent = headers.join(",") + "\n";
+    const csv_content = headers.join(",") + "\n";
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csv_content], { type: 'text/csv;charset=utf-8;' });
 
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
