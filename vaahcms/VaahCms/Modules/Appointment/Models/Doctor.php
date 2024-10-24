@@ -192,6 +192,13 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
+
+        if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
+            $response['success'] = false;
+            $response['errors'][] = "The price per session cannot exceed 500.";
+            return $response;
+        }
+
         if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
             if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
                 $response['success'] = false;
@@ -346,6 +353,9 @@ class Doctor extends VaahModel
             $query->where(function ($q1) use ($search_item) {
                 $q1->where('name', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('email', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('phone', 'LIKE', '%' . $search_item . '%')
+                    ->orWhere('specialization', 'LIKE', '%' . $search_item . '%')
                     ->orWhere('id', 'LIKE', $search_item . '%');
             });
         }
@@ -369,7 +379,6 @@ class Doctor extends VaahModel
                     break;
                 case 'price':
                     if (is_string($filter_value)) {
-                        dd($filter_value);
                         $parts = explode('-', $filter_value);
 
                         if (count($parts) === 2) {
@@ -658,6 +667,13 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
+        
+        if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
+            $response['success'] = false;
+            $response['errors'][] = "The price per session cannot exceed 500.";
+            return $response;
+        }
+
         if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
             $inputs['is_active'] = 1;
         }
