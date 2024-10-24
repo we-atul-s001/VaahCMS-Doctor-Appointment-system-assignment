@@ -71,7 +71,7 @@ const handleFileUpload = (event) => {
                 json_data_pass.value = csvToJson(contents);
                 headers.value = extractHeaders(contents);
                 selected_headers.value = {};
-                preview_data.value = generatepreview_data(json_data_pass.value, selected_headers.value);
+                preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
                goBack();
             } catch (error) {
                 console.error('Error processing the file:', error);
@@ -117,7 +117,7 @@ const csvToJson = (csv) => {
     const lines = csv.split("\n");
     const headers = lines[0].split(",");
 
-    const jsonData = lines.slice(1).map(line => {
+    const json_data = lines.slice(1).map(line => {
         const values = line.split(",");
         return headers.reduce((acc, header, index) => {
             acc[header.trim()] = values[index] ? values[index].trim() : null;
@@ -125,12 +125,28 @@ const csvToJson = (csv) => {
         }, {});
     });
 
-    return jsonData;
+    return json_data;
 };
 
 const downloadSampleCSV = () => {
+    const headers = ['ID', 'Patient', 'Doctor', 'Email', 'Specialization', 'Date', 'slot_start_time', 'Status', 'Reason'];
+    const csvContent = headers.join(",") + "\n";
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "sample_appointments.csv");
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     console.log('Downloading sample CSV...');
 };
+
 
 const extractHeaders = (csv) => {
     const lines = csv.split("\n");
@@ -169,17 +185,17 @@ const exportAppointment = () => {
 
 const setSelectedHeader = (dbHeader, selectedValue) => {
     selected_headers.value[dbHeader] = selectedValue;
-    preview_data.value = generatepreview_data(json_data_pass.value, selected_headers.value);
+    preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
 };
 
-const generatepreview_data = (data, selected_headers) => {
+const generatePreviewData = (data, selected_headers) => {
     return data.map(item => {
-        const previewItem = {};
+        const preview_item = {};
         for (const dbHeader in selected_headers) {
-            const csvHeader = selected_headers[dbHeader];
-            previewItem[dbHeader] = csvHeader ? item[csvHeader] : null;
+            const csv_header = selected_headers[dbHeader];
+            preview_item[dbHeader] = csv_header ? item[csv_header] : null;
         }
-        return previewItem;
+        return preview_item;
     });
 };
 
