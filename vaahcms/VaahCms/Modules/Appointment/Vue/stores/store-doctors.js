@@ -1024,7 +1024,7 @@ export const useDoctorStore = defineStore({
                         file_data = res.data;
                     },
 
-                    
+
                 );
 
                 const blob = new Blob([file_data]);

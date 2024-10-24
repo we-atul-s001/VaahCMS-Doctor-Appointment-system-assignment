@@ -1040,10 +1040,11 @@ class Appointment extends VaahModel
 
     //-------------------------------------------------
 
-    public static function bulkExport()
+    public static function bulkExport(Request $request)
     {
 
-        return Excel::download(new AppointmentExport, 'appointmentsList.csv');
+        $selected_ids = $request->input('selected_ids', null);
+        return Excel::download(new AppointmentExport($selected_ids), 'appointmentsList.csv');
 }
     //-------------------------------------------------
 
