@@ -195,7 +195,7 @@ class Doctor extends VaahModel
 
         if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
             $response['success'] = false;
-            $response['errors'][] = "The price per session cannot exceed 500.";
+            $response['errors'][] = "The price per session cannot exceed ₹ 500.";
             return $response;
         }
 
@@ -667,10 +667,10 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-        
+
         if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
             $response['success'] = false;
-            $response['errors'][] = "The price per session cannot exceed 500.";
+            $response['errors'][] = "The price per session cannot exceed ₹ 500.";
             return $response;
         }
 
