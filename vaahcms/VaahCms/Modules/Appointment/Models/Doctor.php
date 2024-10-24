@@ -1137,9 +1137,10 @@ class Doctor extends VaahModel
        It returns the file as a download.
      *
      */
-    public static function bulkExport()
+    public static function bulkExport(Request $request)
     {
-        return Excel::download(new DoctorExport,'doctorsList.csv');
+        $selected_ids = $request->input('selected_ids', null);
+        return Excel::download(new DoctorExport($selected_ids),'doctorsList.csv');
     }
 
 

@@ -999,26 +999,43 @@ export const useDoctorStore = defineStore({
 
                 });
         },
-        async exportDoctors(){
-            let file_data = null;
-            try {
-                await vaah().ajax(
-                    this.ajax_url.concat('/bulkExport/doctor'),
+        async exportDoctors() {
+            let selected_doctor_ids = this.action.items.map(item => item.id);
+            let params = {};
 
+            if (selected_doctor_ids.length > 0) {
+                params.selected_ids = selected_doctor_ids;
+            }
+
+            let file_data = null;
+
+            try {
+
+                const method = selected_doctor_ids.length > 0 ? 'GET' : 'POST';
+
+                const url = method === 'GET'
+                    ? this.ajax_url.concat('/bulkExport/doctor', `?selected_ids=${selected_doctor_ids.join(',')}`)
+                    : this.ajax_url.concat('/bulkExport/doctor');
+
+
+                await vaah().ajax(
+                    url,
                     (data, res) => {
                         file_data = res.data;
-                    }
+                    },
+
+
                 );
+
                 const blob = new Blob([file_data]);
-                const url = window.URL.createObjectURL(blob);
+                const url_blob = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.href = url;
+                link.href = url_blob;
                 link.setAttribute('download', 'doctorsList.csv');
-                document.body.appendChild(link);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
-                window.URL.revokeObjectURL(url);
+                window.URL.revokeObjectURL(url_blob);
             } catch (error) {
                 console.error('Error downloading file:', error);
             }
