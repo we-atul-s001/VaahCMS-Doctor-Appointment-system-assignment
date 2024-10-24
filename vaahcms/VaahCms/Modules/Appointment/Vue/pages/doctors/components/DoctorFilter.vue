@@ -28,29 +28,12 @@ onBeforeMount(() => {
     store.getSpecializationList();
 });
 
-const isAllSelected = computed(() => {
-
-    return Array.isArray(store.specializations) && store.specializations.length > 0 &&
-        Array.isArray(store.query.field_filter.specialization) && store.query.field_filter.specialization.length > 0 &&
-        store.specializations.every(specialization =>
-            store.query.field_filter.specialization.includes(specialization));
-});
 
 
 const isNoneSelected = computed(() => {
     return !store.query.field_filter.specialization || store.query.field_filter.specialization.length === 0;
 });
 
-
-
-const selectAllSpecializations = () => {
-    store.query.field_filter.specialization = [...store.specializations];
-};
-
-
-const deselectAllSpecializations = () => {
-    store.query.field_filter.specialization = [];
-};
 
 </script>
 
@@ -81,14 +64,7 @@ const deselectAllSpecializations = () => {
                     <b>Specialization:</b>
                 </template>
 
-                <!-- Checkbox for 'All' -->
-                <div class="field-checkbox">
-                    <Checkbox name="active-all"
-                              inputId="all"
-                              :checked="isAllSelected"
-                              @change="selectAllSpecializations" />
-                    <label for="all" class="cursor-pointer">All</label>
-                </div>
+
 
 
                 <!-- Dynamically generated specializations -->
@@ -128,7 +104,7 @@ const deselectAllSpecializations = () => {
                 </template>
 
                 <div v-for="(timing, index) in store.timings" :key="index" class="field-radiobutton">
-                    <Checkbox name="timing"
+                    <RadioButton name="timing"
                               :inputId="timing"
                               :value="timing"
                               data-testid="doctors-filters-timings"
