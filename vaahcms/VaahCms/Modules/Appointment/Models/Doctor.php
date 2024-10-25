@@ -344,23 +344,30 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     public function scopeSearchFilter($query, $filter)
     {
-
         if (!isset($filter['q'])) {
             return $query;
         }
-        $search_array = explode(' ', $filter['q']);
+
+        $search_term = preg_replace('/\s+/', ' ', trim($filter['q']));
+        $search_array = explode(' ', $search_term);
+
         foreach ($search_array as $search_item) {
-            $query->where(function ($q1) use ($search_item) {
-                $q1->where('name', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('email', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('phone', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('specialization', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('id', 'LIKE', $search_item . '%');
+            $search_item_cleaned = preg_replace('/^Prof\.\s*/i', '', $search_item); // Remove "Prof." prefix
+
+            $search_item_normalized = preg_replace('/\s+/', ' ', $search_item_cleaned);
+
+            $query->where(function ($q1) use ($search_item_normalized) {
+              
+                $q1->whereRaw('REPLACE(REPLACE(name, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(slug, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(email, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(phone, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(specialization, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(id, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%']);
             });
         }
-
     }
+
 
     //-------------------------------------------------
     public function scopeIsFieldFilter($query, $field_filter)
