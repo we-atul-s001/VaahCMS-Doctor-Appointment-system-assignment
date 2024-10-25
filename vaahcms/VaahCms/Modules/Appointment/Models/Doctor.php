@@ -964,18 +964,35 @@ class Doctor extends VaahModel
 
 
     //-------------------------------------------------
-    public static function getSpecializations(){
+    /*
+     * Get the list of doctors with the count of appointments for each doctor
+     * grouped by the doctor's specialization.
+     * Also, get the list of time ranges for the doctor's shift.
+     * This data is used in the doctor's list page.
+     */
+    public static function getSpecializations()
+    {
 
-        $specializations = self::distinct()->pluck('specialization');
-        $time_ranges = self::select('shift_start_time', 'shift_end_time')->get();
+        $specializations = self::select('specialization')
+            ->groupBy('specialization')
+            ->selectRaw('specialization, COUNT(*) as doctor_count')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'specialization' => $item->specialization,
+                    'doctor_count' => $item->doctor_count,
+                ];
+            });
 
+        $time_ranges = self::select('shift_start_time', 'shift_end_time')->distinct()->get();
 
         return response()->json([
             'specializations' => $specializations,
-            'time_ranges' => $time_ranges->toArray()
+            'time_ranges' => $time_ranges->toArray(),
         ]);
-
     }
+
+
 
     //-------------------------------------------------
     /*

@@ -1,8 +1,7 @@
-<script  setup>
-import {ref, reactive, watch, onMounted} from 'vue';
-import {useRoute} from 'vue-router';
-
-import { useDoctorStore } from '../../../stores/store-doctors'
+<script setup>
+import { ref, reactive, watch, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { useDoctorStore } from '../../../stores/store-doctors';
 
 const store = useDoctorStore();
 const route = useRoute();
@@ -25,6 +24,11 @@ const toggleBulkMenuState = (event) => {
     bulk_menu_state.value.toggle(event);
 };
 //--------/bulk_menu_state
+
+// Computed property to check if the button should be visible
+const isDoctorFilterButtonVisible = computed(() => {
+    return store.list && store.list.total > 0; // Check if store.list exists
+});
 </script>
 
 <template>
@@ -38,22 +42,24 @@ const toggleBulkMenuState = (event) => {
 
                 <!--selected_menu-->
                 <Button class="p-button-sm"
-                    type="button"
-                    @click="toggleSelectedMenuState"
-                    data-testid="doctors-actions-menu"
-                    aria-haspopup="true"
-                    aria-controls="overlay_menu">
+                        type="button"
+                        @click="toggleSelectedMenuState"
+                        data-testid="doctors-actions-menu"
+                        aria-haspopup="true"
+                        aria-controls="overlay_menu">
                     <i class="pi pi-angle-down"></i>
                     <Badge v-if="store.action.items.length > 0"
                            :value="store.action.items.length" />
                 </Button>
+
                 <Button
                     type="button"
                     data-testid="doctors-actions-show-field-filters"
                     class="p-button-sm"
                     label="Apply doctor filters"
+                    v-if="isDoctorFilterButtonVisible"
                     @click="store.showFieldFilters()">
-              </Button>
+                </Button>
 
                 <Menu ref="selected_menu_state"
                       :model="store.list_selected_menu"
@@ -65,27 +71,17 @@ const toggleBulkMenuState = (event) => {
 
             <!--right-->
             <div >
-
-
                 <div class="grid p-fluid">
-
-
                     <div class="col-12">
                         <div class="p-inputgroup ">
-
                             <InputText v-model="store.query.filter.q"
                                        @keyup.enter="store.delayedSearch()"
                                        class="p-inputtext-sm"
-                                       @keyup.enter.native="store.delayedSearch()"
-                                       @keyup.13="store.delayedSearch()"
-                                       data-testid="doctors-actions-search"
                                        placeholder="Search"/>
                             <Button @click="store.delayedSearch()"
                                     class="p-button-sm"
                                     data-testid="doctors-actions-search-button"
                                     icon="pi pi-search"/>
-
-
                             <Button
                                 type="button"
                                 class="p-button-sm"
@@ -95,9 +91,6 @@ const toggleBulkMenuState = (event) => {
                                 Filters
                                 <Badge v-if="store.count_filters > 0" :value="store.count_filters"></Badge>
                             </Button>
-
-
-
                             <Button
                                 type="button"
                                 icon="pi pi-filter-slash"
@@ -105,28 +98,24 @@ const toggleBulkMenuState = (event) => {
                                 class="p-button-sm"
                                 label="Reset"
                                 @click="store.resetQuery()" />
-
-                                <!--bulk_menu-->
-                                <Button
-                                    type="button"
-                                    @click="toggleBulkMenuState"
-                                    severity="danger" outlined
-                                    data-testid="doctors-actions-bulk-menu"
-                                    aria-haspopup="true"
-                                    aria-controls="bulk_menu_state"
-                                    class="ml-1 p-button-sm">
-                                    <i class="pi pi-ellipsis-v"></i>
-                                </Button>
-                                <Menu ref="bulk_menu_state"
-                                      :model="store.list_bulk_menu"
-                                      :popup="true" />
-                                <!--/bulk_menu-->
-
+                            <!--bulk_menu-->
+                            <Button
+                                type="button"
+                                @click="toggleBulkMenuState"
+                                severity="danger" outlined
+                                data-testid="doctors-actions-bulk-menu"
+                                aria-haspopup="true"
+                                aria-controls="bulk_menu_state"
+                                class="ml-1 p-button-sm">
+                                <i class="pi pi-ellipsis-v"></i>
+                            </Button>
+                            <Menu ref="bulk_menu_state"
+                                  :model="store.list_bulk_menu"
+                                  :popup="true" />
+                            <!--/bulk_menu-->
                         </div>
                     </div>
-
                 </div>
-
             </div>
             <!--/right-->
 
