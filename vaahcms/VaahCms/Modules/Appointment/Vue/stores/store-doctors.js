@@ -22,7 +22,8 @@ let empty_states = {
         field_filter: {
             price: [],
             specialization: [],
-            timings: []
+            timings: [],
+            doctor_count: [],
         },
     },
     action: {
@@ -985,6 +986,7 @@ export const useDoctorStore = defineStore({
                 this.ajax_url.concat('/specialization'),
                 (data,res) => {
                     this.getList();
+
                     this.specializations = res.data.specializations;
 
                     if (Array.isArray(res.data.time_ranges)) {

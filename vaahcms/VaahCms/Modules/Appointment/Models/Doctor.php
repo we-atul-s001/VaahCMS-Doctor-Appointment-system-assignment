@@ -964,18 +964,29 @@ class Doctor extends VaahModel
 
 
     //-------------------------------------------------
-    public static function getSpecializations(){
+    public static function getSpecializations()
+    {
+        // Get unique specializations with the count of doctors for each specialization
+        $specializations = self::select('specialization')
+            ->groupBy('specialization')
+            ->selectRaw('specialization, COUNT(*) as doctor_count')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'specialization' => $item->specialization,
+                    'doctor_count' => $item->doctor_count,
+                ];
+            });
 
-        $specializations = self::distinct()->pluck('specialization');
-        $time_ranges = self::select('shift_start_time', 'shift_end_time')->get();
-
+        $time_ranges = self::select('shift_start_time', 'shift_end_time')->distinct()->get();
 
         return response()->json([
             'specializations' => $specializations,
-            'time_ranges' => $time_ranges->toArray()
+            'time_ranges' => $time_ranges->toArray(),
         ]);
-
     }
+
+
 
     //-------------------------------------------------
     /*

@@ -29,12 +29,6 @@ onBeforeMount(() => {
 });
 
 
-
-const isNoneSelected = computed(() => {
-    return !store.query.field_filter.specialization || store.query.field_filter.specialization.length === 0;
-});
-
-
 </script>
 
 <template>
@@ -67,14 +61,19 @@ const isNoneSelected = computed(() => {
 
 
 
-                <!-- Dynamically generated specializations -->
-                <div v-for="(specialization, index) in store.specializations" :key="index" class="field-checkbox">
+                <div v-for="(item, index) in store.specializations" :key="index" class="field-checkbox">
                     <Checkbox :name="'specialization-' + index"
-                              :inputId="specialization"
-                              :value="specialization"
+                              :inputId="item.specialization"
+                              :value="item.specialization"
                               v-model="store.query.field_filter.specialization" />
-                    <label :for="specialization" class="cursor-pointer">{{ specialization }}</label>
+                    <label :for="item.specialization" class="cursor-pointer">
+                        {{ item.specialization }}
+                    </label>
+                    <Badge v-if="item.doctor_count > 0" :value="item.doctor_count" class="specialization-badge" />
                 </div>
+
+
+
             </VhFieldVertical>
 
             <Divider />
@@ -119,3 +118,16 @@ const isNoneSelected = computed(() => {
 
     </div>
 </template>
+<style>
+
+.field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+}
+
+.specialization-badge {
+    margin-left: 0.1rem;
+}
+</style>
