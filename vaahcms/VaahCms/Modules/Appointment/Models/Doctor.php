@@ -352,12 +352,11 @@ class Doctor extends VaahModel
         $search_array = explode(' ', $search_term);
 
         foreach ($search_array as $search_item) {
-            $search_item_cleaned = preg_replace('/^Prof\.\s*/i', '', $search_item); // Remove "Prof." prefix
 
-            $search_item_normalized = preg_replace('/\s+/', ' ', $search_item_cleaned);
+            $search_item_normalized = preg_replace('/\s+/', ' ', $search_term);
 
             $query->where(function ($q1) use ($search_item_normalized) {
-              
+
                 $q1->whereRaw('REPLACE(REPLACE(name, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
                     ->orWhereRaw('REPLACE(REPLACE(slug, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
                     ->orWhereRaw('REPLACE(REPLACE(email, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
