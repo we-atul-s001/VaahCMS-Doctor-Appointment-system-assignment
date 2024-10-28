@@ -1,8 +1,9 @@
 <script setup>
-import {ref, onMounted} from 'vue';
+import { ref, onMounted } from 'vue';
 import 'primeicons/primeicons.css';
-import {vaah} from '../../vaahvue/pinia/vaah';
-import {useRootStore} from '../../stores/root';
+import { vaah } from '../../vaahvue/pinia/vaah';
+import { useRootStore } from '../../stores/root';
+import Chart from 'primevue/chart';
 
 const total_doctors = ref(0);
 const total_patients = ref(0);
@@ -72,13 +73,22 @@ const setChartOptions = () => {
         plugins: {
             legend: {
                 labels: {
-                    color: textColor
+                    color: textColor,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: 'Doctor & Patient Overview',
+                font: {
+                    size: 20
                 }
             },
             tooltip: {
                 callbacks: {
                     label: (context) => {
-
                         const label = context.label || '';
                         const value = context.raw;
                         return `${label}: ${value}`;
@@ -89,7 +99,10 @@ const setChartOptions = () => {
         scales: {
             x: {
                 ticks: {
-                    color: textColorSecondary
+                    color: textColorSecondary,
+                    font: {
+                        size: 12
+                    }
                 },
                 grid: {
                     color: surfaceBorder
@@ -97,7 +110,10 @@ const setChartOptions = () => {
             },
             y: {
                 ticks: {
-                    color: textColorSecondary
+                    color: textColorSecondary,
+                    font: {
+                        size: 12
+                    }
                 },
                 grid: {
                     color: surfaceBorder
@@ -143,7 +159,17 @@ const setPieChartOptions = () => {
             legend: {
                 labels: {
                     usePointStyle: true,
-                    color: textColor
+                    color: textColor,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: 'Appointments Overview',
+                font: {
+                    size: 20
                 }
             }
         }
@@ -152,16 +178,16 @@ const setPieChartOptions = () => {
 </script>
 
 <template>
-    <div style="margin-top: 8px;">
+    <div class="dashboard">
         <!-- Dashboard Title -->
-        <h1 class="text-4xl">Dashboard</h1>
+        <h1 class="dashboard-title">Dashboard</h1>
 
         <!-- Card Section -->
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin-top: 25px">
+        <div class="stat-cards">
             <!-- Card 1: Total Doctors -->
             <div class="stat-card">
                 <div class="card-header">
-                    <i class="pi pi-file" style="margin-right: 8px;"></i>
+                    <i class="pi pi-user"></i>
                     Total Doctors
                 </div>
                 <div class="card-body">
@@ -172,7 +198,7 @@ const setPieChartOptions = () => {
             <!-- Card 2: Total Patients -->
             <div class="stat-card">
                 <div class="card-header">
-                    <i class="pi pi-file" style="margin-right: 8px;"></i>
+                    <i class="pi pi-users"></i>
                     Total Patients
                 </div>
                 <div class="card-body">
@@ -183,7 +209,7 @@ const setPieChartOptions = () => {
             <!-- Card 3: Total Booked Appointments -->
             <div class="stat-card">
                 <div class="card-header">
-                    <i class="pi pi-file" style="margin-right: 8px;"></i>
+                    <i class="pi pi-calendar-plus"></i>
                     Total Booked Appointments
                 </div>
                 <div class="card-body">
@@ -194,7 +220,7 @@ const setPieChartOptions = () => {
             <!-- Card 4: Total Cancelled Appointments -->
             <div class="stat-card">
                 <div class="card-header">
-                    <i class="pi pi-file" style="margin-right: 8px;"></i>
+                    <i class="pi pi-calendar-times"></i>
                     Total Cancelled Appointments
                 </div>
                 <div class="card-body">
@@ -205,7 +231,7 @@ const setPieChartOptions = () => {
             <!-- Card 5: Total Rescheduled Appointments -->
             <div class="stat-card">
                 <div class="card-header">
-                    <i class="pi pi-file" style="margin-right: 8px;"></i>
+                    <i class="pi pi-calendar-minus"></i>
                     Total Rescheduled Appointments
                 </div>
                 <div class="card-body">
@@ -214,22 +240,20 @@ const setPieChartOptions = () => {
             </div>
         </div>
 
-        <!-- Bar Chart and Pie Chart Section in Two Equal Halves -->
-        <section class="charts-section" style="margin-top: 40px;">
-            <h2 class="text-2xl">Overview</h2>
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <h2 class="section-title">Overview</h2>
             <div class="charts-container">
                 <!-- Bar Chart -->
                 <div class="chart-item">
-                    <h3>Doctor & Patient Overview</h3>
                     <div class="card">
-                        <Chart type="bar" :data="chartData" :options="chartOptions" class="h-[30rem]"/>
+                        <Chart type="bar" :data="chartData" :options="chartOptions" class="chart" />
                     </div>
                 </div>
                 <!-- Pie Chart -->
                 <div class="chart-item">
-                    <h3>Appointments Overview</h3>
                     <div class="card">
-                        <Chart type="pie" :data="pieChartData" :options="pieChartOptions" class="h-[30rem]"/>
+                        <Chart type="pie" :data="pieChartData" :options="pieChartOptions" class="chart" />
                     </div>
                 </div>
             </div>
@@ -238,9 +262,26 @@ const setPieChartOptions = () => {
 </template>
 
 <style scoped>
+.dashboard {
+    padding: 20px;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.stat-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
 .stat-card {
     flex: 1;
-    min-width: 250px;
+    min-width: 200px;
     max-width: 300px;
     background-color: white;
     border-radius: 8px;
@@ -255,47 +296,49 @@ const setPieChartOptions = () => {
     display: flex;
     align-items: center;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #424242;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.card-header i {
+    margin-right: 10px;
+    font-size: 1.3rem;
 }
 
 .card-body h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin: 0;
 }
 
-
-h2 {
-    margin-bottom: 20px;
-}
-
-.charts-section {
-    padding: 20px;
-    border-radius: 8px;
+.section-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
 }
 
 .charts-container {
     display: flex;
-    justify-content: space-between;
-    gap: 20px; /* Space between the two charts */
+    flex-direction: column;
+    gap: 40px;
 }
 
 .chart-item {
-    flex: 1;
-    padding: 20px;
-    background-color: #ffffff;
+    width: 100%;
     border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    padding: 20px;
+}
+
+.chart {
+    height: 400px;
+}
+
+@media (min-width: 1200px) {
+    .charts-container {
+        flex-direction: row;
+    }
+
+    .chart-item {
+        width: calc(50% - 20px);
+    }
 }
 </style>

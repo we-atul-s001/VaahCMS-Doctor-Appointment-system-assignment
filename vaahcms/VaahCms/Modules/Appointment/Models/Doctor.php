@@ -183,6 +183,11 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function formatTimeZone($time): Carbon
+    {
+        return Carbon::parse($time)->timezone('Asia/Kolkata');
+    }
+    //-------------------------------------------------
     public static function createItem($request)
     {
 
@@ -197,14 +202,6 @@ class Doctor extends VaahModel
             $response['success'] = false;
             $response['errors'][] = "The price per session cannot exceed ₹ 500.";
             return $response;
-        }
-
-        if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
-            if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
-                $response['success'] = false;
-                $response['errors'][] = "Shift end time is not valid time";
-                return $response;
-            }
         }
 
         if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
@@ -233,6 +230,8 @@ class Doctor extends VaahModel
 
         $item = new self();
         $item->fill($inputs);
+       $item->shift_start_time = self::formatTimeZone($inputs['shift_start_time']);
+        $item->shift_end_time = self::formatTimeZone($inputs['shift_end_time']);
         $item->save();
 
         $response = self::getItem($item->id);
@@ -242,41 +241,6 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
-
-    protected function shiftStartTime(): Attribute
-    {
-
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
-
-    //-------------------------------------------------
-    public static function formatTime($time, $format = 'H:i:s A')
-    {
-        return Carbon::parse($time)
-            ->setTimezone("ASIA/KOLKATA")
-            ->format($format);
-    }
-
-    //-------------------------------------------------
-    protected function shiftEndTime(): Attribute
-    {
-        return Attribute::make(
-            get: function (string $value = null) {
-                $timezone = Session::get('user_timezone');
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
 
 
     //-------------------------------------------------
@@ -344,23 +308,28 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     public function scopeSearchFilter($query, $filter)
     {
-
         if (!isset($filter['q'])) {
             return $query;
         }
-        $search_array = explode(' ', $filter['q']);
+
+        $search_term = preg_replace('/\s+/', ' ', trim($filter['q']));
+        $search_array = explode(' ', $search_term);
+
         foreach ($search_array as $search_item) {
-            $query->where(function ($q1) use ($search_item) {
-                $q1->where('name', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('email', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('phone', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('specialization', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('id', 'LIKE', $search_item . '%');
+
+            $search_item_normalized = preg_replace('/\s+/', ' ', $search_term);
+
+            $query->where(function ($q1) use ($search_item_normalized) {
+
+                $q1->whereRaw('REPLACE(REPLACE(name, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(email, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(phone, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(specialization, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(id, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%']);
             });
         }
-
     }
+
 
     //-------------------------------------------------
     public function scopeIsFieldFilter($query, $field_filter)
@@ -395,8 +364,8 @@ class Doctor extends VaahModel
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
-                    $min_time = Carbon::parse($parts[0])->format('g:i A');
-                    $max_time = Carbon::parse($parts[1])->format('g:i A');
+                    $min_time = Carbon::parse($parts[0])->format('H:i');
+                    $max_time = Carbon::parse($parts[1])->format('H:i');
                     $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time, $max_time]);
                     break;
             }
@@ -405,14 +374,48 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function scopeIsTimingField($query, $filter_value)
+    {
+        try {
+            if (isset($filter_value['timing_range']) && !empty($filter_value['timing_range'])) {
+                // Decode URL-encoded timing range string
+                $timing_range = urldecode($filter_value['timing_range']); // "09:00 PM - 11:00 PM"
+
+                // Remove AM/PM from the time range
+                $timing_range = str_replace([' AM', ' PM'], '', $timing_range); // "09:00 - 11:00"
+
+                list($start, $end) = explode('-', $timing_range);
+                $start_time = trim($start). ':00';
+                $end_time = trim($end). ':00';
+
+
+                $start_time_24 = (new \DateTime($start_time))->format('H:i');
+                $end_time_24 = (new \DateTime($end_time))->format('H:i');
+
+
+                $query->where(function ($q) use ($start_time_24, $end_time_24) {
+                    $q->where('shift_start_time', '>=', $start_time_24)
+                        ->where('shift_end_time', '<=', $end_time_24);
+                });
+            }
+        } catch (\Exception $e) {
+            \Log::error($e);
+        }
+    }
+
+
+    //-------------------------------------------------
     public static function getList($request)
     {
+
         $list = self::getSorted($request->filter);
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
+
         if ($request->has('field_filter')) {
             $list->isFieldFilter($request->field_filter);
+            $list->isTimingField($request->field_filter);
         }
 
         $rows = config('vaahcms.per_page');
@@ -706,17 +709,30 @@ class Doctor extends VaahModel
             ->withTrashed()
             ->first();
 
-        $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
-            ($item->shift_end_time != $inputs['shift_end_time']);
+        if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
+            $start_time = Self::formatTimeZone($inputs['shift_start_time']);
+            $end_time = Self::formatTimeZone($inputs['shift_end_time']);
+
+            if ($start_time >= $end_time) {
+                return [
+                    'success' => false,
+                    'errors' => ["Shift end time is not valid time"]
+                ];
+            }
+        }
+
+        $working_hours_changed = ($item->shift_start_time != $start_time) ||
+            ($item->shift_end_time != $end_time);
 
 
-        $item->fill($inputs);
+        $item->shift_start_time = $start_time;
+        $item->shift_end_time = $end_time;
         $item->save();
 
         if ($working_hours_changed) {
 
 
-            $appointments = Appointment::where('doctor_id', $id)
+        $appointments = Appointment::where('doctor_id', $id)
                 ->where('patient_id', '!=', null)
                 ->get();
 
@@ -909,18 +925,17 @@ class Doctor extends VaahModel
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
         $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
-        $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
-
-        while (strpos($inputs['shift_start_time'], 'PM') !== false) {
-            $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
-        }
-
-        $shift_start_timestamp = strtotime($inputs['shift_start_time']);
-
-        $shift_end_timestamp = $shift_start_timestamp + (4 * 60 * 60);
+        $start_hour = $faker->unique()->time('H:i');
 
 
-        $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
+        $time = Carbon::createFromFormat('H:i', $start_hour, 'Asia/Kolkata');
+
+        $inputs['shift_start_time'] = $time->minute(round($time->minute / 15) * 15)
+            ->second(0)
+            ->format('Y-m-d h:i:s A');
+
+        $inputs['shift_end_time'] = $time->copy()->addHours(4)->format('Y-m-d h:i:s A');
+
 
         $inputs['price_per_session'] = $faker->numberBetween(100, 500);
 
