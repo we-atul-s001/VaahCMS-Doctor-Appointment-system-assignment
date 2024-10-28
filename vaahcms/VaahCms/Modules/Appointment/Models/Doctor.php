@@ -927,14 +927,13 @@ class Doctor extends VaahModel
         $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
         $start_hour = $faker->unique()->time('H:i');
 
-
         $time = Carbon::createFromFormat('H:i', $start_hour, 'Asia/Kolkata');
 
         $inputs['shift_start_time'] = $time->minute(round($time->minute / 15) * 15)
             ->second(0)
-            ->format('Y-m-d h:i:s A');
+            ->format('H:i:s A');
 
-        $inputs['shift_end_time'] = $time->copy()->addHours(4)->format('Y-m-d h:i:s A');
+        $inputs['shift_end_time'] = $time->copy()->addHours(4)->format('H:i:s A');
 
 
         $inputs['price_per_session'] = $faker->numberBetween(100, 500);
