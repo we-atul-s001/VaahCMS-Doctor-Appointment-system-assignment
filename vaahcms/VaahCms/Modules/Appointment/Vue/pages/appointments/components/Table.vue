@@ -52,7 +52,7 @@ function formatTimeWithAmPm(time) {
                             <span>{{ item.reason || 'N/A' }}</span>
                         </div>
                         <div class="mobile-cell">
-                            <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text"  @click="store.confirmToCancelAppointment(item)"></Button>
+                            <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text" v-tooltip.top="'Cancel Appointment'"  @click="store.confirmToCancelAppointment(item)"></Button>
                             <Button class="p-button-tiny p-button-danger p-button-text" data-testid="doctors-table-action-trash"
                                     v-if="store.isViewLarge() && !item.deleted_at && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
                                     @click="store.itemAction('trash', item)" v-tooltip.top="'Trash'" icon="pi pi-trash"></Button>
@@ -148,6 +148,9 @@ function formatTimeWithAmPm(time) {
                         </div>
                     </template>
                 </Column>
+                <template #empty="prop">
+                    <div style="text-align: center; font-size: 12px; color: #888;">No records found.</div>
+                </template>
             </DataTable>
         </div>
 
@@ -215,9 +218,13 @@ function formatTimeWithAmPm(time) {
             </div>
         </Dialog>
 
-        <Paginator v-if="store.query.rows" v-model:rows="store.query.rows" :totalRecords="store.list.total"
-                   :first="((store.query.page ?? 1) - 1) * store.query.rows" @page="store.paginate($event)"
-                   :rowsPerPageOptions="store.rows_per_page" class="bg-white-alpha-0 pt-2">
+        <Paginator v-if="store.query.rows"
+                   v-model:rows="store.query.rows"
+                   :totalRecords="store.list.total"
+                   :first="((store.query.page??1)-1)*store.query.rows"
+                   @page="store.paginate($event)"
+                   :rowsPerPageOptions="store.rows_per_page"
+                   class="bg-white-alpha-0 pt-2">
         </Paginator>
     </div>
 </template>

@@ -483,12 +483,6 @@ h2 {
     margin-top: 0.5rem;
 }
 
-.error-message {
-    color: #d9534f;
-    font-weight: bold;
-    margin-top: 1rem;
-}
-
 .mapping-summary {
     margin: 20px 0;
 }

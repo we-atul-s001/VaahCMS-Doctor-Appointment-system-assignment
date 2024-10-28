@@ -77,7 +77,7 @@ const isDoctorFilterButtonVisible = computed(() => {
                             <InputText v-model="store.query.filter.q"
                                        @keyup.enter="store.delayedSearch()"
                                        class="p-inputtext-sm"
-                                       placeholder="Search"/>
+                                       placeholder="Search by Name, Specialization & Email" style="width: 220px"/>
                             <Button @click="store.delayedSearch()"
                                     class="p-button-sm"
                                     data-testid="doctors-actions-search-button"

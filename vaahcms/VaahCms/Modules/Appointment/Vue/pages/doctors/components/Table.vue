@@ -113,7 +113,7 @@ function formatTimeWithAmPm(time) {
                     :sortable="true">
 
                 <template #body="prop">
-                    {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
+                    {{new Date(prop.data.shift_start_time).toLocaleTimeString()}}
                 </template>
 
             </Column>
@@ -124,7 +124,7 @@ function formatTimeWithAmPm(time) {
                     :sortable="true">
 
                 <template #body="prop">
-                    {{ formatTimeWithAmPm(prop.data.shift_end_time) }}
+                    {{new Date(prop.data.shift_end_time).toLocaleTimeString()}}
                 </template>
 
             </Column>

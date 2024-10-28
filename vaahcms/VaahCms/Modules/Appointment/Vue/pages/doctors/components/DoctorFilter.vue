@@ -16,6 +16,13 @@ const price_range = [
     '300-400',
     '400-500',
 ];
+const time_range = [
+    '09:00 AM-12:00 PM',
+    '12:00 PM-03:00 PM',
+    '03:00 PM-06:00 PM',
+    '06:00 PM-09:00 PM',
+    '09:00 PM-12:00 AM'
+];
 
 const price_range_with_currency = price_range.map(range => {
     const [min, max] = range.split('-');
@@ -102,7 +109,7 @@ onBeforeMount(() => {
                     <b>Timings:</b>
                 </template>
 
-                <div v-for="(timing, index) in store.timings" :key="index" class="field-radiobutton">
+                <div v-for="(timing, index) in time_range" :key="index" class="field-radiobutton">
                     <RadioButton name="timing"
                               :inputId="timing"
                               :value="timing"
