@@ -290,12 +290,16 @@ const generatePreviewData = (data, selected_headers) => {
                                     <h3>Database Headers</h3>
                                     <div class="database-header-container">
                                         <div v-for="(field, index) in store.assets.fields" :key="index" class="header-row">
-                                            <span class="database-header">{{ field }}</span>
+                <span class="database-header">
+                    {{ field }}
+                    <span v-if="index < 6" class="required-star">*</span>
+                </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="column">
+
+                            <div class="column">
                                     <h3>Extracted Headers</h3>
                                     <div v-if="headers.length > 0">
                                         <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
@@ -488,4 +492,9 @@ h2 {
 .mapping-summary {
     margin: 20px 0;
 }
+.required-star {
+    color: red;
+    margin-left: 4px;
+}
+
 </style>
