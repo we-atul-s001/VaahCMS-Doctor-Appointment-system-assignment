@@ -1,6 +1,7 @@
 <script setup>
 import { vaah } from '../../../vaahvue/pinia/vaah'
 import { useAppointmentStore } from '../../../stores/store-appointments'
+import {addMinutes} from 'date-fns';
 
 const store = useAppointmentStore();
 const useVaah = vaah();
@@ -93,7 +94,8 @@ function formatTimeWithAmPm(time) {
 
                 <Column field="date" header="Date and Slot" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
-                        {{ prop.data?.date }} at {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
+                        {{ prop.data?.date }} at {{ formatTimeWithAmPm(prop.data?.slot_start_time) }}
+
                     </template>
                 </Column>
                 <Column field="status" header="Status" class="overflow-wrap-anywhere" :sortable="true">

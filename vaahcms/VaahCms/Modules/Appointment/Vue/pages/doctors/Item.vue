@@ -157,11 +157,11 @@ function formatTime(time) {
                         </template>
 
                         <template v-else-if="column === 'shift_start_time'">
-                            <VhViewRow :label="column" :value="formatTime(value)" />
+                            <VhViewRow :label="column"  :value="new Date(value).toLocaleTimeString()" />
                         </template>
 
                         <template v-else-if="column === 'shift_end_time'">
-                            <VhViewRow :label="column" :value="formatTime(value)" />
+                            <VhViewRow :label="column"  :value="new Date(value).toLocaleTimeString()" />
                         </template>
 
                         <template v-else-if="column === 'price_per_session'">

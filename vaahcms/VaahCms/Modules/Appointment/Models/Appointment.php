@@ -229,14 +229,18 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function formatTimeZone($time){
+        return Carbon::parse($time)->timezone('Asia/Kolkata');
+    }
+    //-------------------------------------------------
     public static function createItem($request)
     {
 
-        $check_status = self::checkAppointmentTime($request->input('slot_start_time'),
+        $check_status = self::checkAppointmentTime(self::formatTimeZone($request->input('slot_start_time')),
             $request->input('date'), $request->input('doctor_id'));
 
         if(count($check_status) > 0){
-            $response['errors'][] = 'Slot is already booked. Please select 15 minutes later slot';
+            $response['errors'][] = 'Slot is already booked. Please select 30 minutes later slot';
             return $response;
         }
 
@@ -273,8 +277,10 @@ class Appointment extends VaahModel
         $item = new self();
         $item->fill($inputs);
 
+       $item->slot_start_time = self::formatTimeZone($inputs['slot_start_time']);
         $item->status = 1;
         $item->reason = 'N/A';
+
 
         $item->save();
 
@@ -323,7 +329,7 @@ class Appointment extends VaahModel
     public static function checkDoctorSlot($data)
     {
         $timezone = Session::get('user_timezone');
-        $start_time = $data['slot_start_time'];
+        $start_time = self::formatTimeZone($data['slot_start_time']);
 
 
         $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
@@ -353,7 +359,7 @@ class Appointment extends VaahModel
         $doctor = Doctor::find($inputs['doctor_id']);
         $patient = Patient::find($inputs['patient_id']);
         $date = Carbon::parse($inputs['date'])->toDateString();
-        $slot_start_time = self::formatTime($inputs['slot_start_time']);
+        $slot_start_time = self::formatTimeZone($inputs['slot_start_time']);
         $message_patient = sprintf(
             'Hello, %s, You have an appointment is scheduled with Dr. %s on %s at %s',
             $patient->name,
