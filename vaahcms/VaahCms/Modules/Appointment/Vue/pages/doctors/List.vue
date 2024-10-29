@@ -80,11 +80,11 @@ const triggerImportAppointment = () => {
     });
 
     const importData = {
-        csvData: filteredData,
-        headerMapping: selected_headers.value
+        csv_data: filteredData,
+        header_mapping: selected_headers.value
     };
 
-    store.importAppointment(importData);
+    store.importDoctors(importData);
 };
 
 const csvToJson = (csv) => {
@@ -122,7 +122,7 @@ const exportDoctors = () => {
 };
 
 const downloadSampleCSV = () => {
-    const headers = ['ID', 'Patient', 'Doctor', 'Email', 'Specialization', 'Date', 'slot_start_time', 'Status', 'Reason'];
+    const headers = ['Name', 'Email', 'Phone', 'Specialization', 'Shift Start Time', 'Shift End Time', 'Price Per Session'];
     const csv_content = headers.join(",") + "\n";
 
     const blob = new Blob([csv_content], { type: 'text/csv;charset=utf-8;' });
@@ -130,7 +130,7 @@ const downloadSampleCSV = () => {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", "sample_appointments.csv");
+    link.setAttribute("download", "sample_doctor.csv");
     link.style.visibility = 'hidden';
 
     document.body.appendChild(link);
@@ -152,44 +152,49 @@ const goBack = () => {
 };
 
 const goNext = () => {
-    if (current_step.value === 1) {
-        // Check if a file is uploaded and headers are extracted
-        if (!uploaded_file_name.value || headers.value.length === 0) {
-            alert('Please upload a valid CSV file to proceed.');
-            return;
-        }
+    if (current_step.value === 1 && !uploaded_file_name.value) {
+        console.error('No file uploaded. Please upload a file to proceed.');
+        return;
     }
 
-    // Move to the next step if conditions are met
     if (current_step.value < steps.value.length) {
+        current_step.value++;
+    } else if (current_step.value === 2 && Object.keys(headers.value).length > 0) {
+        current_step.value++;
+    } else if (current_step.value === 3) {
         current_step.value++;
     }
 };
 
+
 const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+    const file = event.files[0];
     if (file) {
         uploaded_file_name.value = file.name;
+
         const reader = new FileReader();
         reader.onload = (e) => {
-            const contents = e.target.result;
-            json_data_pass.value = csvToJson(contents);
-            headers.value = extractHeaders(contents);
-
-            if (headers.value.length > 0) {
-                console.log('File uploaded successfully, headers extracted.');
-            } else {
-                alert('No headers extracted. Please upload a valid CSV file.');
+            try {
+                const contents = e.target.result;
+                json_data_pass.value = csvToJson(contents);
+                headers.value = extractHeaders(contents);
+                selected_headers.value = {};
+                preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
+                goBack();
+            } catch (error) {
+                console.error('Error processing the file:', error);
             }
-
-            selected_headers.value = {};
-            preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
-            isDialogVisible.value = false; // Close dialog if necessary
         };
+
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+        };
+
         reader.readAsText(file);
+    } else {
+        console.error('No file selected or file is invalid.');
     }
 };
-
 const closeImportDialog = () => {
     isDialogVisible.value = false;
 };
@@ -290,7 +295,7 @@ const generatePreviewData = (data, selected_headers) => {
                             <div class="p-field">
                                 <FileUpload
                                     mode="basic"
-                                    :auto="false"
+                                    :auto="true"
                                 accept=".csv"
                                 :maxFileSize="1000000"
                                 @select="handleFileUpload"
@@ -317,7 +322,7 @@ const generatePreviewData = (data, selected_headers) => {
                                         <div v-for="(field, index) in store.assets.fields" :key="index" class="header-row">
                 <span class="database-header">
                     {{ field }}
-                    <span v-if="index < 6" class="required-star">*</span>
+                    <span v-if="index < 7" class="required-star">*</span>
                 </span>
                                         </div>
                                     </div>
