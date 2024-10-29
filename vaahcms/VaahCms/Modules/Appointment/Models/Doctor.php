@@ -1057,16 +1057,30 @@ class Doctor extends VaahModel
     public static function bulkImport(Request $request)
     {
         $records_skipped = 0;
+        $response = [
+            'success' => false,
+            'error' => [
+                'missing_fields_header' => [],
+                'availability_errors' => [],
+                'nameErrors' => [],
+                'header_mapping_errors' => [],
+                'email_errors' => [],
+                'time_errors' => []
+            ],
+            'message' => []
+        ];
 
         try {
             $file_contents = $request->json('csv_data', []);
             $header_mapping = $request->json('header_mapping', []);
 
+            // Check if CSV data is provided
             if (empty($file_contents)) {
-                return response()->json(['success' => false, 'message' => 'No data provided.'], 400);
+                $response['messages'][] = 'No data provided.';
+                return response()->json($response, 400);
             }
 
-            // Define required CSV headers for each database field
+            // Required fields for mapping
             $required_fields = [
                 'Name' => 'Name',
                 'Email' => 'Email',
@@ -1076,42 +1090,33 @@ class Doctor extends VaahModel
                 'shift_end_time' => 'shift_end_time',
             ];
 
-            $errors = [
-                'header_mapping_errors' => [],
-                'email_errors' => [],
-                'time_errors' => [],
-                'missing_field_errors' => [],
-            ];
-
-            // Check for missing headers
+            // Validate header mappings
             foreach ($required_fields as $db_field => $expected_csv_header) {
-                if (!isset($header_mapping[$expected_csv_header]) || empty($header_mapping[$expected_csv_header])) {
-                    $errors['header_mapping_errors'][] = "Error: Required header '{$expected_csv_header}' is missing or not mapped correctly.";
+                if (!isset($header_mapping[$db_field]) || $header_mapping[$db_field] !== $expected_csv_header) {
+                    $response['error']['header_mapping_errors'][] = "Error: '{$db_field}' must be mapped to CSV header '{$expected_csv_header}'.";
                 }
             }
 
-            if (!empty($errors['header_mapping_errors'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Header mapping errors found. Please correct the mapping and try again.',
-                    'error' => $errors
-                ], 400);
+            // Check if there are any header mapping errors
+            if (!empty($response['error']['header_mapping_errors'])) {
+                $response['error']['header_mapping_errors'][] = 'Header mapping errors found. Please correct the mapping and try again.';
+                // Always ensure the 'error' field is present
+                return response()->json($response, 400);
             }
 
             $records_processed = 0;
+            $existing_emails = self::pluck('email')->toArray();
 
             foreach ($file_contents as $index => $content) {
                 $mapped_content = [];
                 foreach ($header_mapping as $db_field => $csv_header) {
-                    if (isset($content[$csv_header])) {
-                        $mapped_content[$db_field] = is_string($content[$csv_header]) ? trim($content[$csv_header], '"') : $content[$csv_header];
-                    }
+                    $mapped_content[$db_field] = $content[$csv_header] ?? null;
                 }
 
-                // Check for missing required fields
+                // Check required fields per record
                 foreach ($required_fields as $required_field => $header) {
                     if (empty($mapped_content[$required_field])) {
-                        $errors['missing_field_errors'][] = "The field '$header' is required for doctor: " . ($mapped_content['Name'] ?? 'unknown');
+                        $response['error']['missing_fields_header'][] = "The field '$header' is required for doctor: " . ($mapped_content['Name'] ?? 'unknown');
                         $records_skipped++;
                         continue 2;
                     }
@@ -1119,40 +1124,37 @@ class Doctor extends VaahModel
 
                 // Validate email format
                 if (!filter_var($mapped_content['Email'], FILTER_VALIDATE_EMAIL)) {
-                    $errors['email_errors'][] = "Invalid email format for doctor: {$mapped_content['Name']}.";
+                    $response['error']['email_errors'][] = "Invalid email format for doctor: {$mapped_content['Name']}.";
                     $records_skipped++;
                     continue;
                 }
 
-                $existing_emails = self::pluck('email')->toArray();
-                // Check for existing email
+                // Check for duplicate email
                 if (in_array($mapped_content['Email'], $existing_emails)) {
-                    $errors['email_errors'][] = "The email {$mapped_content['Email']} is already stored for another doctor.";
+                    $response['error']['email_errors'][] = "Email {$mapped_content['Email']} already exists for another doctor.";
                     $records_skipped++;
                     continue;
                 }
 
-                // Default values for optional fields
+                // Optional defaults
                 $mapped_content['Price'] = $mapped_content['Price'] ?? 0.00;
                 $mapped_content['Specialization'] = $mapped_content['Specialization'] ?? 'General';
 
                 // Validate shift times
                 if (isset($mapped_content['shift_start_time'], $mapped_content['shift_end_time'])) {
-                    $start_time = strtotime($mapped_content['shift_start_time']);
-                    $end_time = strtotime($mapped_content['shift_end_time']);
+                    $start_time = self::formatTimeZone($mapped_content['shift_start_time']);
+                    $end_time = self::formatTimeZone($mapped_content['shift_end_time']);
 
                     if ($start_time === false || $end_time === false || $start_time >= $end_time) {
-                        $errors['time_errors'][] = "Invalid or incorrect shift times for doctor: {$mapped_content['Name']}.";
+                        $response['error']['time_errors'][] = "Invalid shift times for doctor: {$mapped_content['Name']}.";
                         $records_skipped++;
                         continue;
                     }
                 }
 
-                // Insert or update the record in the database
+                // Database operation
                 self::updateOrCreate(
-                    [
-                        'email' => $mapped_content['Email'],
-                    ],
+                    ['email' => $mapped_content['Email']],
                     [
                         'name' => $mapped_content['Name'],
                         'slug' => Str::slug($mapped_content['Name']),
@@ -1168,14 +1170,16 @@ class Doctor extends VaahModel
                 $records_processed++;
             }
 
-            $response = [];
-
+            // Set success and completion messages
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors']) || !empty($errors['time_errors']) || !empty($errors['missing_field_errors'])) {
-                $response['error'] = $errors;
+            // Check for remaining errors and ensure the error object structure is consistent
+            if (!empty($response['error']['email_errors']) || !empty($response['error']['time_errors']) ||
+                !empty($response['error']['missing_fields_header']) || !empty($response['error']['header_mapping_errors'])) {
+                // Ensure that 'error' has a consistent structure
+                $response['error'] = array_filter($response['error']); // Remove empty arrays
             }
 
             if ($records_processed == 0 && $records_skipped > 0) {
@@ -1185,17 +1189,14 @@ class Doctor extends VaahModel
             }
 
             return response()->json($response);
+
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'An error occurred during import: ' . $e->getMessage()], 500);
+            // Always include the error object in the response, even on exceptions
+            $response['error'] = $response['error'] ?? []; // Ensure error array is present
+            $response['messages'][] = 'An error occurred during import: ' . $e->getMessage();
+            return response()->json($response, 500);
         }
     }
-
-
-
-
-
-
-
 
 
     //-------------------------------------------------

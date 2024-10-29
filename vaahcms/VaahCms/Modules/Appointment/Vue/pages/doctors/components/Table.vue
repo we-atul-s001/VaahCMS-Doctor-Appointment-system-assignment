@@ -367,22 +367,30 @@ function formatTimeWithAmPm(time) {
                             <td>{{ header_error }}</td>
                         </tr>
                     </template>
+                    <template v-if="store.email_name_errors_display && store.email_name_errors_display.length > 0">
+                        <tr v-for="(email_error, index) in store.email_name_errors_display" :key="'email-'+index">
+                            <td>Email Error</td>
+                            <td>{{ email_error }}</td>
+                        </tr>
+                    </template>
+                    <template v-if="store.header_mapping_errors_display && store.header_mapping_errors_display.length > 0">
+                        <tr v-for="(header_mapping, index) in store.header_mapping_errors_display" :key="'email-'+index">
+                            <td>Mapping Error</td>
+                            <td>{{ header_mapping }}</td>
+                        </tr>
+                    </template>
                     </tbody>
                     <tfoot>
-<tr>
-                        <td><strong>Total Email Duplicate:</strong></td>
-                        <td>{{ store.email_errors_display ? store.email_errors_display.length : 0 }}</td>
+                    <tr>
+                        <td><strong>Total Email Error:</strong></td>
+                        <td>{{ store.email_name_errors_display ? store.email_name_errors_display.length : 0 }}</td>
                     </tr>
                     <tr>
                         <td><strong>Total Header Missing:</strong></td>
-                        <td>{{ store.missing_fields_header ? store.missing_fields_header.length : 0 }}</td>
+                        <td>{{ store.header_mapping_errors_display ? store.header_mapping_errors_display.length : 0 }}</td>
                     </tr>
 <tr>
-    <td><strong>Total Name Duplicate:</strong></td>
-    <td>{{ store.header_mapping_errors_display ? store.header_mapping_errors_display.length : 0 }}</td>
-</tr>
-<tr>
-    <td><strong>Mapping Error:</strong></td>
+    <td><strong>Timing Error:</strong></td>
     <td>{{ store.time_errors_display ? store.time_errors_display.length : 0 }}</td>
 </tr>
                     </tfoot>
