@@ -37,6 +37,7 @@ class DoctorsController extends Controller
             $data['permission'] =$data['permission'] =  \Auth::user()->permissions(true);;
             $data['rows'] = config('vaahcms.per_page');
 
+            $data['fields'] = Doctor::getCustomColumnFields();
             $data['fillable']['columns'] = Doctor::getFillableColumns();
             $data['fillable']['except'] = Doctor::getUnFillableColumns();
             $data['empty_item'] = Doctor::getEmptyItem();

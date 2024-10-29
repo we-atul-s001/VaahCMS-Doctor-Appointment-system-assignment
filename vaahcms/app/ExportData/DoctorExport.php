@@ -50,12 +50,12 @@ class DoctorExport implements FromCollection, WithHeadings, WithCustomCsvSetting
     public function headings(): array
     {
         return [
-            'id',
-            'name',
-            'email',
-            'phone',
-            'specialization',
-            'price',
+            'ID',
+            'Name',
+            'Email',
+            'Phone',
+            'Specialization',
+            'Price',
             'shift_start_time',
             'shift_end_time',
         ];

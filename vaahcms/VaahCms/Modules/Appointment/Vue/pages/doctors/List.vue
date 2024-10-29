@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, reactive, ref, computed, watch } from "vue"; // Import watch
+import { onMounted, reactive, ref, computed, watch } from "vue";
 import { useRoute } from 'vue-router';
 
 import { useDoctorStore } from '../../stores/store-doctors';
@@ -17,6 +17,8 @@ const store = useDoctorStore();
 const root = useRootStore();
 const route = useRoute();
 
+const current_step = ref(1);
+
 onMounted(async () => {
     document.title = 'Doctors - Appointment';
     store.item = null;
@@ -29,54 +31,60 @@ onMounted(async () => {
     await store.getListCreateMenu();
 });
 
-//--------form_menu
 const create_menu = ref();
 const toggleCreateMenu = (event) => {
     create_menu.value.toggle(event);
 };
-//--------/form_menu
-
-const dynamicClass = computed(() => {
-    if (store.quick_filters_doctors) {
-        return 'col-9';
-    } else {
-        return 'col-' + (store.show_filters ? 9 : store.list_view_width);
-    }
-});
-
-watch(() => store.show_filters, (newValue) => {
-    if (newValue) {
-        store.quick_filters_doctors = false;
-    }
-});
-
-watch(() => store.quick_filters_doctors, (newValue) => {
-    if (newValue) {
-        store.show_filters = false;
-    }
-});
-
+const steps = ref([
+    { label: 'Upload', value: 1 },
+    { label: 'Map', value: 2 },
+    { label: 'Preview', value: 3 },
+    { label: 'Result', value: 4 }
+]);
+const selected_file = ref(null);
+const uploaded_file_name = ref("");
+const headers = ref([]);
+const selected_headers = ref({});
+const preview_data = ref([]);
 const isDialogVisible = ref(false);
+
+const fileInput = ref(null);
+const json_data_pass = ref(null);
 
 const openFileDialog = () => {
     isDialogVisible.value = true;
+    current_step.value = 1;
+    selected_file.value = null;
+    uploaded_file_name.value = "";
+    headers.value = [];
+    selected_headers.value = {};
+    preview_data.value = [];
 };
 
-const fileInput = ref(null);
 
-const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const contents = e.target.result;
-            const json_data = csvToJson(contents);
-            console.log('Parsed JSON data:', json_data);
-            importDoctors(json_data);
-            isDialogVisible.value = false;
-        };
-        reader.readAsText(file);
+const triggerImportAppointment = () => {
+    if (!json_data_pass.value) {
+        console.error('No data available to import. Please upload a file.');
+        return;
     }
+
+    const filteredData = json_data_pass.value.map(content => {
+        const mapped_content = {};
+        for (const db_field in selected_headers.value) {
+            const csv_header = selected_headers.value[db_field];
+            if (csv_header) {
+                mapped_content[db_field] = content[csv_header] ? content[csv_header].trim() : null;
+            }
+        }
+        return mapped_content;
+    });
+
+    const importData = {
+        csv_data: filteredData,
+        header_mapping: selected_headers.value
+    };
+
+    store.importDoctors(importData);
 };
 
 const csvToJson = (csv) => {
@@ -94,14 +102,123 @@ const csvToJson = (csv) => {
     }
     return result;
 };
+const dynamicClass = computed(() => {
+    if (store.quick_filters_doctors) {
+        return 'col-9';
+    } else {
+        return 'col-' + (store.show_filters ? 9 : store.list_view_width);
+    }
+});
+
+watch(() => store.show_filters, (newValue) => {
+    if (newValue) {
+        store.quick_filters_doctors = false;
+    }
+});
+
 
 const exportDoctors = () => {
     store.exportDoctors();
 };
 
+const downloadSampleCSV = () => {
+    const headers = ['Name', 'Email', 'Phone', 'Specialization', 'Shift Start Time', 'Shift End Time', 'Price Per Session'];
+    const csv_content = headers.join(",") + "\n";
+
+    const blob = new Blob([csv_content], { type: 'text/csv;charset=utf-8;' });
+
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "sample_doctor.csv");
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log('Downloading sample CSV...');
+};
+const extractHeaders = (csv) => {
+    const lines = csv.split("\n");
+    const headers = lines[0].split(",").map(header => header.trim());
+    return headers;
+};
+
+const goBack = () => {
+    if (current_step.value > 1) {
+        current_step.value--;
+    }
+};
+
+const goNext = () => {
+    if (current_step.value === 1 && !uploaded_file_name.value) {
+        console.error('No file uploaded. Please upload a file to proceed.');
+        return;
+    }
+
+    if (current_step.value < steps.value.length) {
+        current_step.value++;
+    } else if (current_step.value === 2 && Object.keys(headers.value).length > 0) {
+        current_step.value++;
+    } else if (current_step.value === 3) {
+        current_step.value++;
+    }
+};
+
+
+const handleFileUpload = (event) => {
+    const file = event.files[0];
+    if (file) {
+        uploaded_file_name.value = file.name;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const contents = e.target.result;
+                json_data_pass.value = csvToJson(contents);
+                headers.value = extractHeaders(contents);
+                selected_headers.value = {};
+                preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
+                goBack();
+            } catch (error) {
+                console.error('Error processing the file:', error);
+            }
+        };
+
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+        };
+
+        reader.readAsText(file);
+    } else {
+        console.error('No file selected or file is invalid.');
+    }
+};
+const closeImportDialog = () => {
+    isDialogVisible.value = false;
+};
+
 const importDoctors = (json_data) => {
     store.importDoctors(json_data);
 };
+
+const setSelectedHeader = (dbHeader, selectedValue) => {
+    selected_headers.value[dbHeader] = selectedValue;
+    preview_data.value = generatePreviewData(json_data_pass.value, selected_headers.value);
+};
+
+const generatePreviewData = (data, selected_headers) => {
+    return data.map(item => {
+        const preview_item = {};
+        for (const dbHeader in selected_headers) {
+            const csv_header = selected_headers[dbHeader];
+            preview_item[dbHeader] = csv_header ? item[csv_header] : null;
+        }
+        return preview_item;
+    });
+};
+
 </script>
 
 <template>
@@ -127,10 +244,11 @@ const importDoctors = (json_data) => {
                         </Button>
 
                         <Button @click="openFileDialog" class="import-btn">
-                            Upload Doctors CSV
+                            <i class="pi pi-upload mr-1"></i>
+                            Import
                         </Button>
 
-                        <Button label="Export Doctors"
+                        <Button label="Export CSV"
                                 @click="exportDoctors"
                                 class="export-btn"
                                 style="margin-left: 5px;"
@@ -166,70 +284,242 @@ const importDoctors = (json_data) => {
         <DoctorFilter />
         <RouterView />
 
-        <Dialog header="Upload Doctors CSV"
-                :visible.sync="isDialogVisible"
-                modal
-                :closable="true"
-                :dismissable-mask="true"
-                :close-on-escape="true"
-                class="custom-dialog"
-        >
-            <div class="p-fluid" style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
-                <div class="flex align-items-center">
-                    <i class="pi pi-upload" style="font-size: 2em; color: #3f51b5;"></i>
-                    <span style="font-size: 1.2em; color: #333;">Please select a CSV file to upload:</span>
+        <Dialog header="Bulk Import" v-model:visible="isDialogVisible" :style="{width: '50vw'}" :modal="true">
+            <div class="card">
+                <Steps :model="steps" :readonly="false" :activeIndex="current_step - 1" />
+
+                <div class="mt-4">
+                    <div v-if="current_step === 1" class="upload-step">
+                        <h2>Select a CSV file to Import</h2>
+                        <div class="p-fluid">
+                            <div class="p-field">
+                                <FileUpload
+                                    mode="basic"
+                                    :auto="true"
+                                accept=".csv"
+                                :maxFileSize="1000000"
+                                @select="handleFileUpload"
+                                chooseLabel="Select File"
+                                />
+                                <p v-if="uploaded_file_name" class="uploaded-file-name">
+                                    Uploaded File: {{ uploaded_file_name }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <Button label="Download Sample CSV" icon="pi pi-download" @click="downloadSampleCSV" class="p-button-secondary" />
+                        </div>
+                    </div>
+
+
+                    <div v-else-if="current_step === 2">
+                        <h2>Map Fields</h2>
+                        <div class="header-mapping">
+                            <div class="columns">
+                                <div class="column">
+                                    <h3>Database Headers</h3>
+                                    <div class="database-header-container">
+                                        <div v-for="(field, index) in store.assets.fields" :key="index" class="header-row">
+                <span class="database-header">
+                    {{ field }}
+                    <span v-if="index < 7" class="required-star">*</span>
+                </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="column">
+                                    <h3>Extracted Headers</h3>
+                                    <div v-if="headers.length > 0">
+                                        <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
+                                            <Dropdown
+                                                v-model="selected_headers[dbHeader]"
+                                                :options="headers.map(h => h)"
+                                                @change="(e) => setSelectedHeader(dbHeader, e.value)"
+                                                placeholder="Select Header"
+                                                class="custom-dropdown"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <p class="error-message">No headers extracted. Please upload a valid CSV file.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="current_step === 3">
+                        <h2>Preview Mapped Data</h2>
+                        <div v-if="preview_data.length > 0">
+                            <table class="p-datatable">
+                                <thead>
+                                <tr>
+                                    <th v-for="(dbHeader, index) in store.assets.fields" :key="index">
+                                        {{ dbHeader }}
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-for="(item, index) in preview_data" :key="index">
+                                    <td v-for="(dbHeader, idx) in store.assets.fields" :key="idx">
+                                        {{ item[dbHeader] }}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else>
+                            <p>No data to preview. Please ensure your CSV file has valid mappings.</p>
+                        </div>
+                    </div>
+
+                    <div v-else-if="current_step === 4">
+                        <h2>Review and Confirm</h2>
+                        <p>Please review your mappings before proceeding with the import.</p>
+                    </div>
+
+                    <div class="mt-4 flex justify-content-between">
+                        <Button label="Back" icon="pi pi-chevron-left" @click="goBack" class="p-button-secondary"  :disabled="current_step === 1" />
+                        <Button label="Next" icon="pi pi-chevron-right" @click="goNext" class="p-button-primary" :disabled="current_step === 4" />
+                        <Button label="Finish" icon="pi pi-check" @click="triggerImportAppointment" v-if="current_step === 4" />
+                    </div>
                 </div>
-                <input type="file" ref="fileInput" @change="handleFileUpload" accept=".csv" class="custom-file-input" />
             </div>
-            <template #footer>
-                <Button label="Close" @click="isDialogVisible = false" class="p-button-text">
-                    Close
-                </Button>
-            </template>
+
         </Dialog>
     </div>
 </template>
 
 <style scoped>
-.custom-dialog .p-dialog {
-    background-color: #f5f5f5;
-    border-radius: 8px;
+.card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
 }
 
-.custom-dialog .p-dialog-header {
-    background-color: #e0e0e0;
-    border-radius: 8px 8px 0 0;
-    font-weight: bold;
-    color: #333;
+.upload-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    border: 2px dashed #ced4da;
+    border-radius: 6px;
 }
 
-.custom-dialog .p-button {
-    background-color: transparent;
-    color: #3f51b5;
+h2 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+.database-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between each row */
 }
 
-.custom-dialog .p-button-text {
-    color: #3f51b5;
-}
-
-.custom-file-input {
-    display: inline-block;
-    padding: 10px 15px;
-    border: 2px solid #ccc;
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #f1f1f1;
     border-radius: 5px;
+}
+
+.database-header {
+    flex: 1;
+    font-weight: bold;
+}
+
+
+.header-mapping {
+    display: flex;
+    justify-content: space-between;
+}
+
+.columns {
+    display: flex;
+    flex: 1;
+    gap: 50px;
+    align-items: center;
+}
+
+.column {
+    flex: 1;
+    margin: 0 10px;
+}
+
+.database-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between each row */
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #f1f1f1; /* Background for the row */
+    border-radius: 5px;
+}
+
+.database-header {
+    flex: 1; /* Take up available space */
+    font-weight: bold;
+}
+
+.custom-dropdown {
+    margin-top: 5px; /* Space between the dropdown and the header */
+}
+
+.error-message {
+    color: red; /* Style for error messages */
+    margin-top: 10px; /* Space above error message */
+}
+
+.p-datatable {
+    width: 100%;
+    border-collapse: collapse; /* Ensure borders are collapsed */
+    margin-top: 20px; /* Space above the table */
+}
+
+.p-datatable th,
+.p-datatable td {
+    padding: 10px; /* Padding for table cells */
+    text-align: left; /* Align text to the left */
+    border: 1px solid #ddd; /* Light border for cells */
+}
+
+.p-datatable th {
+    background-color: #f2f2f2; /* Light gray background for headers */
+    font-weight: bold; /* Bold text for headers */
+}
+
+.p-datatable tr:nth-child(even) {
+    background-color: #f9f9f9; /* Zebra striping for even rows */
+}
+
+.p-datatable tr:hover {
+    background-color: #f1f1f1; /* Highlight row on hover */
+}
+.header-mapping {
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
     background-color: #f9f9f9;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.3s ease;
 }
 
-.custom-file-input:hover {
-    background-color: #e0e0e0;
-    border-color: #3f51b5;
+.custom-dropdown {
+    margin-top: 0.5rem;
 }
 
-.custom-file-input:focus {
-    outline: none;
-    border-color: #3f51b5;
+.mapping-summary {
+    margin: 20px 0;
 }
+.required-star {
+    color: red;
+    margin-left: 4px;
+}
+
 </style>

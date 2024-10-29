@@ -26,7 +26,7 @@ const steps = ref([
 const selected_file = ref(null);
 const uploaded_file_name = ref("");
 const headers = ref([]);
-const selected_headers = ref({}); // Use an object for mapping
+const selected_headers = ref({});
 const preview_data = ref([]);
 
 onMounted(async () => {

@@ -905,7 +905,7 @@ class Appointment extends VaahModel
             $file_contents = $request->json('csvData', []);
             $header_mapping = $request->json('headerMapping', []);
 
-            // Define the required headers (without Email, since it's auto-checked)
+
             $required_headers = [
                 'Patient' => 'Patient',
                 'Doctor' => 'Doctor',
