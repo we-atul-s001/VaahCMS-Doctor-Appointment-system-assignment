@@ -16,6 +16,7 @@ const route = useRoute();
 const confirm = useConfirm();
 
 const is_import_dialog_visible = ref(false);
+const is_import_dialog_closed = ref(false);
 const current_step = ref(1);
 const steps = ref([
     { label: 'Upload', value: 1 },
@@ -47,13 +48,15 @@ const toggleCreateMenu = (event) => {
 };
 
 const openImportDialog = async () => {
-    is_import_dialog_visible.value = true;
-    current_step.value = 1;
-    selected_file.value = null;
-    uploaded_file_name.value = "";
-    headers.value = [];
-    selected_headers.value = {};
-    preview_data.value = [];
+    if (!is_import_dialog_closed.value) {
+        is_import_dialog_visible.value = true;
+        current_step.value = 1;
+        selected_file.value = null;
+        uploaded_file_name.value = "";
+        headers.value = [];
+        selected_headers.value = {};
+        preview_data.value = [];
+    }
 };
 
 const file_input = ref(null);
@@ -110,7 +113,15 @@ const triggerImportAppointment = () => {
         headerMapping: selected_headers.value
     };
 
-    store.importAppointment(importData);
+    store.importAppointment(importData).then(() => {
+        console.log("Data imported successfully.");
+        is_import_dialog_closed.value = true;
+        closeImportDialog();
+    }).catch(error => {
+        console.error("Error during import:", error);
+        is_import_dialog_closed.value = true;
+        closeImportDialog();
+    });
 };
 
 const csvToJson = (csv) => {
@@ -147,7 +158,6 @@ const downloadSampleCSV = () => {
     console.log('Downloading sample CSV...');
 };
 
-
 const extractHeaders = (csv) => {
     const lines = csv.split("\n");
     const headers = lines[0].split(",").map(header => header.trim());
@@ -177,6 +187,7 @@ const goNext = () => {
 
 const closeImportDialog = () => {
     is_import_dialog_visible.value = false;
+    is_import_dialog_closed.value = true;
 };
 
 const exportAppointment = () => {
@@ -439,38 +450,38 @@ h2 {
 }
 
 .custom-dropdown {
-    margin-top: 5px; /* Space between the dropdown and the header */
+    margin-top: 5px;
 }
 
 .error-message {
-    color: red; /* Style for error messages */
-    margin-top: 10px; /* Space above error message */
+    color: red;
+    margin-top: 10px;
 }
 
 .p-datatable {
     width: 100%;
-    border-collapse: collapse; /* Ensure borders are collapsed */
-    margin-top: 20px; /* Space above the table */
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
 .p-datatable th,
 .p-datatable td {
-    padding: 10px; /* Padding for table cells */
-    text-align: left; /* Align text to the left */
-    border: 1px solid #ddd; /* Light border for cells */
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
 }
 
 .p-datatable th {
-    background-color: #f2f2f2; /* Light gray background for headers */
-    font-weight: bold; /* Bold text for headers */
+    background-color: #f2f2f2;
+    font-weight: bold;
 }
 
 .p-datatable tr:nth-child(even) {
-    background-color: #f9f9f9; /* Zebra striping for even rows */
+    background-color: #f9f9f9;
 }
 
 .p-datatable tr:hover {
-    background-color: #f1f1f1; /* Highlight row on hover */
+    background-color: #f1f1f1;
 }
 .header-mapping {
     padding: 1rem;

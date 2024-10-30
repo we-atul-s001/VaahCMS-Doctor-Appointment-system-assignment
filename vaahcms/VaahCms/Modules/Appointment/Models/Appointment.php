@@ -911,7 +911,6 @@ class Appointment extends VaahModel
             $file_contents = $request->json('csvData', []);
             $header_mapping = $request->json('headerMapping', []);
 
-
             $required_headers = [
                 'Patient' => 'Patient',
                 'Doctor' => 'Doctor',
@@ -930,7 +929,6 @@ class Appointment extends VaahModel
                 'header_mapping_errors' => [],
             ];
 
-
             foreach ($required_headers as $db_field => $expected_csv_header) {
                 if (!isset($header_mapping[$expected_csv_header]) || empty($header_mapping[$expected_csv_header])) {
                     $errors['header_mapping_errors'][] = "Error: Required header '{$expected_csv_header}' is missing or not mapped correctly.";
@@ -938,7 +936,6 @@ class Appointment extends VaahModel
             }
 
             if (!empty($errors['header_mapping_errors'])) {
-
                 $errors['error'] = 'Header mapping errors found. Please correct the mapping and try again.';
             }
 
@@ -952,19 +949,16 @@ class Appointment extends VaahModel
                     }
                 }
 
-                // Check if Doctor field is missing
                 if (empty($mapped_content['Doctor'])) {
                     $errors['nameErrors'][] = "Error in row {$index}: Doctor name is missing.";
                     continue;
                 }
 
-                // Check if Patient field is missing
                 if (empty($mapped_content['Patient'])) {
                     $errors['nameErrors'][] = "Error in row {$index}: Patient name is missing.";
                     continue;
                 }
 
-                // Get the doctor from the Doctor model by name
                 $doctor = Doctor::where('name', $mapped_content['Doctor'])->first();
 
                 if (!$doctor) {
@@ -972,30 +966,32 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Check if the doctor has an email in the database
                 if (empty($doctor->email)) {
                     $errors['availability_errors'][] = "Error in row {$index}: Doctor '{$mapped_content['Doctor']}' does not have an email.";
                     continue;
                 }
 
-                // Get the patient from the Patient model by name
                 $patient = Patient::where('name', $mapped_content['Patient'])->first();
                 if (!$patient) {
                     $errors['availability_errors'][] = "Error in row {$index}: Patient '{$mapped_content['Patient']}' not found.";
                     continue;
                 }
 
-                // Check if Date or Slot Start Time is missing
                 if (empty($mapped_content['Date']) || empty($mapped_content['slot_start_time'])) {
                     $errors['availability_errors'][] = "Error in row {$index}: Date or slot start time is missing.";
                     continue;
                 }
 
+                $appointment_date = date('Y-m-d', strtotime($mapped_content['Date']));
+                if ($appointment_date < date('Y-m-d')) {
+                    $errors['availability_errors'][] = "Error in row {$index}: Appointment date '{$mapped_content['Date']}' cannot be in the past.";
+                    continue;
+                }
 
                 $existing_appointment = self::where('doctor_id', $doctor->id)
                     ->where('patient_id', $patient->id)
-                    ->where('date', date('Y-m-d', strtotime($mapped_content['Date'])))
-                    ->where('slot_start_time', date('Y-m-d H:i:s', strtotime(self::formatTime($mapped_content['slot_start_time']))))
+                    ->where('date', $appointment_date)
+                    ->where('slot_start_time', date('Y-m-d H:i:s', strtotime(self::formatTimeZone($mapped_content['slot_start_time']))))
                     ->first();
 
                 if ($existing_appointment) {
@@ -1003,12 +999,11 @@ class Appointment extends VaahModel
                     continue;
                 }
 
-                // Create or update the appointment
                 self::updateOrCreate([
                     'doctor_id' => $doctor->id,
                     'patient_id' => $patient->id,
-                    'slot_start_time' => date('Y-m-d H:i:s', strtotime(self::formatTime($mapped_content['slot_start_time']))),
-                    'date' => date('Y-m-d', strtotime($mapped_content['Date'])),
+                    'slot_start_time' => date('Y-m-d H:i:s', strtotime(self::formatTimeZone($mapped_content['slot_start_time']))),
+                    'date' => $appointment_date,
                     'status' => 1,
                     'reason' => 'N/A',
                     'is_active' => 1,
@@ -1038,6 +1033,7 @@ class Appointment extends VaahModel
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
 
 
 
