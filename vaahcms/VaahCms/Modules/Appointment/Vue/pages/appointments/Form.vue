@@ -21,19 +21,18 @@ onMounted(async () => {
 
     await store.getFormMenu();
 });
-function formatTimeWithAmPm(time) {
-    if (!time) return '';
+function formatTimeWithAmPm(datetime) {
+    if (!datetime) return '';
 
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes);
-    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+    const date = new Date(datetime);
 
-    let hour = date.getHours() % 12;
-    if (hour === 0) hour = 12;
+    if (isNaN(date.getTime())) return '';
 
-    return `${hour}:${minutes} ${amPm}`;
+    return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
 }
 //--------form_menu
 const handleDateChange = (newDate, property) => {
@@ -194,6 +193,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                     <b>
                         Shift Time-</b>
 
+
                     {{formatTimeWithAmPm(store.item?.doctor?.shift_start_time)}} -
                     {{formatTimeWithAmPm(store.item?.doctor?.shift_end_time)}}
                     (Please Select the time in the given time slot).
@@ -228,7 +228,7 @@ const isValidTime = (date) => date instanceof Date && !isNaN(date.getTime());
                             time-only
                             showTime
                             hourFormat="12"
-                            stepMinute="30"
+                            :stepMinute="30"
                             :showIcon="true"
                             :inputStyle="{ pointerEvents: 'none' }"
                             placeholder="Appointment Time"

@@ -25,19 +25,18 @@ function openSidebar(appointmentsCount, appointmentsList) {
 
     visible_right.value = true;
 }
-function formatTimeWithAmPm(time) {
-    if (!time) return '';
+function formatTimeWithAmPm(datetime) {
+    if (!datetime) return '';
 
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes);
-    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+    const date = new Date(datetime);
 
-    let hour = date.getHours() % 12;
-    if (hour === 0) hour = 12;
+    if (isNaN(date.getTime())) return '';
 
-    return `${hour}:${minutes} ${amPm}`;
+    return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
 }
 </script>
 
@@ -113,7 +112,8 @@ function formatTimeWithAmPm(time) {
                     :sortable="true">
 
                 <template #body="prop">
-                    {{new Date(prop.data.shift_start_time).toLocaleTimeString()}}
+                    {{ formatTimeWithAmPm(prop.data.shift_start_time) }}
+
                 </template>
 
             </Column>
@@ -124,7 +124,7 @@ function formatTimeWithAmPm(time) {
                     :sortable="true">
 
                 <template #body="prop">
-                    {{new Date(prop.data.shift_end_time).toLocaleTimeString()}}
+                    {{ formatTimeWithAmPm(prop.data.shift_end_time)}}
                 </template>
 
             </Column>
