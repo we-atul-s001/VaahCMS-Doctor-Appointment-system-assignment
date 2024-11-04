@@ -9,6 +9,7 @@
         "@grapoza/vue-tree": "^5.1.0",
         "axios": "^1.4.0",
         "chart.js": "^4.4.4",
+        "date-fns": "^4.1.0",
         "pinia": "^2.1.6",
         "primeicons": "^7.0.0",
         "primevue": "3.46.0",

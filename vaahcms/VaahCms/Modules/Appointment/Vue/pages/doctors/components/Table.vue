@@ -38,6 +38,21 @@ function formatTimeWithAmPm(datetime) {
         hour12: true,
     });
 }
+
+function formatTime(time24) {
+
+    const [hours24, minutes] = time24.split(':').map(Number);
+
+
+    const ampm = hours24 >= 12 ? 'PM' : 'AM';
+    const hours12 = hours24 % 12 || 12;
+
+
+    const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes;
+
+
+    return `${hours12}:${minutesFormatted} ${ampm}`;
+}
 </script>
 
 <template>
@@ -264,7 +279,7 @@ function formatTimeWithAmPm(datetime) {
 
                         <Column field="time" header="Time" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
-                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
+                                {{ formatTime(prop.data.slot_start_time) }}
                             </template>
                         </Column>
 
@@ -316,7 +331,7 @@ function formatTimeWithAmPm(datetime) {
 
                         <Column field="time" header="Time" :sortable="true" class="overflow-wrap-anywhere">
                             <template #body="prop">
-                                {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
+                                {{ formatTime(prop.data.slot_start_time) }}
                             </template>
                         </Column>
 

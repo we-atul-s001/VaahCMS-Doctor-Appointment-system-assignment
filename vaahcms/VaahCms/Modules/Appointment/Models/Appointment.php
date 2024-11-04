@@ -271,6 +271,7 @@ class Appointment extends VaahModel
         }
 
         $item = new self();
+        $inputs['slot_start_time'] = self::formatTimeZone($inputs['slot_start_time']);
         $item->fill($inputs);
 
         $item->status = 1;
