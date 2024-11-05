@@ -607,17 +607,30 @@ export const useDoctorStore = defineStore({
         {
             this.count_filters = 0;
             this.count_filters_doctors = 0;
-            if(query && query.filter)
-            {
-                let filter = vaah().cleanObject(query.filter);
-                this.count_filters = Object.keys(filter).length;
-            }
-            else if (query.quick_filters_doctors)
-            {
-                let filter = vaah().cleanObject(query.quick_filters_doctors);
-                this.count_filters_doctors = Object.keys(filter).length;
+
+            if (query) {
+
+                if (query.filter) {
+                    const filter = vaah().cleanObject(query.filter);
+                    this.count_filters = Object.keys(filter).length;
+                }
+
+
+                if (query.field_filter) {
+                    const field_filter_doctor = vaah().cleanObject(query.field_filter);
+                    this.count_filters_doctors = Object.keys(field_filter_doctor).reduce((count, key) => {
+
+                        if (Array.isArray(field_filter_doctor[key]) && field_filter_doctor[key].length > 0) {
+                            return count + 1;
+                        } else if (field_filter_doctor[key]) {
+                            return count + 1;
+                        }
+                        return count;
+                    }, 0);
+                }
             }
         },
+
         //---------------------------------------------------------------------
         async clearSearch()
         {

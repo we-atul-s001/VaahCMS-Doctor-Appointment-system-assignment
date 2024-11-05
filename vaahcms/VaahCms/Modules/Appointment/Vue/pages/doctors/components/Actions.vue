@@ -56,9 +56,10 @@ const isDoctorFilterButtonVisible = computed(() => {
                     type="button"
                     data-testid="doctors-actions-show-field-filters"
                     class="p-button-sm"
-                    label="Apply doctor filters"
                     v-if="isDoctorFilterButtonVisible"
                     @click="store.showFieldFilters()">
+                    Apply Doctor filters
+                    <Badge v-if="store.count_filters_doctors > 0" :value="store.count_filters_doctors"></Badge>
                 </Button>
 
                 <Menu ref="selected_menu_state"
