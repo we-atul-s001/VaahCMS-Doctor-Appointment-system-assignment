@@ -265,12 +265,22 @@ class Patient extends VaahModel
         {
             return $query;
         }
-        $search_array = explode(' ',$filter['q']);
+
+
+        $search_term = preg_replace('/\s+/', ' ', trim($filter['q']));
+
+        $search_array = explode(' ', $search_term);
+
         foreach ($search_array as $search_item){
-            $query->where(function ($q1) use ($search_item) {
-                $q1->where('name', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('id', 'LIKE', $search_item . '%');
+
+            $search_item_normalized = preg_replace('/\s+/', ' ', $search_term);
+
+            $query->where(function ($q1) use ($search_item_normalized) {
+
+                $q1->whereRaw('REPLACE(REPLACE(name, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(email, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(phone, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(id, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%']);
             });
         }
 

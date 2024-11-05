@@ -71,7 +71,8 @@ const toggleBulkMenuState = (event) => {
                                        @keyup.enter.native="store.delayedSearch()"
                                        @keyup.13="store.delayedSearch()"
                                        data-testid="patients-actions-search"
-                                       placeholder="Search"/>
+                                       style="width: 200px"
+                                       placeholder="Search by Name, Email & Phone"/>
                             <Button @click="store.delayedSearch()"
                                     class="p-button-sm"
                                     data-testid="patients-actions-search-button"
