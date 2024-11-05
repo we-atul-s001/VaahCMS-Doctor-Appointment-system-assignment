@@ -224,12 +224,24 @@ const generatePreviewData = (data, selected_headers) => {
                             Create
                         </Button>
 
-                        <Button @click="openImportDialog" class="p-button-sm">
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            @click="openImportDialog"
+                            class="p-button-sm"
+                        >
                             <i class="pi pi-upload mr-1"></i>
                             Import
                         </Button>
 
-                        <Button label="Export CSV" @click="exportAppointment" class="p-button-sm" style="margin-left: 5px;" />
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            label="Export CSV"
+                            @click="exportAppointment"
+                            class="p-button-sm"
+                            style="margin-left: 5px;"
+                        >
+                        </Button>
+
 
                         <Button data-testid="appointments-list-reload" class="p-button-sm" @click="store.getList()">
                             <i class="pi pi-refresh mr-1"></i>

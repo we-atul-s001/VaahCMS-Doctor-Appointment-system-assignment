@@ -243,16 +243,24 @@ const generatePreviewData = (data, selected_headers) => {
                             Create
                         </Button>
 
-                        <Button @click="openFileDialog" class="import-btn">
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            @click="openFileDialog"
+                            class="import-btn"
+                        >
                             <i class="pi pi-upload mr-1"></i>
                             Import
                         </Button>
 
-                        <Button label="Export CSV"
-                                @click="exportDoctors"
-                                class="export-btn"
-                                style="margin-left: 5px;"
-                        />
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            label="Export CSV"
+                            @click="exportDoctors"
+                            class="export-btn"
+                            style="margin-left: 5px;"
+                        >
+                        </Button>
+
 
                         <!-- Reload Button -->
                         <Button data-testid="doctors-list-reload"

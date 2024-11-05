@@ -51,17 +51,24 @@ class ExtendController extends Controller
             'link'=> route('vh.backend.appointment'),
         ];
 
-        $links[0]['items'][] = [
-            'icon' => 'user',
-            'label'=> 'Doctors',
-            'link'=> route('vh.backend.appointment')."#/doctors",
-        ];
+        if (!\Auth::user()->hasPermission('appointment-has-access-of-patient') || \Auth::user()->hasPermission('appointment-has-access-of-doctor')) {
+            $links[0]['items'][] = [
+                'icon' => 'user',
+                'label' => 'Doctors',
+                'link' => route('vh.backend.appointment') . "#/doctors",
+            ];
+        }
 
-        $links[0]['items'][] = [
-            'icon' => 'users',
-            'label'=> 'Patients',
-            'link'=> route('vh.backend.appointment')."#/patients",
-        ];
+
+        if (\Auth::user()->hasPermission('appointment-has-access-of-patient')){
+
+            $links[0]['items'][] = [
+                'icon' => 'users',
+                'label'=> 'Patients',
+                'link'=> route('vh.backend.appointment')."#/patients",
+            ];
+        }
+
 
         $links[0]['items'][] = [
             'icon' => 'calendar',

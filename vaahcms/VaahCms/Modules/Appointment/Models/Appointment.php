@@ -502,12 +502,15 @@ class Appointment extends VaahModel
                     ->orWhere(function ($query) use ($search_item) {
                         $search_item = strtolower($search_item);
 
-                        if ($search_item === 'booked') {
+                        if (str_contains('booked', $search_item)) {
+
                             $query->where('status', 1);
-                        } elseif ($search_item === 'cancelled') {
+                        } elseif (str_contains('cancelled', $search_item)) {
+
                             $query->whereIn('status', [0, 2]);
                         }
                     });
+
 
             });
         }
