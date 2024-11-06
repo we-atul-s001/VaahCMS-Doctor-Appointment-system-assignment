@@ -4,6 +4,8 @@ import 'primeicons/primeicons.css';
 import { vaah } from '../../vaahvue/pinia/vaah';
 import { useRootStore } from '../../stores/root';
 import Chart from 'primevue/chart';
+import CustomerChart from "./components/CustomerChart.vue";
+
 
 const total_doctors = ref(0);
 const total_patients = ref(0);
@@ -33,15 +35,56 @@ const fetchDashboardData = async () => {
         total_cancelled_appointments.value = response.data.totalCancelledAppointments;
         total_rescheduled_appointments.value = response.data.totalRescheduledAppointments;
 
+        chart_series.value = [
+            {
+                name: 'Doctors & Patients Count',
+                data: [
+                    total_doctors.value,
+                    total_patients.value
+                ]
+            }
+        ];
         chartData.value = setChartData();
         chartOptions.value = setChartOptions();
 
         pieChartData.value = setPieChartData();
         pieChartOptions.value = setPieChartOptions();
+
     } catch (error) {
         console.error('Error fetching dashboard stats:', error);
     }
 };
+const chart_series = ref([
+    {
+        name: 'Doctors & Patients Count',
+        data: [
+            total_doctors.value,
+            total_patients.value
+        ]
+    }
+]);
+
+const chart_options = ref({
+    chart: {
+        stacked: false,
+    },
+    plotOptions: {
+        bar: {},
+    },
+    xaxis: {
+        categories: ['Doctors', 'Patients'],
+    },
+    yaxis: {
+        title: {
+            text: 'Count',
+        },
+    },
+    title: {
+        text: 'Doctors & Patients Count',
+        align: 'center',
+    },
+});
+
 
 const setChartData = () => {
     return {
@@ -257,6 +300,18 @@ const setPieChartOptions = () => {
                     </div>
                 </div>
             </div>
+
+
+            <CustomerChart
+                type="bar"
+                title='Customer Count Bar Chart'
+                height="400"
+                width="600"
+                titleAlign="center"
+                :chartSeries="chart_series"
+                :chartOptions="chart_options"
+            />
+
         </section>
     </div>
 </template>
