@@ -40,7 +40,7 @@ const chartOptions = ref({
         bar: {}
     },
     xaxis: {
-        categories: ['Doctors', 'Patients'], 
+        categories: ['Doctors', 'Patients'],
     },
     yaxis: {
         title: {

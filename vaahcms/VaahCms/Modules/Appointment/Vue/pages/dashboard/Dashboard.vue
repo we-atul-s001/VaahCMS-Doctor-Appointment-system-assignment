@@ -4,7 +4,7 @@ import 'primeicons/primeicons.css';
 import { vaah } from '../../vaahvue/pinia/vaah';
 import { useRootStore } from '../../stores/root';
 import Chart from 'primevue/chart';
-import CustomerChart from "./components/CustomerChart.vue";
+import DoctorPatientCountChart from "./components/DoctorPatientCountChart.vue";
 
 
 const total_doctors = ref(0);
@@ -302,7 +302,7 @@ const setPieChartOptions = () => {
             </div>
 
 
-            <CustomerChart
+            <DoctorPatientCountChart
                 type="bar"
                 title='Customer Count Bar Chart'
                 height="400"
