@@ -1,8 +1,11 @@
 <script setup>
-import {ref, onMounted} from 'vue';
+import { ref, onMounted } from 'vue';
 import 'primeicons/primeicons.css';
-import {vaah} from '../../vaahvue/pinia/vaah';
-import {useRootStore} from '../../stores/root';
+import { vaah } from '../../vaahvue/pinia/vaah';
+import { useRootStore } from '../../stores/root';
+import Chart from 'primevue/chart';
+import DoctorPatientCountChart from "./components/DoctorPatientCountChart.vue";
+
 
 const total_doctors = ref(0);
 const total_patients = ref(0);
@@ -14,6 +17,8 @@ const useDashboardStore = useRootStore();
 
 const chartData = ref();
 const chartOptions = ref();
+const pieChartData = ref();
+const pieChartOptions = ref();
 
 onMounted(() => {
     fetchDashboardData();
@@ -30,50 +35,75 @@ const fetchDashboardData = async () => {
         total_cancelled_appointments.value = response.data.totalCancelledAppointments;
         total_rescheduled_appointments.value = response.data.totalRescheduledAppointments;
 
+        chart_series.value = [
+            {
+                name: 'Doctors & Patients Count',
+                data: [
+                    total_doctors.value,
+                    total_patients.value
+                ]
+            }
+        ];
         chartData.value = setChartData();
         chartOptions.value = setChartOptions();
+
+        pieChartData.value = setPieChartData();
+        pieChartOptions.value = setPieChartOptions();
+
     } catch (error) {
         console.error('Error fetching dashboard stats:', error);
     }
 };
+const chart_series = ref([
+    {
+        name: 'Doctors & Patients Count',
+        data: [
+            total_doctors.value,
+            total_patients.value
+        ]
+    }
+]);
+
+const chart_options = ref({
+    chart: {
+        stacked: false,
+    },
+    plotOptions: {
+        bar: {},
+    },
+    xaxis: {
+        categories: ['Doctors', 'Patients'],
+    },
+    yaxis: {
+        title: {
+            text: 'Count',
+        },
+    },
+    title: {
+        text: 'Doctors & Patients Count',
+        align: 'center',
+    },
+});
+
 
 const setChartData = () => {
-    const documentStyle = getComputedStyle(document.documentElement);
-
     return {
-        labels: ['Doctors', 'Patients', 'Booked Appointments', 'Cancelled Appointments', 'Rescheduled Appointments'],
+        labels: ['Doctors', 'Patients'],
         datasets: [
             {
                 label: 'Doctor Appointment System',
                 data: [
                     total_doctors.value,
                     total_patients.value,
-                    total_booked_appointments.value,
-                    total_cancelled_appointments.value,
-                    total_rescheduled_appointments.value,
                 ],
                 fill: true,
-                backgroundColor: [
-                    '#B0BEC5', 
-                    '#90A4AE',
-                    '#78909C',
-                    '#607D8B',
-                    '#455A64'
-                ],
-                borderColor: [
-                    '#78909C',
-                    '#546E7A',
-                    '#37474F',
-                    '#263238',
-                    '#1C1C1C'
-                ],
-
+                backgroundColor: ['#B0BEC5', '#90A4AE'],
+                borderColor: ['#78909C', '#546E7A'],
                 borderWidth: 1,
             }
         ]
     };
 };
-
 
 const setChartOptions = () => {
     const documentStyle = getComputedStyle(document.documentElement);
@@ -86,13 +116,22 @@ const setChartOptions = () => {
         plugins: {
             legend: {
                 labels: {
-                    color: textColor
+                    color: textColor,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: 'Doctor & Patient Overview',
+                font: {
+                    size: 20
                 }
             },
             tooltip: {
                 callbacks: {
                     label: (context) => {
-
                         const label = context.label || '';
                         const value = context.raw;
                         return `${label}: ${value}`;
@@ -103,7 +142,10 @@ const setChartOptions = () => {
         scales: {
             x: {
                 ticks: {
-                    color: textColorSecondary
+                    color: textColorSecondary,
+                    font: {
+                        size: 12
+                    }
                 },
                 grid: {
                     color: surfaceBorder
@@ -111,7 +153,10 @@ const setChartOptions = () => {
             },
             y: {
                 ticks: {
-                    color: textColorSecondary
+                    color: textColorSecondary,
+                    font: {
+                        size: 12
+                    }
                 },
                 grid: {
                     color: surfaceBorder
@@ -122,87 +167,176 @@ const setChartOptions = () => {
     };
 };
 
+const setPieChartData = () => {
+    return {
+        labels: ['Booked Appointments', 'Cancelled Appointments', 'Rescheduled Appointments'],
+        datasets: [
+            {
+                data: [
+                    total_booked_appointments.value,
+                    total_cancelled_appointments.value,
+                    total_rescheduled_appointments.value
+                ],
+                backgroundColor: [
+                    '#90A4AE',
+                    '#78909C',
+                    '#607D8B'
+                ],
+                hoverBackgroundColor: [
+                    '#B0BEC5',
+                    '#90A4AE',
+                    '#78909C'
+                ]
+            }
+        ]
+    };
+};
+
+const setPieChartOptions = () => {
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--p-text-color');
+
+    return {
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    usePointStyle: true,
+                    color: textColor,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            title: {
+                display: true,
+                text: 'Appointments Overview',
+                font: {
+                    size: 20
+                }
+            }
+        }
+    };
+};
 </script>
 
 <template>
-    <div style="margin-top: 8px;">
+    <div class="dashboard">
         <!-- Dashboard Title -->
-        <h1 className="text-4xl">Dashboard</h1>
+        <h1 class="dashboard-title">Dashboard</h1>
 
-        <!-- Card Section with Equal Spacing -->
-
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; margin-top: 25px">
+        <!-- Card Section -->
+        <div class="stat-cards">
             <!-- Card 1: Total Doctors -->
-            <div className="stat-card">
-                <div className="card-header">
-                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+            <div class="stat-card">
+                <div class="card-header">
+                    <i class="pi pi-user"></i>
                     Total Doctors
                 </div>
-                <div className="card-body">
+                <div class="card-body">
                     <h1>{{ total_doctors }}</h1>
                 </div>
             </div>
 
             <!-- Card 2: Total Patients -->
-            <div className="stat-card">
-                <div className="card-header">
-                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+            <div class="stat-card">
+                <div class="card-header">
+                    <i class="pi pi-users"></i>
                     Total Patients
                 </div>
-                <div className="card-body">
+                <div class="card-body">
                     <h1>{{ total_patients }}</h1>
                 </div>
             </div>
 
             <!-- Card 3: Total Booked Appointments -->
-            <div className="stat-card">
-                <div className="card-header">
-                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+            <div class="stat-card">
+                <div class="card-header">
+                    <i class="pi pi-calendar-plus"></i>
                     Total Booked Appointments
                 </div>
-                <div className="card-body">
+                <div class="card-body">
                     <h1>{{ total_booked_appointments }}</h1>
                 </div>
             </div>
 
             <!-- Card 4: Total Cancelled Appointments -->
-            <div className="stat-card">
-                <div className="card-header">
-                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+            <div class="stat-card">
+                <div class="card-header">
+                    <i class="pi pi-calendar-times"></i>
                     Total Cancelled Appointments
                 </div>
-                <div className="card-body">
+                <div class="card-body">
                     <h1>{{ total_cancelled_appointments }}</h1>
                 </div>
             </div>
 
             <!-- Card 5: Total Rescheduled Appointments -->
-            <div className="stat-card">
-                <div className="card-header">
-                    <i className="pi pi-file" style="margin-right: 8px;"></i>
+            <div class="stat-card">
+                <div class="card-header">
+                    <i class="pi pi-calendar-minus"></i>
                     Total Rescheduled Appointments
                 </div>
-                <div className="card-body">
+                <div class="card-body">
                     <h1>{{ total_rescheduled_appointments }}</h1>
                 </div>
             </div>
         </div>
 
-        <!-- Chart Section -->
-        <section style="margin-top: 40px;">
-            <h2 className="text-2xl">Overview</h2>
-            <div className="card">
-                <Chart type="bar" :data="chartData" :options="chartOptions" class="h-[30rem]"/>
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <h2 class="section-title">Overview</h2>
+            <div class="charts-container">
+                <!-- Bar Chart -->
+                <div class="chart-item">
+                    <div class="card">
+                        <Chart type="bar" :data="chartData" :options="chartOptions" class="chart" />
+                    </div>
+                </div>
+                <!-- Pie Chart -->
+                <div class="chart-item">
+                    <div class="card">
+                        <Chart type="pie" :data="pieChartData" :options="pieChartOptions" class="chart" />
+                    </div>
+                </div>
             </div>
+
+
+            <DoctorPatientCountChart
+                type="bar"
+                title='Customer Count Bar Chart'
+                height="400"
+                width="600"
+                titleAlign="center"
+                :chartSeries="chart_series"
+                :chartOptions="chart_options"
+            />
+
         </section>
     </div>
 </template>
 
 <style scoped>
-/* Same styling as before */
+.dashboard {
+    padding: 20px;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.stat-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 40px;
+}
+
 .stat-card {
     flex: 1;
-    min-width: 250px;
+    min-width: 200px;
     max-width: 300px;
     background-color: white;
     border-radius: 8px;
@@ -217,30 +351,49 @@ const setChartOptions = () => {
     display: flex;
     align-items: center;
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #424242;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.card-body {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.card-header i {
+    margin-right: 10px;
+    font-size: 1.3rem;
 }
 
 .card-body h1 {
-    font-size: 2rem;
+    font-size: 2.5rem;
     margin: 0;
 }
 
-section {
-    padding: 20px;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+.section-title {
+    font-size: 2rem;
+    margin-bottom: 30px;
 }
 
-h2 {
-    margin-bottom: 20px;
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.chart-item {
+    width: 100%;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.chart {
+    height: 400px;
+}
+
+@media (min-width: 1200px) {
+    .charts-container {
+        flex-direction: row;
+    }
+
+    .chart-item {
+        width: calc(50% - 20px);
+    }
 }
 </style>

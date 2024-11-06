@@ -26,7 +26,7 @@ const steps = ref([
 const selected_file = ref(null);
 const uploaded_file_name = ref("");
 const headers = ref([]);
-const selected_headers = ref({}); // Use an object for mapping
+const selected_headers = ref({});
 const preview_data = ref([]);
 
 onMounted(async () => {
@@ -224,12 +224,24 @@ const generatePreviewData = (data, selected_headers) => {
                             Create
                         </Button>
 
-                        <Button @click="openImportDialog" class="p-button-sm">
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            @click="openImportDialog"
+                            class="p-button-sm"
+                        >
                             <i class="pi pi-upload mr-1"></i>
                             Import
                         </Button>
 
-                        <Button label="Export CSV" @click="exportAppointment" class="p-button-sm" style="margin-left: 5px;" />
+                        <Button
+                            v-if="store.assets.permission.includes('appointment-has-access-of-patient') && store.assets.permission.includes('appointment-has-access-of-doctor')"
+                            label="Export CSV"
+                            @click="exportAppointment"
+                            class="p-button-sm"
+                            style="margin-left: 5px;"
+                        >
+                        </Button>
+
 
                         <Button data-testid="appointments-list-reload" class="p-button-sm" @click="store.getList()">
                             <i class="pi pi-refresh mr-1"></i>
@@ -290,12 +302,16 @@ const generatePreviewData = (data, selected_headers) => {
                                     <h3>Database Headers</h3>
                                     <div class="database-header-container">
                                         <div v-for="(field, index) in store.assets.fields" :key="index" class="header-row">
-                                            <span class="database-header">{{ field }}</span>
+                <span class="database-header">
+                    {{ field }}
+                    <span v-if="index < 6" class="required-star">*</span>
+                </span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="column">
+
+                            <div class="column">
                                     <h3>Extracted Headers</h3>
                                     <div v-if="headers.length > 0">
                                         <div v-for="(dbHeader, index) in store.assets.fields" :key="index">
@@ -479,13 +495,12 @@ h2 {
     margin-top: 0.5rem;
 }
 
-.error-message {
-    color: #d9534f;
-    font-weight: bold;
-    margin-top: 1rem;
-}
-
 .mapping-summary {
     margin: 20px 0;
 }
+.required-star {
+    color: red;
+    margin-left: 4px;
+}
+
 </style>

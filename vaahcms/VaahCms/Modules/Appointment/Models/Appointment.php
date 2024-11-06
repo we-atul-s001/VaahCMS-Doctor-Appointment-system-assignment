@@ -229,7 +229,7 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
-    public static function createItem($request)
+    public static function createItem(Request $request)
     {
 
         $check_status = self::checkAppointmentTime($request->input('slot_start_time'),
@@ -271,6 +271,7 @@ class Appointment extends VaahModel
         }
 
         $item = new self();
+        $inputs['slot_start_time'] = self::formatTimeZone($inputs['slot_start_time']);
         $item->fill($inputs);
 
         $item->status = 1;
@@ -289,10 +290,15 @@ class Appointment extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function formatTimeZone($time): Carbon
+    {
+        return Carbon::parse($time)->timezone('Asia/Kolkata');
+    }
+    //-------------------------------------------------
     public static function checkAppointmentTime($slot_start_time, $appointment_date, $doctorId)
     {
 
-        $slot_time = Carbon::parse($slot_start_time);
+        $slot_time = self::formatTimeZone($slot_start_time);
 
         $slot_date = $appointment_date;
 
@@ -323,29 +329,42 @@ class Appointment extends VaahModel
     public static function checkDoctorSlot($data)
     {
         $timezone = Session::get('user_timezone');
-        $start_time = $data['slot_start_time'];
+        $start_time = self::formatTimeZone($data['slot_start_time']);
+
+        $start_time_only = $start_time->format('H:i:s');
 
 
-        $doctor_shift_time = Doctor::where('id', $data['doctor_id'])
-            ->where('shift_start_time', '<=', $start_time)
-            ->exists();
-        if (!$doctor_shift_time) {
+        $doctor_shift = Doctor::where('id', $data['doctor_id'])
+            ->select('shift_start_time', 'shift_end_time')
+            ->first();
 
+        if (!$doctor_shift) {
+            return 'Doctor not found';
+        }
+
+        $shift_start_time = self::formatTimeZone($doctor_shift->shift_start_time)->format('H:i:s');
+        $shift_end_time = self::formatTimeZone($doctor_shift->shift_end_time)->format('H:i:s');
+
+        if (!($start_time_only >= $shift_start_time && $start_time_only <= $shift_end_time)) {
             return 'Invalid Slot';
         }
 
-        $slots_exist = self::where('doctor_id', $data['doctor_id'])->where('date', $data['date'])->where(function ($query)
-        use ($start_time) {
-            $query
-                ->where('slot_start_time', '>', $start_time);
-        })->withTrashed()->exists();
+
+        $slots_exist = self::where('doctor_id', $data['doctor_id'])
+            ->where('date', $data['date'])
+            ->where(function ($query) use ($start_time_only) {
+                $query->whereRaw("TIME(slot_start_time) >= ?", [$start_time_only]);
+            })
+            ->withTrashed()
+            ->exists();
+
         if ($slots_exist) {
             return 'No Slot Available';
+        } else {
+            return false;
         }
-        else{
-            return false;        }
-
     }
+
 
     //-------------------------------------------------
     public static function sendAppointmentMail($inputs, $subject)
@@ -483,12 +502,15 @@ class Appointment extends VaahModel
                     ->orWhere(function ($query) use ($search_item) {
                         $search_item = strtolower($search_item);
 
-                        if ($search_item === 'booked') {
+                        if (str_contains('booked', $search_item)) {
+
                             $query->where('status', 1);
-                        } elseif ($search_item === 'cancelled') {
+                        } elseif (str_contains('cancelled', $search_item)) {
+
                             $query->whereIn('status', [0, 2]);
                         }
                     });
+
 
             });
         }
@@ -905,7 +927,7 @@ class Appointment extends VaahModel
             $file_contents = $request->json('csvData', []);
             $header_mapping = $request->json('headerMapping', []);
 
-            // Define the required headers (without Email, since it's auto-checked)
+
             $required_headers = [
                 'Patient' => 'Patient',
                 'Doctor' => 'Doctor',

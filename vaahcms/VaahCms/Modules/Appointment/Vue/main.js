@@ -52,6 +52,7 @@ import Tag from "primevue/tag";
 import InputNumber from 'primevue/inputnumber';
 import Calendar from 'primevue/calendar';
 import Dropdown from 'primevue/dropdown';
+import ApexChart from 'vue3-apexcharts';
 //-------------/CRUD PrimeVue Imports
 
 
@@ -97,6 +98,7 @@ app.component('Dialog', Dialog);
 app.component('Checkbox', Checkbox);
 app.component('FileUpload', FileUpload);
 app.component('Steps', Steps);
+app.component('ApexChart', ApexChart);
 app.use(VueMobileDetection);
 
 //-------------/PrimeVue Use

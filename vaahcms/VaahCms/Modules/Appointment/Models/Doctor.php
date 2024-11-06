@@ -36,13 +36,13 @@ class Doctor extends VaahModel
     protected $fillable = [
         'uuid',
         'name',
-        'slug',
         'email',
-        'phone',
         'price_per_session',
         'specialization',
         'shift_start_time',
         'shift_end_time',
+        'slug',
+        'phone',
         'is_active',
         'created_by',
         'updated_by',
@@ -51,6 +51,12 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     protected $fill_except = [
 
+        'created_by',
+        'updated_by',
+        'deleted_by',
+        'is_active',
+        'slug',
+        'uuid'
     ];
 
     //-------------------------------------------------
@@ -95,6 +101,34 @@ class Doctor extends VaahModel
             'updated_by',
             'deleted_by',
         ];
+    }
+
+    //-------------------------------------------------
+    public static function getCustomColumnFields()
+    {
+        $model = new self();
+
+        $fillable_columns = $model->fillable;
+
+        $fillable_columns = array_diff($fillable_columns, $model->fill_except);
+
+        $columns_mapping = [
+
+            'name' => 'Name',
+            'email' => 'Email',
+            'phone' => 'Phone',
+            'price_per_session' => 'Price',
+            'specialization' => 'Specialization',
+            'shift_start_time' => 'shift_start_time',
+            'shift_end_time' => 'shift_end_time',
+
+        ];
+
+        $replace_columns_frontend  = array_map(function ($column) use ($columns_mapping) {
+            return $columns_mapping[$column] ?? $column;
+        }, $fillable_columns);
+
+        return $replace_columns_frontend;
     }
 
     //-------------------------------------------------
@@ -183,6 +217,11 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function formatTimeZone($time): Carbon
+    {
+        return Carbon::parse($time)->timezone('Asia/Kolkata');
+    }
+    //-------------------------------------------------
     public static function createItem($request)
     {
 
@@ -195,16 +234,8 @@ class Doctor extends VaahModel
 
         if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
             $response['success'] = false;
-            $response['errors'][] = "The price per session cannot exceed 500.";
+            $response['errors'][] = "The price per session cannot exceed ₹ 500.";
             return $response;
-        }
-
-        if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
-            if (strtotime($inputs['shift_end_time']) <= strtotime($inputs['shift_start_time'])) {
-                $response['success'] = false;
-                $response['errors'][] = "Shift end time is not valid time";
-                return $response;
-            }
         }
 
         if (!isset($inputs['is_active']) || $inputs['is_active'] == 0) {
@@ -233,6 +264,8 @@ class Doctor extends VaahModel
 
         $item = new self();
         $item->fill($inputs);
+       $item->shift_start_time = self::formatTimeZone($inputs['shift_start_time']);
+        $item->shift_end_time = self::formatTimeZone($inputs['shift_end_time']);
         $item->save();
 
         $response = self::getItem($item->id);
@@ -242,41 +275,6 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
-
-    protected function shiftStartTime(): Attribute
-    {
-
-        return Attribute::make(
-            get: function (string $value = null,) {
-                $timezone = Session::get('user_timezone');
-
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
-
-    //-------------------------------------------------
-    public static function formatTime($time, $format = 'H:i:s A')
-    {
-        return Carbon::parse($time)
-            ->setTimezone("ASIA/KOLKATA")
-            ->format($format);
-    }
-
-    //-------------------------------------------------
-    protected function shiftEndTime(): Attribute
-    {
-        return Attribute::make(
-            get: function (string $value = null) {
-                $timezone = Session::get('user_timezone');
-                return Carbon::parse($value)
-                    ->setTimezone($timezone)
-                    ->format('H:i');
-            },
-        );
-    }
 
 
     //-------------------------------------------------
@@ -344,23 +342,28 @@ class Doctor extends VaahModel
     //-------------------------------------------------
     public function scopeSearchFilter($query, $filter)
     {
-
         if (!isset($filter['q'])) {
             return $query;
         }
-        $search_array = explode(' ', $filter['q']);
+
+        $search_term = preg_replace('/\s+/', ' ', trim($filter['q']));
+        $search_array = explode(' ', $search_term);
+
         foreach ($search_array as $search_item) {
-            $query->where(function ($q1) use ($search_item) {
-                $q1->where('name', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('slug', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('email', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('phone', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('specialization', 'LIKE', '%' . $search_item . '%')
-                    ->orWhere('id', 'LIKE', $search_item . '%');
+
+            $search_item_normalized = preg_replace('/\s+/', ' ', $search_term);
+
+            $query->where(function ($q1) use ($search_item_normalized) {
+
+                $q1->whereRaw('REPLACE(REPLACE(name, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(email, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(phone, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(specialization, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%'])
+                    ->orWhereRaw('REPLACE(REPLACE(id, "  ", " "), " ", "") LIKE ?', ['%' . str_replace(' ', '', $search_item_normalized) . '%']);
             });
         }
-
     }
+
 
     //-------------------------------------------------
     public function scopeIsFieldFilter($query, $field_filter)
@@ -395,8 +398,8 @@ class Doctor extends VaahModel
                     break;
                 case 'timings' :
                     $parts = explode('-', $filter_value);
-                    $min_time = Carbon::parse($parts[0])->format('g:i A');
-                    $max_time = Carbon::parse($parts[1])->format('g:i A');
+                    $min_time = Carbon::parse($parts[0])->format('H:i');
+                    $max_time = Carbon::parse($parts[1])->format('H:i');
                     $query->whereRaw('TIME(shift_start_time) BETWEEN ? AND ?', [$min_time, $max_time]);
                     break;
             }
@@ -405,14 +408,48 @@ class Doctor extends VaahModel
     }
 
     //-------------------------------------------------
+    public static function scopeIsTimingField($query, $filter_value)
+    {
+        try {
+            if (isset($filter_value['timing_range']) && !empty($filter_value['timing_range'])) {
+                // Decode URL-encoded timing range string
+                $timing_range = urldecode($filter_value['timing_range']); // "09:00 PM - 11:00 PM"
+
+                // Remove AM/PM from the time range
+                $timing_range = str_replace([' AM', ' PM'], '', $timing_range); // "09:00 - 11:00"
+
+                list($start, $end) = explode('-', $timing_range);
+                $start_time = trim($start). ':00';
+                $end_time = trim($end). ':00';
+
+
+                $start_time_24 = (new \DateTime($start_time))->format('H:i');
+                $end_time_24 = (new \DateTime($end_time))->format('H:i');
+
+
+                $query->where(function ($q) use ($start_time_24, $end_time_24) {
+                    $q->where('shift_start_time', '>=', $start_time_24)
+                        ->where('shift_end_time', '<=', $end_time_24);
+                });
+            }
+        } catch (\Exception $e) {
+            \Log::error($e);
+        }
+    }
+
+
+    //-------------------------------------------------
     public static function getList($request)
     {
+
         $list = self::getSorted($request->filter);
         $list->isActiveFilter($request->filter);
         $list->trashedFilter($request->filter);
         $list->searchFilter($request->filter);
+
         if ($request->has('field_filter')) {
             $list->isFieldFilter($request->field_filter);
+            $list->isTimingField($request->field_filter);
         }
 
         $rows = config('vaahcms.per_page');
@@ -667,10 +704,10 @@ class Doctor extends VaahModel
         if (!$validation['success']) {
             return $validation;
         }
-        
+
         if (isset($inputs['price_per_session']) && $inputs['price_per_session'] > 500) {
             $response['success'] = false;
-            $response['errors'][] = "The price per session cannot exceed 500.";
+            $response['errors'][] = "The price per session cannot exceed ₹ 500.";
             return $response;
         }
 
@@ -706,17 +743,30 @@ class Doctor extends VaahModel
             ->withTrashed()
             ->first();
 
-        $working_hours_changed = ($item->shift_start_time != $inputs['shift_start_time']) ||
-            ($item->shift_end_time != $inputs['shift_end_time']);
+        if (isset($inputs['shift_start_time']) && isset($inputs['shift_end_time'])) {
+            $start_time = Self::formatTimeZone($inputs['shift_start_time']);
+            $end_time = Self::formatTimeZone($inputs['shift_end_time']);
+
+            if ($start_time >= $end_time) {
+                return [
+                    'success' => false,
+                    'errors' => ["Shift end time is not valid time"]
+                ];
+            }
+        }
+
+        $working_hours_changed = ($item->shift_start_time != $start_time) ||
+            ($item->shift_end_time != $end_time);
 
 
-        $item->fill($inputs);
+        $item->shift_start_time = $start_time;
+        $item->shift_end_time = $end_time;
         $item->save();
 
         if ($working_hours_changed) {
 
 
-            $appointments = Appointment::where('doctor_id', $id)
+        $appointments = Appointment::where('doctor_id', $id)
                 ->where('patient_id', '!=', null)
                 ->get();
 
@@ -909,18 +959,16 @@ class Doctor extends VaahModel
         $phone_length = rand(7, 16);
         $inputs['phone'] = (int)$faker->numerify(str_repeat('#', $phone_length));
         $inputs['specialization'] = $random_specialization[array_rand($random_specialization)];
-        $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
+        $start_hour = $faker->unique()->time('H:i');
 
-        while (strpos($inputs['shift_start_time'], 'PM') !== false) {
-            $inputs['shift_start_time'] = $faker->time($format = 'g:i A', $max = '11:59 AM');
-        }
+        $time = Carbon::createFromFormat('H:i', $start_hour, 'Asia/Kolkata');
 
-        $shift_start_timestamp = strtotime($inputs['shift_start_time']);
+        $inputs['shift_start_time'] = $time->minute(round($time->minute / 15) * 15)
+            ->second(0)
+            ->format('Y-m-d h:i:s A');
 
-        $shift_end_timestamp = $shift_start_timestamp + (4 * 60 * 60);
+        $inputs['shift_end_time'] = $time->copy()->addHours(4)->format('Y-m-d h:i:s A');
 
-
-        $inputs['shift_end_time'] = date('g:i A', $shift_end_timestamp);
 
         $inputs['price_per_session'] = $faker->numberBetween(100, 500);
 
@@ -964,18 +1012,35 @@ class Doctor extends VaahModel
 
 
     //-------------------------------------------------
-    public static function getSpecializations(){
+    /*
+     * Get the list of doctors with the count of appointments for each doctor
+     * grouped by the doctor's specialization.
+     * Also, get the list of time ranges for the doctor's shift.
+     * This data is used in the doctor's list page.
+     */
+    public static function getSpecializations()
+    {
 
-        $specializations = self::distinct()->pluck('specialization');
-        $time_ranges = self::select('shift_start_time', 'shift_end_time')->get();
+        $specializations = self::select('specialization')
+            ->groupBy('specialization')
+            ->selectRaw('specialization, COUNT(*) as doctor_count')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'specialization' => $item->specialization,
+                    'doctor_count' => $item->doctor_count,
+                ];
+            });
 
+        $time_ranges = self::select('shift_start_time', 'shift_end_time')->distinct()->get();
 
         return response()->json([
             'specializations' => $specializations,
-            'time_ranges' => $time_ranges->toArray()
+            'time_ranges' => $time_ranges->toArray(),
         ]);
-
     }
+
+
 
     //-------------------------------------------------
     /*
@@ -987,147 +1052,134 @@ class Doctor extends VaahModel
        Finally, it returns a success message.
      *
      */
+
+
     public static function bulkImport(Request $request)
     {
-        $records_processed = 0;
         $records_skipped = 0;
+        $response = [
+            'success' => false,
+            'error' => [
+                'missing_fields_header' => [],
+                'availability_errors' => [],
+                'nameErrors' => [],
+                'header_mapping_errors' => [],
+                'email_errors' => [],
+                'time_errors' => []
+            ],
+            'message' => []
+        ];
 
         try {
-            $file_contents = $request->json()->all();
+            $file_contents = $request->json('csv_data', []);
+            $header_mapping = $request->json('header_mapping', []);
 
-            if (!$file_contents) {
-                return response()->json(['success' => false, 'message' => 'No data provided.'], 400);
+            // Check if CSV data is provided
+            if (empty($file_contents)) {
+                $response['messages'][] = 'No data provided.';
+                return response()->json($response, 400);
             }
 
-            $header_mapping = [
-                'name' => ['name', 'Name'],
-                'email' => ['email', 'Email'],
-                'price' => ['price', 'Price'],
-                'phone' => ['phone', 'Phone'],
-                'specialization' => ['specialization', 'Specialization'],
-                'shift_start_time' => ['shift_start_time', 'start_time'],
-                'shift_end_time' => ['shift_end_time', 'end_time'],
+            // Required fields for mapping
+            $required_fields = [
+                'Name' => 'Name',
+                'Email' => 'Email',
+                'Specialization' => 'Specialization',
+                'Price' => 'Price',
+                'shift_start_time' => 'shift_start_time',
+                'shift_end_time' => 'shift_end_time',
             ];
 
-            $errors = [
-                'email_errors' => [],
-                'phone_errors' => [],
-                'time_errors' => [],
-                'missing_field_errors' => [],
-            ];
-
-            $first_row = $file_contents[0] ?? [];
-            $columns = array_keys($first_row);
-
-            $field_map = [];
-            foreach ($header_mapping as $db_field => $aliases) {
-                foreach ($columns as $column) {
-                    if (in_array(strtolower($column), array_map('strtolower', $aliases))) {
-                        $field_map[$db_field] = $column;
-                        break;
-                    }
+            // Validate header mappings
+            foreach ($required_fields as $db_field => $expected_csv_header) {
+                if (!isset($header_mapping[$db_field]) || $header_mapping[$db_field] !== $expected_csv_header) {
+                    $response['error']['header_mapping_errors'][] = "Error: '{$db_field}' must be mapped to CSV header '{$expected_csv_header}'.";
                 }
             }
 
-            $required_fields = ['name', 'email', 'phone', 'price', 'specialization', 'shift_start_time', 'shift_end_time'];
-            foreach ($required_fields as $required_field) {
-                if (!isset($field_map[$required_field])) {
-                    return response()->json(['success' => false, 'message' => "Missing required field: $required_field in the file."], 400);
-                }
+            // Check if there are any header mapping errors
+            if (!empty($response['error']['header_mapping_errors'])) {
+                $response['error']['header_mapping_errors'][] = 'Header mapping errors found. Please correct the mapping and try again.';
+                // Always ensure the 'error' field is present
+                return response()->json($response, 400);
             }
 
-            $emails = array_column($file_contents, $field_map['email']);
-            $phones = array_column($file_contents, $field_map['phone']);
+            $records_processed = 0;
+            $existing_emails = self::pluck('email')->toArray();
 
-            $existing_doctors = self::whereIn('email', $emails)
-                ->orWhereIn('phone', $phones)
-                ->withTrashed()
-                ->get(['email', 'phone']);
-
-            $existing_emails = $existing_doctors->pluck('email')->toArray();
-
-            foreach ($file_contents as $content) {
-                foreach ($content as $key => $value) {
-                    $content[$key] = trim($value, '"');
-                    if ($key === 'price' && $value === 'NA') {
-                        $content[$key] = null;
-                    }
-                }
-
+            foreach ($file_contents as $index => $content) {
                 $mapped_content = [];
-                foreach ($field_map as $db_field => $csv_header) {
+                foreach ($header_mapping as $db_field => $csv_header) {
                     $mapped_content[$db_field] = $content[$csv_header] ?? null;
                 }
 
-                foreach ($required_fields as $required_field) {
+                // Check required fields per record
+                foreach ($required_fields as $required_field => $header) {
                     if (empty($mapped_content[$required_field])) {
-                        $errors['missing_field_errors'][] = "The field '$required_field' is required for doctor: " . ($mapped_content['name'] ?? 'unknown');
+                        $response['error']['missing_fields_header'][] = "The field '$header' is required for doctor: " . ($mapped_content['Name'] ?? 'unknown');
                         $records_skipped++;
                         continue 2;
                     }
                 }
 
-                if (!filter_var($mapped_content['email'], FILTER_VALIDATE_EMAIL)) {
-                    $errors['email_errors'][] = "Invalid email format for doctor: {$mapped_content['name']}.";
+                // Validate email format
+                if (!filter_var($mapped_content['Email'], FILTER_VALIDATE_EMAIL)) {
+                    $response['error']['email_errors'][] = "Invalid email format for doctor: {$mapped_content['Name']}.";
                     $records_skipped++;
                     continue;
                 }
 
-                if (empty($mapped_content['phone'])) {
-                    $errors['phone_errors'][] = "Phone number is required for doctor: {$mapped_content['name']}.";
+                // Check for duplicate email
+                if (in_array($mapped_content['Email'], $existing_emails)) {
+                    $response['error']['email_errors'][] = "Email {$mapped_content['Email']} already exists for another doctor.";
                     $records_skipped++;
                     continue;
                 }
 
-                if (in_array($mapped_content['email'], $existing_emails)) {
-                    $errors['email_errors'][] = "The email {$mapped_content['email']} is already stored for another doctor.";
-                    $records_skipped++;
-                    continue;
-                }
+                // Optional defaults
+                $mapped_content['Price'] = $mapped_content['Price'] ?? 0.00;
+                $mapped_content['Specialization'] = $mapped_content['Specialization'] ?? 'General';
 
-                $mapped_content['price'] = $mapped_content['price'] ?? 0.00;
-                $mapped_content['specialization'] = $mapped_content['specialization'] ?? 'General';
-
+                // Validate shift times
                 if (isset($mapped_content['shift_start_time'], $mapped_content['shift_end_time'])) {
-                    $start_time = strtotime($mapped_content['shift_start_time']);
-                    $end_time = strtotime($mapped_content['shift_end_time']);
+                    $start_time = self::formatTimeZone($mapped_content['shift_start_time']);
+                    $end_time = self::formatTimeZone($mapped_content['shift_end_time']);
 
                     if ($start_time === false || $end_time === false || $start_time >= $end_time) {
-                        $errors['time_errors'][] = "Invalid or incorrect shift times for doctor: {$mapped_content['name']}.";
+                        $response['error']['time_errors'][] = "Invalid shift times for doctor: {$mapped_content['Name']}.";
                         $records_skipped++;
                         continue;
                     }
                 }
 
+                // Database operation
                 self::updateOrCreate(
+                    ['email' => $mapped_content['Email']],
                     [
-                        'email' => $mapped_content['email'],
-                        'phone' => $mapped_content['phone'],
-                    ],
-                    [
-                        'name' => $mapped_content['name'],
-                        'slug' => Str::slug($mapped_content['name']),
-                        'price_per_session' => $mapped_content['price'],
-                        'specialization' => $mapped_content['specialization'],
-                        'shift_start_time' => self::formatTime($mapped_content['shift_start_time']),
-                        'shift_end_time' => self::formatTime($mapped_content['shift_end_time']),
+                        'name' => $mapped_content['Name'],
+                        'slug' => Str::slug($mapped_content['Name']),
+                        'phone' => $mapped_content['Phone'] ?? 'N/A',
+                        'price_per_session' => $mapped_content['Price'],
+                        'specialization' => $mapped_content['Specialization'],
+                        'shift_start_time' => self::formatTimeZone($mapped_content['shift_start_time']),
+                        'shift_end_time' => self::formatTimeZone($mapped_content['shift_end_time']),
                         'is_active' => 1,
                     ]
                 );
 
-                DoctorBulkRecord::dispatch($mapped_content['email'], $mapped_content['phone'], $mapped_content['name'], $mapped_content['price'], $mapped_content['specialization'], $mapped_content['shift_start_time'], $mapped_content['shift_end_time']);
-
                 $records_processed++;
             }
 
-            $response = [];
-
+            // Set success and completion messages
             if ($records_processed > 0) {
                 $response['messages'][] = trans("vaahcms-general.imported_successfully");
             }
 
-            if (!empty($errors['email_errors']) || !empty($errors['phone_errors']) || !empty($errors['time_errors']) || !empty($errors['missing_field_errors'])) {
-                $response['error'] = $errors;
+            // Check for remaining errors and ensure the error object structure is consistent
+            if (!empty($response['error']['email_errors']) || !empty($response['error']['time_errors']) ||
+                !empty($response['error']['missing_fields_header']) || !empty($response['error']['header_mapping_errors'])) {
+                // Ensure that 'error' has a consistent structure
+                $response['error'] = array_filter($response['error']); // Remove empty arrays
             }
 
             if ($records_processed == 0 && $records_skipped > 0) {
@@ -1137,14 +1189,14 @@ class Doctor extends VaahModel
             }
 
             return response()->json($response);
+
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'An error occurred during import: ' . $e->getMessage()], 500);
+            // Always include the error object in the response, even on exceptions
+            $response['error'] = $response['error'] ?? []; // Ensure error array is present
+            $response['messages'][] = 'An error occurred during import: ' . $e->getMessage();
+            return response()->json($response, 500);
         }
     }
-
-
-
-
 
 
     //-------------------------------------------------
@@ -1158,6 +1210,7 @@ class Doctor extends VaahModel
         $selected_ids = $request->input('selected_ids', null);
         return Excel::download(new DoctorExport($selected_ids),'doctorsList.csv');
     }
+
 
 
 

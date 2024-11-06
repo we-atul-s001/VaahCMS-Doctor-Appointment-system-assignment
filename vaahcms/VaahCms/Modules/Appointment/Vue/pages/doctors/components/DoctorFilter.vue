@@ -16,6 +16,13 @@ const price_range = [
     '300-400',
     '400-500',
 ];
+const time_range = [
+    '09:00 AM-12:00 PM',
+    '12:00 PM-03:00 PM',
+    '03:00 PM-06:00 PM',
+    '06:00 PM-09:00 PM',
+    '09:00 PM-12:00 AM'
+];
 
 const price_range_with_currency = price_range.map(range => {
     const [min, max] = range.split('-');
@@ -26,12 +33,6 @@ const store = useDoctorStore();
 
 onBeforeMount(() => {
     store.getSpecializationList();
-});
-
-
-
-const isNoneSelected = computed(() => {
-    return !store.query.field_filter.specialization || store.query.field_filter.specialization.length === 0;
 });
 
 
@@ -67,14 +68,19 @@ const isNoneSelected = computed(() => {
 
 
 
-                <!-- Dynamically generated specializations -->
-                <div v-for="(specialization, index) in store.specializations" :key="index" class="field-checkbox">
+                <div v-for="(item, index) in store.specializations" :key="index" class="field-checkbox">
                     <Checkbox :name="'specialization-' + index"
-                              :inputId="specialization"
-                              :value="specialization"
+                              :inputId="item.specialization"
+                              :value="item.specialization"
                               v-model="store.query.field_filter.specialization" />
-                    <label :for="specialization" class="cursor-pointer">{{ specialization }}</label>
+                    <label :for="item.specialization" class="cursor-pointer">
+                        {{ item.specialization }}
+                    </label>
+                    <Badge v-if="item.doctor_count > 0" :value="item.doctor_count" class="specialization-badge" />
                 </div>
+
+
+
             </VhFieldVertical>
 
             <Divider />
@@ -103,7 +109,7 @@ const isNoneSelected = computed(() => {
                     <b>Timings:</b>
                 </template>
 
-                <div v-for="(timing, index) in store.timings" :key="index" class="field-radiobutton">
+                <div v-for="(timing, index) in time_range" :key="index" class="field-radiobutton">
                     <RadioButton name="timing"
                               :inputId="timing"
                               :value="timing"
@@ -119,3 +125,16 @@ const isNoneSelected = computed(() => {
 
     </div>
 </template>
+<style>
+
+.field-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+}
+
+.specialization-badge {
+    margin-left: 0.1rem;
+}
+</style>

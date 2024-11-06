@@ -22,7 +22,8 @@ let empty_states = {
         field_filter: {
             price: [],
             specialization: [],
-            timings: []
+            timings: [],
+            doctor_count: [],
         },
     },
     action: {
@@ -76,8 +77,10 @@ export const useDoctorStore = defineStore({
         specializations: [],
         timings: [],
         is_visible_errors: false,
-        email_errors_display: null,
+        email_name_errors_display: null,
         missing_fields_header: null,
+        header_mapping_errors_display: null,
+        time_errors_display: null,
     }),
     getters: {
 
@@ -604,17 +607,30 @@ export const useDoctorStore = defineStore({
         {
             this.count_filters = 0;
             this.count_filters_doctors = 0;
-            if(query && query.filter)
-            {
-                let filter = vaah().cleanObject(query.filter);
-                this.count_filters = Object.keys(filter).length;
-            }
-            else if (query.quick_filters_doctors)
-            {
-                let filter = vaah().cleanObject(query.quick_filters_doctors);
-                this.count_filters_doctors = Object.keys(filter).length;
+
+            if (query) {
+
+                if (query.filter) {
+                    const filter = vaah().cleanObject(query.filter);
+                    this.count_filters = Object.keys(filter).length;
+                }
+
+
+                if (query.field_filter) {
+                    const field_filter_doctor = vaah().cleanObject(query.field_filter);
+                    this.count_filters_doctors = Object.keys(field_filter_doctor).reduce((count, key) => {
+
+                        if (Array.isArray(field_filter_doctor[key]) && field_filter_doctor[key].length > 0) {
+                            return count + 1;
+                        } else if (field_filter_doctor[key]) {
+                            return count + 1;
+                        }
+                        return count;
+                    }, 0);
+                }
             }
         },
+
         //---------------------------------------------------------------------
         async clearSearch()
         {
@@ -985,6 +1001,7 @@ export const useDoctorStore = defineStore({
                 this.ajax_url.concat('/specialization'),
                 (data,res) => {
                     this.getList();
+
                     this.specializations = res.data.specializations;
 
                     if (Array.isArray(res.data.time_ranges)) {
@@ -1058,8 +1075,11 @@ export const useDoctorStore = defineStore({
             );
         },
         async importDoctorsAfter(data, res){
-            this.email_errors_display = res.data.error.email_errors;
+            console.log(res.data);
+            this.email_name_errors_display = res.data.error.email_errors;
             this.missing_fields_header = res.data.error.missing_field_errors;
+            this.header_mapping_errors_display = res.data.error.header_mapping_errors;
+            this.time_errors_display = res.data.error.time_errors;
             this.is_visible_errors = true;
             await this.getList();
         }

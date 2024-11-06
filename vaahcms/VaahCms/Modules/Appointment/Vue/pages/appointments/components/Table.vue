@@ -5,20 +5,22 @@ import { useAppointmentStore } from '../../../stores/store-appointments'
 const store = useAppointmentStore();
 const useVaah = vaah();
 
-function formatTimeWithAmPm(time) {
-    if (!time) return '';
 
-    const [hours, minutes] = time.split(':');
-    const date = new Date();
-    date.setHours(hours);
-    date.setMinutes(minutes);
-    const amPm = date.getHours() >= 12 ? 'PM' : 'AM';
+function formatTimeWithAmPm(time24) {
 
-    let hour = date.getHours() % 12;
-    if (hour === 0) hour = 12;
+    const [hours24, minutes] = time24.split(':').map(Number);
 
-    return `${hour}:${minutes} ${amPm}`;
+
+    const ampm = hours24 >= 12 ? 'PM' : 'AM';
+    const hours12 = hours24 % 12 || 12;
+
+
+    const minutesFormatted = minutes < 10 ? `0${minutes}` : minutes;
+
+
+    return `${hours12}:${minutesFormatted} ${ampm}`;
 }
+
 </script>
 
 <template>
@@ -52,7 +54,7 @@ function formatTimeWithAmPm(time) {
                             <span>{{ item.reason || 'N/A' }}</span>
                         </div>
                         <div class="mobile-cell">
-                            <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text"  @click="store.confirmToCancelAppointment(item)"></Button>
+                            <Button icon="pi pi-times" class="p-button-tiny p-button-danger p-button-text" v-tooltip.top="'Cancel Appointment'"  @click="store.confirmToCancelAppointment(item)"></Button>
                             <Button class="p-button-tiny p-button-danger p-button-text" data-testid="doctors-table-action-trash"
                                     v-if="store.isViewLarge() && !item.deleted_at && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
                                     @click="store.itemAction('trash', item)" v-tooltip.top="'Trash'" icon="pi pi-trash"></Button>
@@ -93,7 +95,8 @@ function formatTimeWithAmPm(time) {
 
                 <Column field="date" header="Date and Slot" class="overflow-wrap-anywhere" :sortable="true">
                     <template #body="prop">
-                        {{ prop.data?.date }} at {{ formatTimeWithAmPm(prop.data.slot_start_time) }}
+                        {{prop.data?.date}} to {{formatTimeWithAmPm(prop.data.slot_start_time)}}
+
                     </template>
                 </Column>
                 <Column field="status" header="Status" class="overflow-wrap-anywhere" :sortable="true">
@@ -127,8 +130,12 @@ function formatTimeWithAmPm(time) {
                 <Column field="actions" style="width:150px;" :style="{width: store.getActionWidth() }" :header="store.getActionLabel()">
                     <template #body="prop">
                         <div class="p-inputgroup">
-                            <Button class="p-button-tiny p-button-text" data-testid="appoinments-table-to-view" v-tooltip.top="'View'"
-                                    @click="store.toView(prop.data)" icon="pi pi-eye" />
+                            <Button
+                                    class="p-button-tiny p-button-text"
+                                    data-testid="appointments-table-to-view"
+                                    v-tooltip.top="'View'"
+                                    @click="store.toView(prop.data)"
+                                    icon="pi pi-eye" />
 
                             <Button class="p-button-tiny p-button-text" data-testid="appoinments-table-to-edit"
                                     v-if="!(prop.data.status === 1 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient') && store.hasPermission(store.assets.permission, 'appointment-has-access-of-doctor')) && prop.data.status !== 2 && store.hasPermission(store.assets.permission, 'appointment-has-access-of-patient')"
@@ -148,6 +155,9 @@ function formatTimeWithAmPm(time) {
                         </div>
                     </template>
                 </Column>
+                <template #empty="prop">
+                    <div style="text-align: center; font-size: 12px; color: #888;">No records found.</div>
+                </template>
             </DataTable>
         </div>
 
@@ -215,9 +225,13 @@ function formatTimeWithAmPm(time) {
             </div>
         </Dialog>
 
-        <Paginator v-if="store.query.rows" v-model:rows="store.query.rows" :totalRecords="store.list.total"
-                   :first="((store.query.page ?? 1) - 1) * store.query.rows" @page="store.paginate($event)"
-                   :rowsPerPageOptions="store.rows_per_page" class="bg-white-alpha-0 pt-2">
+        <Paginator v-if="store.query.rows"
+                   v-model:rows="store.query.rows"
+                   :totalRecords="store.list.total"
+                   :first="((store.query.page??1)-1)*store.query.rows"
+                   @page="store.paginate($event)"
+                   :rowsPerPageOptions="store.rows_per_page"
+                   class="bg-white-alpha-0 pt-2">
         </Paginator>
     </div>
 </template>
