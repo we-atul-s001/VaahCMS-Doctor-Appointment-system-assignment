@@ -1,13 +1,3 @@
-<template>
-    <div>
-        <ApexChart
-            :options="chartOptions"
-            :series="chartSeries"
-            v-bind="$attrs"
-        />
-    </div>
-</template>
-
 <script setup>
 import { ref, defineProps, watch } from 'vue';
 
@@ -50,7 +40,7 @@ const chartOptions = ref({
         bar: {}
     },
     xaxis: {
-        categories: ['Doctors', 'Patients'], // Labels for the bar chart
+        categories: ['Doctors', 'Patients'], 
     },
     yaxis: {
         title: {
@@ -73,3 +63,14 @@ watch(() => props.chartSeries, (newSeries) => {
     chartSeries.value = newSeries;
 }, { immediate: true });
 </script>
+<template>
+    <div>
+        <ApexChart
+            :options="chartOptions"
+            :series="chartSeries"
+            v-bind="$attrs"
+        />
+    </div>
+</template>
+
+
