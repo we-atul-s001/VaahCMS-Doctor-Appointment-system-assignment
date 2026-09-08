@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VaahCMS Doctor Appointment System - A simple demo page showcasing semantic HTML5 structure with internal and external links, navigation, images, and meaningful content.">
+    <title>VaahCMS Doctor Appointment System | Demo Page</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1.5rem 2rem;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        nav {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        main {
+            max-width: 960px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        section {
+            background-color: var(--card-bg);
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        section h2 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .image-grid img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+        }
+        footer {
+            background-color: var(--secondary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 2rem;
+            margin-top: 2rem;
+        }
+        footer a {
+            color: #fbbf24;
+        }
+        ul.features {
+            padding-left: 1.25rem;
+        }
+        ul.features li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>VaahCMS Doctor Appointment System</h1>
+        <p>A demonstration page for end-to-end testing of the auto-PR workflow.</p>
+    </header>
+
+    <nav aria-label="Primary navigation">
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#gallery">Gallery</a></li>
+            <li><a href="#resources">Resources</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub (External)</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Project Overview</h2>
+            <p>
+                The VaahCMS Doctor Appointment System is a lightweight content module built on top of
+                <a href="https://vaah.dev" target="_blank" rel="noopener noreferrer">VaahCMS</a>,
+                designed to help clinics manage patient bookings, doctor schedules, and appointment
+                notifications from a single dashboard.
+            </p>
+            <p>
+                This page exists to validate that the end-to-end <em>auto-PR</em> workflow — commit,
+                branch push, automated review, and merge — functions correctly on GitHub. The README
+                footer change that triggered this run was trivial on purpose.
+            </p>
+            <p>
+                To learn more about how this module fits into the broader ecosystem, see the
+                <a href="#features">features section</a> below or jump to the
+                <a href="#resources">resources list</a>.
+            </p>
+        </section>
+
+        <section id="features">
+            <h2>Core Features</h2>
+            <ul class="features">
+                <li><strong>Doctor profiles</strong> — Specialty, availability, and bio fields.</li>
+                <li><strong>Patient booking</strong> — Frontend form with date and time-slot picker.</li>
+                <li><strong>Email notifications</strong> — Confirmation and reminder messages.</li>
+                <li><strong>Admin dashboard</strong> — Daily, weekly, and monthly appointment views.</li>
+                <li><strong>REST API</strong> — Headless access for mobile clients.</li>
+                <li><strong>Role-based access</strong> — Admin, doctor, and receptionist roles.</li>
+            </ul>
+        </section>
+
+        <section id="gallery">
+            <h2>Module Screenshots</h2>
+            <p>Preview images illustrating the booking flow.</p>
+            <div class="image-grid">
+                <img src="https://placehold.co/400x250/2563eb/ffffff?text=Booking+Form"
+                     alt="Screenshot of the doctor appointment booking form"
+                     width="400" height="250">
+                <img src="https://placehold.co/400x250/64748b/ffffff?text=Admin+Dashboard"
+                     alt="Screenshot of the admin dashboard with appointment counts"
+                     width="400" height="250">
+                <img src="https://placehold.co/400x250/059669/ffffff?text=Doctor+Profile"
+                     alt="Screenshot of a doctor profile page showing availability"
+                     width="400" height="250">
+            </div>
+        </section>
+
+        <section id="resources">
+            <h2>Useful Resources</h2>
+            <ol>
+                <li><a href="https://vaah.dev" target="_blank" rel="noopener noreferrer">VaahCMS Official Site</a></li>
+                <li><a href="https://laravel.com" target="_blank" rel="noopener noreferrer">Laravel Framework</a></li>
+                <li><a href="https://developer.mozilla.org" target="_blank" rel="noopener noreferrer">MDN Web Docs</a></li>
+                <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+            </ol>
+        </section>
+
+        <section id="contact">
+            <h2>Contact</h2>
+            <p>
+                Have feedback? Open an issue on the
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer">project repository</a>
+                or email <a href="mailto:support@example.com">support@example.com</a>.
+            </p>
+            <p>
+                Return to the <a href="#overview">top of the page</a>.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 VaahCMS Doctor Appointment System. All rights reserved.</p>
+        <p>
+            <a href="#overview">Back to top</a> |
+            <a href="https://vaah.dev" target="_blank" rel="noopener noreferrer">VaahCMS</a>
+        </p>
+    </footer>
+</body>
+</html>
